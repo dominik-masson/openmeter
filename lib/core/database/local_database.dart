@@ -1,0 +1,72 @@
+import 'dart:io';
+
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqlite3/sqlite3.dart';
+
+import 'daos/contract_dao.dart';
+import 'daos/entry_dao.dart';
+import 'daos/meter_dao.dart';
+import 'daos/room_dao.dart';
+import 'tables/contract.dart';
+import 'tables/entries.dart';
+import 'tables/meter.dart';
+import 'tables/room.dart';
+
+part 'local_database.g.dart';
+
+// create => flutter pub run build_runner build
+
+@DriftDatabase(
+    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider],
+    daos: [MeterDao, EntryDao, RoomDao, ContractDao])
+class LocalDatabase extends _$LocalDatabase {
+  LocalDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 1;
+
+  Future<void> exportInto(String path) async {
+    final newPath = p.join(path, 'meter.db');
+    final File file = await File(newPath).create(recursive: true);
+
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
+
+    await customStatement('VACUUM INTO ?', [newPath]);
+  }
+
+  Future<void> importDB(String path) async {
+    final newDB = sqlite3.open(path);
+    final appDir = await getApplicationDocumentsDirectory();
+    final File file = File(p.join(appDir.path, 'meter.db'));
+
+    newDB.execute('VACUUM INTO ?', [file.path]);
+
+    newDB.dispose();
+
+    markTablesUpdated(allTables);
+
+    // Unhandled Exception: Unable to load asset: /data/user/0/com.example.openmeter/app_flutter/meter.db
+  }
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'meter.db'));
+
+    if (!await file.exists()) {
+      final blob = await rootBundle.load(p.join(dbFolder.path, 'meter.db'));
+      final buffer = blob.buffer;
+      await file.writeAsBytes(
+          buffer.asUint8List(blob.offsetInBytes, blob.lengthInBytes));
+    }
+
+    return NativeDatabase.createInBackground(file);
+  });
+}
