@@ -23,7 +23,6 @@ jobs:
           KEY_STOREPASSWORD: ${{ secrets.STORE_PASSWORD }}
       - run: flutter upgrade
       - run: flutter pub get
-      - run: flutter test
       - run: flutter build apk 
       - uses: actions/upload-artifact@v2
         with:
