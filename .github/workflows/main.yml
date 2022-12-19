@@ -21,6 +21,7 @@ jobs:
           KEY_JKS: ${{ secrets.KEY_JKS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_STOREPASSWORD: ${{ secrets.STORE_PASSWORD }}
+      - run: flutter upgrade
       - run: flutter pub get
       - run: flutter test
       - run: flutter build apk 
