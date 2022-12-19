@@ -1,5 +1,5 @@
 name: openmeter
-description: A new Flutter project.
+description: Is a simple app to note the current meter reading and keep track of his usage.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

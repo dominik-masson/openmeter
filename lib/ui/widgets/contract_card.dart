@@ -54,7 +54,7 @@ class _ContractCardState extends State<ContractCard> {
         if (items.isEmpty) {
           return const Center(
             child: Text(
-              'Es wurden noch keine Verträge erstellt. \n Drücke jetzt auf das Plus um ein Zimmer zu erstellen.',
+              'Es wurden noch keine Verträge erstellt. \n Drücke jetzt auf das Plus um ein Vertrag zu erstellen.',
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),

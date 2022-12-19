@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/meter_card.dart';
+import 'add_meter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,7 +20,11 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
               onPressed: () {
-                Navigator.of(context).pushNamed('add_meter');
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddScreen(meter: null, room: null,),
+                    ));
               },
               icon: const Icon(Icons.add)),
           IconButton(onPressed: () {

@@ -114,7 +114,7 @@ class _MeterCardState extends State<MeterCard> {
                       count = entry.count.toString();
                     }
 
-                    return _card(context, meterItem, entry, date, count);
+                    return _card(context, meterItem, entry, element.room, date, count);
                   },
                 );
               },
@@ -123,7 +123,7 @@ class _MeterCardState extends State<MeterCard> {
         });
   }
 
-  Widget _card(BuildContext context, MeterData meterItem, Entrie? entry,
+  Widget _card(BuildContext context, MeterData meterItem, Entrie? entry, RoomData? room,
       String date, String count) {
     return Dismissible(
       key: Key('${meterItem.id}'),
@@ -144,7 +144,7 @@ class _MeterCardState extends State<MeterCard> {
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => DetailsSingleMeter(meter: meterItem),
+            builder: (context) => DetailsSingleMeter(meter: meterItem, room: room,),
           ));
         },
         child: Padding(

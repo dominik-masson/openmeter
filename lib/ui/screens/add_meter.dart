@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../../core/database/local_database.dart';
 import '../utils/meter_typ.dart';
 
-
 class AddScreen extends StatefulWidget {
-  const AddScreen({Key? key}) : super(key: key);
+  final MeterData? meter;
+  final RoomData? room;
+
+  const AddScreen({Key? key, required this.meter, required this.room})
+      : super(key: key);
 
   @override
   State<AddScreen> createState() => _AddScreenState();
@@ -18,8 +21,20 @@ class _AddScreenState extends State<AddScreen> {
   final TextEditingController _meternote = TextEditingController();
   final TextEditingController _metervalue = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  String _meterTyp = '';
+  String _meterTyp = 'Stromzähler';
   int _roomId = -1;
+  String _pageTitle = 'Neuer Zähler';
+  bool _updateMeter = false;
+
+  @override
+  void initState() {
+    if (widget.meter == null) {
+      return;
+    } else {
+      _setController();
+    }
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -27,6 +42,16 @@ class _AddScreenState extends State<AddScreen> {
     _meternumber.dispose();
     _meternote.dispose();
     _metervalue.dispose();
+  }
+
+  void _setController() {
+    if (widget.room != null) {}
+
+    _pageTitle = widget.meter!.number;
+    _meternumber.text = widget.meter!.number;
+    _meternote.text = widget.meter!.note;
+    _meterTyp = widget.meter!.typ;
+    _updateMeter = true;
   }
 
   Future<void> _saveEntry() async {
@@ -43,32 +68,55 @@ class _AddScreenState extends State<AddScreen> {
         note: drift.Value(_meternote.text),
       );
 
-      int meterId = await db.meterDao.createMeter(meter);
 
-      final entry = EntriesCompanion(
-        count: drift.Value(int.parse(_metervalue.text)),
-        date: drift.Value(DateTime.now()),
-        meter: drift.Value(meterId),
-      );
+      if(!_updateMeter){
+        int meterId = await db.meterDao.createMeter(meter);
 
-      if(_roomId != -1){
-        final room = MeterInRoomCompanion(
-          meterId: drift.Value(meterId),
-          roomId: drift.Value(_roomId),
+        if (_roomId != -1) {
+          final room = MeterInRoomCompanion(
+            meterId: drift.Value(meterId),
+            roomId: drift.Value(_roomId),
+          );
+
+          await db.roomDao.createMeterInRoom(room);
+        }
+
+        final entry = EntriesCompanion(
+          count: drift.Value(int.parse(_metervalue.text)),
+          date: drift.Value(DateTime.now()),
+          meter: drift.Value(meterId),
         );
 
-        await db.roomDao.createMeterInRoom(room);
+        await db.meterDao.createEntry(entry).then((value) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+              'Zähler wird erstellt!',
+            ),
+          ));
+          Navigator.of(context).pop();
+        });
+      }else{
+        MeterData meterData = MeterData(typ: _meterTyp, note: _meternote.text, number: _meternumber.text, id: widget.meter!.id);
+
+        if (_roomId != -1) {
+          final room = MeterInRoomCompanion(
+            meterId: drift.Value(widget.meter!.id),
+            roomId: drift.Value(_roomId),
+          );
+
+          await db.roomDao.createMeterInRoom(room);
+        }
+
+        await db.meterDao.updateMeter(meterData).then((value) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+              'Zähler wird aktualisiert!',
+            ),
+          ));
+          Navigator.of(context).pop(meterData);
+        });
       }
 
-      await db.meterDao.createEntry(entry).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Zähler wird erstellt!',
-          ),
-        ));
-        Navigator.of(context).pop();
-
-      });
     }
   }
 
@@ -76,7 +124,7 @@ class _AddScreenState extends State<AddScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neuer Zähler'),
+        title: Text(_pageTitle),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -117,20 +165,21 @@ class _AddScreenState extends State<AddScreen> {
                   const SizedBox(
                     height: 15,
                   ),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Bitte gebe den aktuellen Zählerstand ein!';
-                      }
-                      return null;
-                    },
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.number,
-                    controller: _metervalue,
-                    decoration: const InputDecoration(
-                        label: Text('Aktueller Zählerstand'),
-                        icon: Icon(Icons.assessment_outlined)),
-                  ),
+                  if (!_updateMeter)
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Bitte gebe den aktuellen Zählerstand ein!';
+                        }
+                        return null;
+                      },
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.number,
+                      controller: _metervalue,
+                      decoration: const InputDecoration(
+                          label: Text('Aktueller Zählerstand'),
+                          icon: Icon(Icons.assessment_outlined)),
+                    ),
                   const SizedBox(
                     height: 15,
                   ),
@@ -176,6 +225,7 @@ class _AddScreenState extends State<AddScreen> {
           contentPadding: EdgeInsets.all(0.0),
           isDense: true,
         ),
+        value: _meterTyp,
         items: meterTyps.entries.map((e) {
           return DropdownMenuItem(
             value: e.key,
@@ -201,6 +251,39 @@ class _AddScreenState extends State<AddScreen> {
 
   Widget _dropDownRoom(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
+
+    if (_updateMeter && widget.room?.id != null) {
+      return StreamBuilder(
+        stream: data.roomDao.watchAllRooms(),
+        builder: (context, snapshot) {
+          final roomList = snapshot.data ?? [];
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: DropdownButtonFormField(
+              isExpanded: true,
+              decoration: const InputDecoration(
+                label: Text(
+                  'Zimmer',
+                ),
+                icon: Icon(Icons.bedroom_parent_outlined),
+              ),
+              value: widget.room!.id,
+              items: roomList.map((e) {
+                return DropdownMenuItem(
+                  value: e.id,
+                  child: Text('${e.typ}: ${e.name}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                _roomId = int.parse(value.toString());
+              },
+            ),
+          );
+        },
+      );
+    }
+
     return StreamBuilder(
       stream: data.roomDao.watchAllRooms(),
       builder: (context, snapshot) {
@@ -210,7 +293,6 @@ class _AddScreenState extends State<AddScreen> {
           padding: const EdgeInsets.only(right: 4),
           child: DropdownButtonFormField(
             isExpanded: true,
-            // value: _room,
             decoration: const InputDecoration(
               label: Text(
                 'Zimmer',

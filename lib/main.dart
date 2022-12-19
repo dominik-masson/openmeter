@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
             initialRoute: '/',
             routes: {
               '/': (_) => const BottomNavBar(),
-              'add_meter': (_) => const AddScreen(),
+              // 'add_meter': (_) => AddScreen(),
               'add_contract': (_) => const AddContract(),
               'settings': (_) => const MainSettings(),
               // 'details_single_meter': (_) => DetailsSingleMeter(),

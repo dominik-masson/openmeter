@@ -9,11 +9,14 @@ import '../../core/provider/theme_changer.dart';
 import '../../core/services/torch_controller.dart';
 import '../widgets/entry_card.dart';
 import '../widgets/line_chart_single_meter.dart';
+import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
+  final RoomData? room;
 
-  const DetailsSingleMeter({Key? key, required this.meter}) : super(key: key);
+  const DetailsSingleMeter({Key? key, required this.meter, required this.room})
+      : super(key: key);
 
   @override
   State<DetailsSingleMeter> createState() => _DetailsSingleMeterState();
@@ -24,8 +27,17 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   final TextEditingController _countercontroller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime? _selectedDate = DateTime.now();
+  String _meterName = '';
+  late MeterData _meter;
 
   final TorchController _torchController = TorchController();
+
+  @override
+  void initState() {
+    _meterName = widget.meter.number;
+    _meter = widget.meter;
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -80,11 +92,33 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.meter.typ),
+        title: Text(_meterName),
         actions: [
           IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddScreen(
+                        meter: _meter,
+                        room: widget.room,
+                      ),
+                    )).then((value) {
+                  if (value == null) {
+                    return;
+                  }
+                  _meter = value as MeterData;
+                  setState(
+                    () {
+                      _meterName = _meter.number;
+                    },
+                  );
+                });
+              },
+              icon: const Icon(Icons.edit)),
+          IconButton(
               onPressed: () => _showBottomModel(context),
-              icon: const Icon(Icons.add))
+              icon: const Icon(Icons.add)),
         ],
       ),
       body: SingleChildScrollView(
@@ -95,7 +129,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             Padding(
               padding: const EdgeInsets.only(left: 12.0),
               child: Text(
-                widget.meter.number,
+                _meterName,
                 style: const TextStyle(
                   fontSize: 18,
                 ),
