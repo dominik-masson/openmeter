@@ -69,4 +69,15 @@ Map<String, dynamic> meterTyps = {
       ),
     ),
   },
+  'Gaszähler': {
+    'einheit': 'kWh',
+    'anbieter': 'Heizungsgebühren',
+    'avatar': const CircleAvatar(
+      backgroundColor: Colors.blueGrey,
+      child: Icon(
+        CustomIcons.flamme,
+        color: Colors.white,
+      ),
+    ),
+  },
 };

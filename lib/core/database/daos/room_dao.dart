@@ -19,7 +19,11 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
   Future<int> deleteRoom(int roomId) async {
     await (db.delete(db.meterInRoom)..where((tbl) => tbl.roomId.equals(roomId))).go();
     return await (db.delete(db.room)..where((tbl) => tbl.id.equals(roomId))).go();
-}
+  }
+
+  Future<int> deleteMeter(int meterId) async{
+    return await (db.delete(db.meterInRoom)..where((tbl) => tbl.meterId.equals(meterId))).go();
+  }
 
   Stream<List<RoomData>> watchAllRooms() {
     return select(db.room).watch();

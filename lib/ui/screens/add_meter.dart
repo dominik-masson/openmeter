@@ -22,9 +22,15 @@ class _AddScreenState extends State<AddScreen> {
   final TextEditingController _metervalue = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String _meterTyp = 'Stromzähler';
-  int _roomId = -1;
+  int _roomId = -2; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeter = false;
+  final List<DropdownMenuItem> _roomList = [
+    const DropdownMenuItem(
+      value: -1,
+      child: Text('Keinem Zimmer zugeordnet'),
+    ),
+  ];
 
   @override
   void initState() {
@@ -68,13 +74,12 @@ class _AddScreenState extends State<AddScreen> {
         note: drift.Value(_meternote.text),
       );
 
-
-      if(!_updateMeter){
+      if (!_updateMeter) {
         int meterId = await db.meterDao.createMeter(meter);
 
-        if (_roomId != -1) {
+        if (_roomId != -2 && _roomId != -1) {
           final room = MeterInRoomCompanion(
-            meterId: drift.Value(meterId),
+            meterId: drift.Value(widget.meter!.id),
             roomId: drift.Value(_roomId),
           );
 
@@ -95,16 +100,24 @@ class _AddScreenState extends State<AddScreen> {
           ));
           Navigator.of(context).pop();
         });
-      }else{
-        MeterData meterData = MeterData(typ: _meterTyp, note: _meternote.text, number: _meternumber.text, id: widget.meter!.id);
+      } else {
+        MeterData meterData = MeterData(
+            typ: _meterTyp,
+            note: _meternote.text,
+            number: _meternumber.text,
+            id: widget.meter!.id);
 
-        if (_roomId != -1) {
-          final room = MeterInRoomCompanion(
-            meterId: drift.Value(widget.meter!.id),
-            roomId: drift.Value(_roomId),
-          );
+        if (_roomId != -2) {
+          if (_roomId == -1) {
+            await db.roomDao.deleteMeter(widget.meter!.id);
+          } else {
+            final room = MeterInRoomCompanion(
+              meterId: drift.Value(widget.meter!.id),
+              roomId: drift.Value(_roomId),
+            );
 
-          await db.roomDao.createMeterInRoom(room);
+            await db.roomDao.createMeterInRoom(room);
+          }
         }
 
         await db.meterDao.updateMeter(meterData).then((value) {
@@ -116,7 +129,6 @@ class _AddScreenState extends State<AddScreen> {
           Navigator.of(context).pop(meterData);
         });
       }
-
     }
   }
 
@@ -249,6 +261,15 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
+  void _createRoomDropDown(List<RoomData> rooms) {
+    _roomList.addAll(rooms.map((e) {
+      return DropdownMenuItem(
+        value: e.id,
+        child: Text('${e.typ}: ${e.name}'),
+      );
+    }));
+  }
+
   Widget _dropDownRoom(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
 
@@ -258,28 +279,29 @@ class _AddScreenState extends State<AddScreen> {
         builder: (context, snapshot) {
           final roomList = snapshot.data ?? [];
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: DropdownButtonFormField(
-              isExpanded: true,
-              decoration: const InputDecoration(
-                label: Text(
-                  'Zimmer',
+          _createRoomDropDown(roomList);
+
+          if (_roomList.length != 1) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: DropdownButtonFormField(
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  label: Text(
+                    'Zimmer',
+                  ),
+                  icon: Icon(Icons.bedroom_parent_outlined),
                 ),
-                icon: Icon(Icons.bedroom_parent_outlined),
+                items: _roomList,
+                // value: widget.room!.id,
+                value: widget.room!.id,
+                onChanged: (value) {
+                  _roomId = int.parse(value.toString());
+                },
               ),
-              value: widget.room!.id,
-              items: roomList.map((e) {
-                return DropdownMenuItem(
-                  value: e.id,
-                  child: Text('${e.typ}: ${e.name}'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                _roomId = int.parse(value.toString());
-              },
-            ),
-          );
+            );
+          }
+          return Container();
         },
       );
     }
@@ -288,6 +310,8 @@ class _AddScreenState extends State<AddScreen> {
       stream: data.roomDao.watchAllRooms(),
       builder: (context, snapshot) {
         final roomList = snapshot.data ?? [];
+
+        _createRoomDropDown(roomList);
 
         return Padding(
           padding: const EdgeInsets.only(right: 4),
@@ -299,12 +323,8 @@ class _AddScreenState extends State<AddScreen> {
               ),
               icon: Icon(Icons.bedroom_parent_outlined),
             ),
-            items: roomList.map((e) {
-              return DropdownMenuItem(
-                value: e.id,
-                child: Text('${e.typ}: ${e.name}'),
-              );
-            }).toList(),
+            value: _roomId == -2 ? -1 : _roomId,
+            items: _roomList,
             onChanged: (value) {
               _roomId = int.parse(value.toString());
             },
