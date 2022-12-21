@@ -1,38 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:grouped_list/grouped_list.dart';
 
 import '../../core/database/local_database.dart';
-import '../../core/database/models/meter_with_room.dart';
 import '../screens/details_single_meter.dart';
 import '../utils/meter_typ.dart';
-import 'empty_data.dart';
 
-class MeterCard extends StatefulWidget {
-  const MeterCard({Key? key}) : super(key: key);
+class MeterCard {
 
-  @override
-  State<MeterCard> createState() => _MeterCardState();
-}
-
-class _MeterCardState extends State<MeterCard> {
-
-
-
-  @override
-  initState() {
-    // _firstInit = true;
-    super.initState();
-  }
-
+  const MeterCard();
 
   Future<bool> _deleteMeter(BuildContext context, int meterId) async {
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Sind Sie sich sicher?'),
+            title: const Text('Löschen?'),
             content: const Text('Möchten Sie diesen Zähler wirklich löschen?'),
             actions: [
               TextButton(
@@ -57,79 +38,17 @@ class _MeterCardState extends State<MeterCard> {
         false;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final data = Provider.of<LocalDatabase>(context);
-
-    return StreamBuilder<List<MeterWithRoom>>(
-        stream: data.meterDao.watchAllMeterWithRooms(),
-        builder: (context, snapshot) {
-          final meters = snapshot.data;
-
-          // print(snapshot.connectionState);
-          // print(meters);
-
-          if (meters == null || meters.isEmpty) {
-            return const EmptyData();
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 8),
-            child: GroupedListView(
-              stickyHeaderBackgroundColor: Theme.of(context).canvasColor,
-              floatingHeader: false,
-              elements: meters,
-              groupBy: (element) {
-                if (element.room != null) {
-                  return element.room!.name;
-                } else {
-                  return '';
-                }
-              },
-              groupSeparatorBuilder: (element) => Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 2),
-                child: Text(
-                  element,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-              ),
-              itemBuilder: (context, element) {
-                final meterItem = element.meter;
-                return StreamBuilder(
-                  stream: data.meterDao.getNewestEntry(meterItem.id),
-                  builder: (context, snapshot2) {
-                    final entry = snapshot2.data?[0];
-                    final String date;
-                    final String count;
-
-                    // print(snapshot2.data);
-                    if (entry == null) {
-                      date = 'none';
-                      count = 'none';
-                    } else {
-                      date = DateFormat('dd.MM.yyyy').format(entry.date);
-                      count = entry.count.toString();
-                    }
-
-                    return _card(context, meterItem, entry, element.room, date, count);
-                  },
-                );
-              },
-            ),
-          );
-        });
-  }
-
-  Widget _card(BuildContext context, MeterData meterItem, Entrie? entry, RoomData? room,
-      String date, String count) {
+  Widget getCard(
+      {required BuildContext context,
+      required MeterData meter,
+      RoomData? room,
+      required String date,
+      required String count}) {
     return Dismissible(
-      key: Key('${meterItem.id}'),
+      key: Key('${meter.id}'),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        return await _deleteMeter(context, meterItem.id);
+        return await _deleteMeter(context, meter.id);
       },
       background: Container(
         alignment: AlignmentDirectional.centerEnd,
@@ -144,7 +63,10 @@ class _MeterCardState extends State<MeterCard> {
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => DetailsSingleMeter(meter: meterItem, room: room,),
+            builder: (context) => DetailsSingleMeter(
+              meter: meter,
+              room: room,
+            ),
           ));
         },
         child: Padding(
@@ -157,12 +79,12 @@ class _MeterCardState extends State<MeterCard> {
                 children: [
                   Row(
                     children: [
-                      meterTyps[meterItem.typ]['avatar'] as Widget,
+                      meterTyps[meter.typ]['avatar'] as Widget,
                       const SizedBox(
                         width: 10,
                       ),
                       Text(
-                        meterItem.typ,
+                        meter.typ,
                         style: const TextStyle(fontSize: 16),
                       ),
                       const SizedBox(
@@ -176,7 +98,7 @@ class _MeterCardState extends State<MeterCard> {
                       Column(
                         children: [
                           Text(
-                            meterItem.number,
+                            meter.number,
                           ),
                           const Text(
                             "Zählernummer",
@@ -190,7 +112,7 @@ class _MeterCardState extends State<MeterCard> {
                       Column(
                         children: [
                           Text(
-                            '$count ${meterTyps[meterItem.typ]['einheit']}',
+                            '$count ${meterTyps[meter.typ]['einheit']}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           const Text(
@@ -203,7 +125,7 @@ class _MeterCardState extends State<MeterCard> {
                         width: 20,
                       ),
                       Text(
-                        meterItem.note.toString(),
+                        meter.note.toString(),
                         style:
                             const TextStyle(fontSize: 14, color: Colors.grey),
                       ),

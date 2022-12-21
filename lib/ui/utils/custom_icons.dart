@@ -12,6 +12,7 @@ class CustomIcons {
   static const IconData sun = IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData pv = IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData heater = IconData(0xe804, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData glocke = IconData(0xe805, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData meter = IconData(0xe806, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData voltmeter = IconData(0xe807, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   // ignore: constant_identifier_names

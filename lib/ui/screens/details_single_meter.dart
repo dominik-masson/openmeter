@@ -95,30 +95,32 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
         title: Text(_meterName),
         actions: [
           IconButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddScreen(
-                        meter: _meter,
-                        room: widget.room,
-                      ),
-                    )).then((value) {
-                  if (value == null) {
-                    return;
-                  }
-                  _meter = value as MeterData;
-                  setState(
-                    () {
-                      _meterName = _meter.number;
-                    },
-                  );
-                });
-              },
-              icon: const Icon(Icons.edit)),
+            onPressed: () => _showBottomModel(context),
+            icon: const Icon(Icons.add),
+          ),
           IconButton(
-              onPressed: () => _showBottomModel(context),
-              icon: const Icon(Icons.add)),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddScreen(
+                      meter: _meter,
+                      room: widget.room,
+                    ),
+                  )).then((value) {
+                if (value == null) {
+                  return;
+                }
+                _meter = value as MeterData;
+                setState(
+                  () {
+                    _meterName = _meter.number;
+                  },
+                );
+              });
+            },
+            icon: const Icon(Icons.edit),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -127,12 +129,23 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           children: [
             // Zählernummer
             Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: Text(
-                _meterName,
-                style: const TextStyle(
-                  fontSize: 18,
-                ),
+              padding: const EdgeInsets.only(left: 12.0, right: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _meterName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    widget.room == null ? '' : widget.room!.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
             ),
             const Divider(),

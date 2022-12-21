@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/meter_card.dart';
+import '../widgets/meter_card_list.dart';
 import 'add_meter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body:
-        const MeterCard(),
+        const MeterCardList(),
     );
   }
 }

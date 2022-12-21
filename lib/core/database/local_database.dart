@@ -49,9 +49,6 @@ class LocalDatabase extends _$LocalDatabase {
 
     newDB.dispose();
 
-    markTablesUpdated(allTables);
-
-    // Unhandled Exception: Unable to load asset: /data/user/0/com.example.openmeter/app_flutter/meter.db
   }
 }
 

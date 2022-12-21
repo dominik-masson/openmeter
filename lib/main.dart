@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'core/database/local_database.dart';
 import 'core/provider/theme_changer.dart';
 import 'ui/screens/add_contract.dart';
-import 'ui/screens/add_meter.dart';
 
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/widgets/bottom_nav_bar.dart';
