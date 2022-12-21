@@ -6,10 +6,12 @@ import '../screens/details_single_meter.dart';
 import '../utils/meter_typ.dart';
 
 class MeterCard {
-
   const MeterCard();
 
-  Future<bool> _deleteMeter(BuildContext context, int meterId) async {
+  Future<bool> _deleteMeter(
+      BuildContext context, int meterId, RoomData? room) async {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -22,9 +24,11 @@ class MeterCard {
               ),
               TextButton(
                 onPressed: () {
-                  Provider.of<LocalDatabase>(context, listen: false)
-                      .meterDao
-                      .deleteMeter(meterId);
+                  if (room != null) {
+                    db.roomDao.deleteMeter(meterId);
+                  }
+
+                  db.meterDao.deleteMeter(meterId);
                   Navigator.of(context).pop(true);
                 },
                 child: const Text(
@@ -48,7 +52,7 @@ class MeterCard {
       key: Key('${meter.id}'),
       direction: DismissDirection.endToStart,
       confirmDismiss: (direction) async {
-        return await _deleteMeter(context, meter.id);
+        return await _deleteMeter(context, meter.id, room);
       },
       background: Container(
         alignment: AlignmentDirectional.centerEnd,
