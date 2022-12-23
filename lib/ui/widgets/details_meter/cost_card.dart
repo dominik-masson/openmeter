@@ -19,6 +19,7 @@ class _CostBarState extends State<CostBar> {
   DateTime? _firstDate;
   DateTime? _lastDate;
   DateTime? _oneYearEarly;
+  bool _errorDate = false;
 
   @override
   void initState() {
@@ -56,6 +57,7 @@ class _CostBarState extends State<CostBar> {
       }
 
       setState(() {
+        _errorDate = !_errorDate;
         if (firstDate) {
           _firstDate = pickedDate;
           costProvider.saveFistDate(_firstDate!.millisecondsSinceEpoch);
@@ -84,6 +86,23 @@ class _CostBarState extends State<CostBar> {
     );
   }
 
+  void _errorDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Fehler beim Datum'),
+        content: const Text(
+            'Ein gewähltes Datum stimmt nicht mit den vorhandenen Einträgen überein. Bitte wähle ein neues Datum um die Werte zu berechnen!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   int _calcDifferenceMont() {
     if (_lastDate != null && _firstDate != null) {
       return (_lastDate!.difference(_firstDate!).inDays / 30).floor();
@@ -98,15 +117,18 @@ class _CostBarState extends State<CostBar> {
     }).toList();
 
     int posLastDate = result.indexOf(DateFormat('M.yyyy').format(_lastDate!));
-    int posFirstDate =
-        result.indexOf(DateFormat('M.yyyy').format(_firstDate!));
+    int posFirstDate = result.indexOf(DateFormat('M.yyyy').format(_firstDate!));
+
+    if (posFirstDate == -1 || posLastDate == -1) {
+      return [];
+    }
 
     int valLastDate = entries.elementAt(posLastDate).count;
     int valFirstDate = entries.elementAt(posFirstDate).count;
 
     return [valFirstDate, valLastDate];
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final costProvider = Provider.of<CostProvider>(context);
@@ -123,13 +145,15 @@ class _CostBarState extends State<CostBar> {
           return Container();
         }
 
+        List<int> countValues = [];
+
         if (entryData.length >= 11) {
-
-          _getValueFromDates(entryData);
-
-          final countValues = _getValueFromDates(entryData);
-
-          costProvider.setCount(countValues[0], countValues[1]);
+          countValues = _getValueFromDates(entryData);
+          if (countValues.isEmpty) {
+            _errorDate = true;
+          } else {
+            costProvider.setCount(countValues[0], countValues[1]);
+          }
         }
 
         return FutureBuilder(
@@ -141,9 +165,7 @@ class _CostBarState extends State<CostBar> {
               return Container();
             }
 
-            double restCost = 0.0;
-
-            if (entryData.length >= 11) {
+            if (entryData.length >= 11 && countValues.isNotEmpty) {
               costProvider.setValues(
                 contractData.basicPrice,
                 contractData.energyPrice,
@@ -151,10 +173,12 @@ class _CostBarState extends State<CostBar> {
               );
 
               costProvider.setSumMont(months);
-              restCost = costProvider.calcRest();
             }
 
-            return _card(context,  costProvider);
+            return _card(
+              context,
+              costProvider,
+            );
           },
         );
       },
@@ -162,7 +186,9 @@ class _CostBarState extends State<CostBar> {
   }
 
   Widget _card(
-      BuildContext context, CostProvider costProvider) {
+    BuildContext context,
+    CostProvider costProvider,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -177,10 +203,24 @@ class _CostBarState extends State<CostBar> {
                   'Kostenübersicht',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                IconButton(
-                  onPressed: () => _informationDialog(context),
-                  icon: const FaIcon(FontAwesomeIcons.circleInfo, size: 18),
+                Row(
+                  children: [
+                    if (_errorDate)
+                      IconButton(
+                        onPressed: () => _errorDialog(context),
+                        icon: const FaIcon(
+                          FontAwesomeIcons.circleExclamation,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                      ),
+                    IconButton(
+                      onPressed: () => _informationDialog(context),
+                      icon: const FaIcon(FontAwesomeIcons.circleInfo, size: 20),
+                    ),
+                  ],
                 ),
+
               ],
             ),
           ),
@@ -255,7 +295,9 @@ class _CostBarState extends State<CostBar> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          costProvider.calcRest().isNegative ? 'Nachzahlung' : 'Rückzahlung',
+                          costProvider.calcRest().isNegative
+                              ? 'Nachzahlung'
+                              : 'Rückzahlung',
                           style: const TextStyle(fontSize: 16),
                         ),
                         Text(
@@ -273,4 +315,6 @@ class _CostBarState extends State<CostBar> {
       ),
     );
   }
+
+
 }
