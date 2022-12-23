@@ -1,4 +1,3 @@
-
 import 'package:drift/drift.dart';
 
 import '../local_database.dart';
@@ -8,7 +7,7 @@ import '../tables/meter.dart';
 part 'entry_dao.g.dart';
 
 @DriftAccessor(tables: [Meter, Entries])
-class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin{
+class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
   final LocalDatabase db;
 
   EntryDao(this.db) : super(db);
@@ -17,4 +16,10 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin{
     return await db.into(db.entries).insert(entry);
   }
 
+  Future<List<Entrie>> getLastEntry(int meterId) async {
+    return await (db.select(db.entries)
+          ..where((tbl) => tbl.meter.equals(meterId))
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.count,mode: OrderingMode.desc)]))
+          .get();
+  }
 }

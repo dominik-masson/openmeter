@@ -61,11 +61,16 @@ class _MeterCardListState extends State<MeterCardList> {
                 return StreamBuilder(
                   stream: data.meterDao.getNewestEntry(meterItem.id),
                   builder: (context, snapshot2) {
-                    final entry = snapshot2.data?[0];
+                    final entryList = snapshot2.data;
+
+                    if (entryList == null || entryList.isEmpty) {
+                      return Container();
+                    }
+
+                    final entry = entryList[0];
                     final String date;
                     final String count;
 
-                    // print(snapshot2.data);
                     if (entry == null) {
                       date = 'none';
                       count = 'none';

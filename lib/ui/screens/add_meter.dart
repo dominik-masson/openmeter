@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
@@ -77,9 +78,11 @@ class _AddScreenState extends State<AddScreen> {
       if (!_updateMeter) {
         int meterId = await db.meterDao.createMeter(meter);
 
-        if (_roomId != -2 && _roomId != -1) {
+
+        if (_roomId != -2 || _roomId != -1) {
+
           final room = MeterInRoomCompanion(
-            meterId: drift.Value(widget.meter!.id),
+            meterId: drift.Value(meterId),
             roomId: drift.Value(_roomId),
           );
 
@@ -111,6 +114,7 @@ class _AddScreenState extends State<AddScreen> {
           if (_roomId == -1) {
             await db.roomDao.deleteMeter(widget.meter!.id);
           } else {
+            await db.roomDao.deleteMeter(widget.meter!.id);
             final room = MeterInRoomCompanion(
               meterId: drift.Value(widget.meter!.id),
               roomId: drift.Value(_roomId),
@@ -189,8 +193,13 @@ class _AddScreenState extends State<AddScreen> {
                       keyboardType: TextInputType.number,
                       controller: _metervalue,
                       decoration: const InputDecoration(
-                          label: Text('Aktueller Zählerstand'),
-                          icon: Icon(Icons.assessment_outlined)),
+                        label: Text('Aktueller Zählerstand'),
+                        // icon: Icon(Icons.assessment_outlined),
+                        icon: FaIcon(
+                          FontAwesomeIcons.chartSimple,
+                          size: 18,
+                        ),
+                      ),
                     ),
                   const SizedBox(
                     height: 15,
@@ -290,7 +299,11 @@ class _AddScreenState extends State<AddScreen> {
                   label: Text(
                     'Zimmer',
                   ),
-                  icon: Icon(Icons.bedroom_parent_outlined),
+                  // icon: Icon(Icons.bedroom_parent_outlined),
+                  icon: FaIcon(
+                    FontAwesomeIcons.bed,
+                    size: 18,
+                  ),
                 ),
                 items: _roomList,
                 // value: widget.room!.id,
@@ -321,7 +334,11 @@ class _AddScreenState extends State<AddScreen> {
               label: Text(
                 'Zimmer',
               ),
-              icon: Icon(Icons.bedroom_parent_outlined),
+              // icon: Icon(Icons.bedroom_parent_outlined),
+              icon: FaIcon(
+                FontAwesomeIcons.bed,
+                size: 18,
+              ),
             ),
             value: _roomId == -2 ? -1 : _roomId,
             items: _roomList,

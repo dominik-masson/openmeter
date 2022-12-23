@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../utils/meter_typ.dart';
+import '../../../core/database/local_database.dart';
+import '../../utils/meter_typ.dart';
 
 class EntryCard extends StatelessWidget {
   final MeterData meter;

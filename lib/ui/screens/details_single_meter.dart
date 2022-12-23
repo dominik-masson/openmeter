@@ -7,8 +7,9 @@ import 'package:drift/drift.dart' as drift;
 import '../../core/database/local_database.dart';
 import '../../core/provider/theme_changer.dart';
 import '../../core/services/torch_controller.dart';
-import '../widgets/entry_card.dart';
-import '../widgets/line_chart_single_meter.dart';
+import '../widgets/details_meter/cost_card.dart';
+import '../widgets/details_meter/entry_card.dart';
+import '../widgets/details_meter/meter_count_line_chart.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
@@ -29,6 +30,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   DateTime? _selectedDate = DateTime.now();
   String _meterName = '';
   late MeterData _meter;
+  late RoomData? _room;
 
   final TorchController _torchController = TorchController();
 
@@ -36,6 +38,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   void initState() {
     _meterName = widget.meter.number;
     _meter = widget.meter;
+    _room = widget.room;
     super.initState();
   }
 
@@ -105,7 +108,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                   MaterialPageRoute(
                     builder: (context) => AddScreen(
                       meter: _meter,
-                      room: widget.room,
+                      room: _room,
                     ),
                   )).then((value) {
                 if (value == null) {
@@ -115,6 +118,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                 setState(
                   () {
                     _meterName = _meter.number;
+                    _room;
                   },
                 );
               });
@@ -140,7 +144,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                     ),
                   ),
                   Text(
-                    widget.room == null ? '' : widget.room!.name,
+                    _room == null ? '' : _room!.name,
                     style: const TextStyle(
                       fontSize: 18,
                     ),
@@ -151,11 +155,13 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             const Divider(),
             EntryCard(meter: widget.meter),
             const SizedBox(
-              height: 15,
+              height: 10,
             ),
             LineChartSingleMeter(
               meterId: widget.meter.id,
             ),
+
+            CostBar(meter: _meter),
           ],
         ),
       ),

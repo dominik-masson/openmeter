@@ -89,7 +89,7 @@ class ThemeChanger extends ChangeNotifier {
         _themeMode = ThemeMode.system;
     }
 
-    _nightMode = _pref.getBool(keyNight)!;
+    _nightMode = _pref.getBool(keyNight) ?? false;
 
     notifyListeners();
   }

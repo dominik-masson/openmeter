@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/cost_provider.dart';
 import '../screens/details_single_meter.dart';
 import '../utils/meter_typ.dart';
 
@@ -71,7 +72,9 @@ class MeterCard {
               meter: meter,
               room: room,
             ),
-          ));
+          )).then((value) {
+            Provider.of<CostProvider>(context, listen: false).resetValues();
+          });
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 4.0, right: 4),

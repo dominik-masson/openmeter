@@ -45,6 +45,10 @@ class LocalDatabase extends _$LocalDatabase {
     final appDir = await getApplicationDocumentsDirectory();
     final File file = File(p.join(appDir.path, 'meter.db'));
 
+    if(file.existsSync()){
+      file.deleteSync();
+    }
+
     newDB.execute('VACUUM INTO ?', [file.path]);
 
     newDB.dispose();
@@ -57,12 +61,12 @@ LazyDatabase _openConnection() {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'meter.db'));
 
-    if (!await file.exists()) {
-      final blob = await rootBundle.load(p.join(dbFolder.path, 'meter.db'));
-      final buffer = blob.buffer;
-      await file.writeAsBytes(
-          buffer.asUint8List(blob.offsetInBytes, blob.lengthInBytes));
-    }
+    // if (!await file.exists()) {
+    //   final blob = await rootBundle.load(p.join(dbFolder.path, 'meter.db'));
+    //   final buffer = blob.buffer;
+    //   await file.writeAsBytes(
+    //       buffer.asUint8List(blob.offsetInBytes, blob.lengthInBytes));
+    // }
 
     return NativeDatabase.createInBackground(file);
   });
