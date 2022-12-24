@@ -42,7 +42,7 @@ class _AddContractState extends State<AddContract> {
 
   @override
   void initState() {
-    if (widget.provider != null) {
+    if (widget.contract != null) {
       _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
       _setController();
     }
@@ -64,12 +64,9 @@ class _AddContractState extends State<AddContract> {
     _bonus.text = contract.bonus.toString();
     _note.text = contract.bonus.toString();
 
-    if (widget.provider != null) {
-      final provider = widget.provider;
-      if (provider == null) {
-        return;
-      }
+    final provider = widget.provider;
 
+    if (provider != null) {
       _providerName.text = provider.name;
       _contractNumber.text = provider.contractNumber;
       _dateBeginController.text =
@@ -78,6 +75,8 @@ class _AddContractState extends State<AddContract> {
           DateFormat('dd.MM.yyyy').format(provider.validUntil);
       _notice.text = provider.notice.toString();
       _providerExpand = true;
+    }else{
+      return;
     }
   }
 
@@ -115,9 +114,12 @@ class _AddContractState extends State<AddContract> {
         final contract = ContractCompanion(
             meterTyp: drift.Value(_meterTyp),
             provider: drift.Value(providerId),
-            basicPrice: drift.Value(double.parse(_basicPrice.text.replaceAll(',', '.'))),
-            energyPrice: drift.Value(double.parse(_energyPrice.text.replaceAll(',', '.'))),
-            discount: drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
+            basicPrice: drift.Value(
+                double.parse(_basicPrice.text.replaceAll(',', '.'))),
+            energyPrice: drift.Value(
+                double.parse(_energyPrice.text.replaceAll(',', '.'))),
+            discount:
+                drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
             bonus: drift.Value(bonus),
             note: drift.Value(_note.text));
 
@@ -130,7 +132,7 @@ class _AddContractState extends State<AddContract> {
           Navigator.of(context).pop();
         });
       } else {
-        if(_providerExpand){
+        if (_providerExpand) {
           final provider = ProviderData(
             uid: widget.provider!.uid,
             name: _providerName.text,
