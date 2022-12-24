@@ -75,7 +75,7 @@ class _AddContractState extends State<AddContract> {
           DateFormat('dd.MM.yyyy').format(provider.validUntil);
       _notice.text = provider.notice.toString();
       _providerExpand = true;
-    }else{
+    } else {
       return;
     }
   }
@@ -87,7 +87,7 @@ class _AddContractState extends State<AddContract> {
     int notice;
 
     if (_formKey.currentState!.validate()) {
-      if (_providerExpand && !_isUpdate) {
+      if (!_isUpdate && (_providerExpand || _providerName.text.isNotEmpty)) {
         if (_notice.text.isEmpty) {
           notice = 0;
         } else {
@@ -132,23 +132,41 @@ class _AddContractState extends State<AddContract> {
           Navigator.of(context).pop();
         });
       } else {
-        if (_providerExpand) {
-          final provider = ProviderData(
-            uid: widget.provider!.uid,
-            name: _providerName.text,
-            contractNumber: _contractNumber.text,
-            notice: int.parse(_notice.text),
-            validFrom: _dateBegin!,
-            validUntil: _dateBegin!,
-          );
+        if (_providerExpand || _providerName.text.isNotEmpty) {
+          if (_notice.text.isEmpty) {
+            notice = 0;
+          } else {
+            notice = int.parse(_notice.text);
+          }
 
-          await db.contractDao.updateProvider(provider);
+          if (widget.provider == null) {
+            final provider = ProviderCompanion(
+                name: drift.Value(_providerName.text),
+                contractNumber: drift.Value(_contractNumber.text),
+                notice: drift.Value(notice),
+                validFrom: drift.Value(_dateBegin!),
+                validUntil: drift.Value(_dateEnd!));
+
+            providerId = await db.contractDao.createProvider(provider);
+          } else {
+            final providerData = ProviderData(
+              uid: widget.provider!.uid,
+              name: _providerName.text,
+              contractNumber: _contractNumber.text,
+              notice: int.parse(_notice.text),
+              validFrom: _dateBegin!,
+              validUntil: _dateBegin!,
+            );
+
+            await db.contractDao.updateProvider(providerData);
+            providerId = widget.provider!.uid;
+          }
         }
 
         final contract = ContractData(
           uid: widget.contract!.uid,
           meterTyp: _meterTyp,
-          provider: widget.provider!.uid,
+          provider: providerId,
           basicPrice: double.parse(_basicPrice.text.replaceAll(',', '.')),
           energyPrice: double.parse(_energyPrice.text.replaceAll(',', '.')),
           discount: double.parse(_discount.text.replaceAll(',', '.')),
@@ -166,6 +184,25 @@ class _AddContractState extends State<AddContract> {
         });
       }
     }
+  }
+
+  void _deleteProvider() async {
+    final db = Provider.of<LocalDatabase>(context,listen: false);
+
+    await db.contractDao.deleteProvider(widget.provider!.uid).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Anbieter wird gelöscht!',
+        ),
+      ));
+    });
+
+    setState(() {
+        _providerName.clear();
+        _contractNumber.clear();
+        _notice.clear();
+    });
+
   }
 
   void _showDatePicker(BuildContext context, String typ) async {
@@ -286,7 +323,16 @@ class _AddContractState extends State<AddContract> {
       },
       children: [
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isUpdate)
+              TextButton(
+                onPressed: () => _deleteProvider(),
+                child: const Text(
+                  'Anbieter löschen',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                ),
+              ),
             TextFormField(
               controller: _providerName,
               validator: (value) {
