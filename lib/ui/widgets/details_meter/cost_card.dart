@@ -128,7 +128,7 @@ class _CostBarState extends State<CostBar> {
 
     return [valFirstDate, valLastDate];
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final costProvider = Provider.of<CostProvider>(context);

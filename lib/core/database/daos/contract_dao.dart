@@ -38,4 +38,12 @@ class ContractDao extends DatabaseAccessor<LocalDatabase> with _$ContractDaoMixi
   Future<ContractData> getContractByTyp(String meterTyp) async {
     return await (db.select(db.contract)..where((tbl) => tbl.meterTyp.equals(meterTyp))).getSingle();
   }
+
+  Future<bool> updateContract(ContractData contractData) async{
+    return await update(db.contract).replace(contractData);
+  }
+
+  Future<bool> updateProvider(ProviderData providerData) async {
+    return await update(db.provider).replace(providerData);
+  }
 }

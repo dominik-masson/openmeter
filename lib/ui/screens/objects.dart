@@ -6,6 +6,7 @@ import '../../core/database/local_database.dart';
 import '../utils/room_typ.dart';
 import '../widgets/contract_card.dart';
 import '../widgets/room_card.dart';
+import 'add_contract.dart';
 
 class ObjectsScreen extends StatefulWidget {
   const ObjectsScreen({Key? key}) : super(key: key);
@@ -83,7 +84,11 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                   style: TextStyle(fontSize: 18),
                 ),
                 trailing: const Icon(Icons.add),
-                onTap: () => Navigator.of(context).pushNamed('add_contract'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddContract(contract: null),
+                  ),
+                ),
               ),
               const ContractCard(),
             ],

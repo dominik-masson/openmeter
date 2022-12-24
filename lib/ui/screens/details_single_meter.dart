@@ -138,7 +138,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _meterName,
+                    _meter.note,
                     style: const TextStyle(
                       fontSize: 18,
                     ),

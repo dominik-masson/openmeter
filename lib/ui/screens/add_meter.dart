@@ -4,6 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/theme_changer.dart';
+import '../../core/services/torch_controller.dart';
 import '../utils/meter_typ.dart';
 
 class AddScreen extends StatefulWidget {
@@ -32,6 +34,7 @@ class _AddScreenState extends State<AddScreen> {
       child: Text('Keinem Zimmer zugeordnet'),
     ),
   ];
+  final TorchController _torchController = TorchController();
 
   @override
   void initState() {
@@ -138,9 +141,30 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var getMode =
+        Provider.of<ThemeChanger>(context, listen: false).getThemeMode;
+    bool darkMode;
+    if (getMode == ThemeMode.dark || getMode == ThemeMode.system) {
+      darkMode = true;
+    } else {
+      darkMode = false;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_pageTitle),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // _getTorch();
+              _torchController.getTorch();
+            },
+            icon: Icon(
+              Icons.flashlight_on,
+              color: darkMode ? Colors.white : Colors.black,
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(
