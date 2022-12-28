@@ -6,8 +6,5 @@ List roomTyps = [
   'Kinderzimmer',
   'Arbeitszimmer',
   'Badezimmer',
-  'WC',
-  'Abstellraum',
-  'Garten',
   'Sonstiges'
 ];

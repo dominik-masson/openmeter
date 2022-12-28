@@ -74,12 +74,12 @@ class _DetailsRoomState extends State<DetailsRoom> {
                 TextFormField(
                   readOnly: !_update,
                   controller: _name,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Bitte geben Sie einen Zimmernamen an';
-                    }
-                    return null;
-                  },
+                  // validator: (value) {
+                  //   if (value == null || value.isEmpty) {
+                  //     return 'Bitte geben Sie einen Zimmernamen an';
+                  //   }
+                  //   return null;
+                  // },
                   decoration: const InputDecoration(
                     label: Text('Zimmername'),
                     icon: Icon(Icons.abc),
@@ -196,6 +196,15 @@ class _DetailsRoomState extends State<DetailsRoom> {
   ) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     if (_formKey.currentState!.validate()) {
+
+      if(_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name){
+        return;
+      }
+
+      if(_name.text.isEmpty){
+        _name.text = _roomTyp;
+      }
+
       final updateRoom =
           RoomData(id: widget.roomData.id, typ: _roomTyp, name: _name.text);
       _currentRoom = updateRoom;
