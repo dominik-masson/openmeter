@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/meter_card.dart';
+import '../widgets/homescreen/sort_meter_cards.dart';
+import '../widgets/homescreen/meter_card_list.dart';
+import 'add_meter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -12,23 +14,38 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('OpenMeter'),
         actions: [
           IconButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('add_meter');
-              },
-              icon: const Icon(Icons.add)),
-          IconButton(onPressed: () {
-            Navigator.of(context).pushNamed('settings');
-          }, icon: const Icon(Icons.settings))
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddScreen(
+                      meter: null,
+                      room: null,
+                    ),
+                  ));
+            },
+            icon: const Icon(Icons.add),
+          ),
+          IconButton(
+            onPressed: () {
+              SortMeterCards().getFilter(context: context);
+            },
+            icon: const Icon(Icons.filter_list),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed('settings');
+            },
+            icon: const Icon(Icons.settings),
+          ),
         ],
       ),
-      body:
-        const MeterCard(),
+      body: const MeterCardList(),
     );
   }
 }

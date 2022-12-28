@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
+import '../../../core/database/local_database.dart';
 
 class LineChartSingleMeter extends StatefulWidget {
   final int meterId;
@@ -84,7 +84,7 @@ class _LineChartSingleMeterState extends State<LineChartSingleMeter> {
               ),
             ),
           );
-        }else{
+        } else {
           return Container();
         }
       },
@@ -145,6 +145,7 @@ class _LineChartSingleMeterState extends State<LineChartSingleMeter> {
                       showTitles: false,
                     ),
                   ),
+                  // topTitles: _leftTitle(),
                   topTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: false,

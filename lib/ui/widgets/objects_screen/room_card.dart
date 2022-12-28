@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../utils/meter_typ.dart';
+import '../../../core/database/local_database.dart';
+import '../../screens/details_room.dart';
+import '../../utils/meter_typ.dart';
 
 class RoomCard extends StatefulWidget {
   const RoomCard({Key? key}) : super(key: key);
@@ -16,7 +17,7 @@ class _RoomCardState extends State<RoomCard> {
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Sind Sie sich sicher?'),
+            title: const Text('Löschen?'),
             content: const Text('Möchten Sie dieses Zimmer wirklich löschen?'),
             actions: [
               TextButton(
@@ -83,65 +84,75 @@ class _RoomCardState extends State<RoomCard> {
                     size: 40,
                   ),
                 ),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  room.typ,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                                const Text(
-                                  'Zimmertyp',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Text(
-                                  room.name,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                                const Text(
-                                  'Zimmername',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 15,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 15.0),
-                          child: _numberCounter(context, room, data),
-                        ),
-                        const SizedBox(
-                          height: 15,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 15.0, bottom: 8),
-                          child: Row(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => DetailsRoom(
+                        roomData: room,
+                      ),
+                    ));
+                  },
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _getMeterTyps(context, room.id, data),
+                              Column(
+                                children: [
+                                  Text(
+                                    room.typ,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const Text(
+                                    'Zimmertyp',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    room.name,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const Text(
+                                    'Zimmername',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
-                        )
-                      ],
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15.0),
+                            child: _numberCounter(context, room, data),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 15.0, bottom: 8),
+                            child: Row(
+                              children: [
+                                _getMeterTyps(context, room.id, data),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -178,7 +189,9 @@ class _RoomCardState extends State<RoomCard> {
             }
 
             return Row(
-              children: [for (var items in item) meterTyps[items]['avatar']],
+              children: [
+                for (var items in item) meterTyps[items]['avatar'],
+              ],
             );
           },
         );

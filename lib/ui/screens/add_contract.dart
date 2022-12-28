@@ -7,7 +7,11 @@ import '../../core/database/local_database.dart';
 import '../utils/meter_typ.dart';
 
 class AddContract extends StatefulWidget {
-  const AddContract({Key? key}) : super(key: key);
+  final ContractData? contract;
+  final ProviderData? provider;
+
+  const AddContract({Key? key, required this.contract, this.provider})
+      : super(key: key);
 
   @override
   State<AddContract> createState() => _AddContractState();
@@ -27,11 +31,54 @@ class _AddContractState extends State<AddContract> {
   final TextEditingController _bonus = TextEditingController();
   final TextEditingController _note = TextEditingController();
 
-  String _meterTyp = '';
+  String _meterTyp = 'Stromzähler';
   bool _providerExpand = false;
   DateTime? _dateBegin = DateTime.now();
   DateTime? _dateEnd = DateTime(
       DateTime.now().year + 2, DateTime.now().month, DateTime.now().day);
+
+  bool _isUpdate = false;
+  String _pageName = 'Neuer Vertrag';
+
+  @override
+  void initState() {
+    if (widget.contract != null) {
+      _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
+      _setController();
+    }
+    super.initState();
+  }
+
+  void _setController() {
+    final contract = widget.contract;
+
+    if (contract == null) {
+      return;
+    }
+
+    _isUpdate = true;
+    _meterTyp = contract.meterTyp;
+    _basicPrice.text = contract.basicPrice.toString();
+    _energyPrice.text = contract.energyPrice.toString();
+    _discount.text = contract.discount.toString();
+    _bonus.text = contract.bonus.toString();
+    _note.text = contract.bonus.toString();
+
+    final provider = widget.provider;
+
+    if (provider != null) {
+      _providerName.text = provider.name;
+      _contractNumber.text = provider.contractNumber;
+      _dateBeginController.text =
+          DateFormat('dd.MM.yyyy').format(provider.validFrom);
+      _dateEndController.text =
+          DateFormat('dd.MM.yyyy').format(provider.validUntil);
+      _notice.text = provider.notice.toString();
+      _providerExpand = true;
+    } else {
+      return;
+    }
+  }
 
   Future<void> _saveEntry() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
@@ -40,11 +87,10 @@ class _AddContractState extends State<AddContract> {
     int notice;
 
     if (_formKey.currentState!.validate()) {
-      if (_providerExpand) {
-
-        if(_notice.text.isEmpty){
+      if (!_isUpdate && (_providerExpand || _providerName.text.isNotEmpty)) {
+        if (_notice.text.isEmpty) {
           notice = 0;
-        }else{
+        } else {
           notice = int.parse(_notice.text);
         }
 
@@ -64,25 +110,99 @@ class _AddContractState extends State<AddContract> {
         bonus = int.parse(_bonus.text);
       }
 
-      final contract = ContractCompanion(
-          meterTyp: drift.Value(_meterTyp),
-          provider: drift.Value(providerId),
-          basicPrice: drift.Value(double.parse(_basicPrice.text)),
-          energyPrice: drift.Value(double.parse(_energyPrice.text)),
-          discount: drift.Value(double.parse(_discount.text)),
-          bonus: drift.Value(bonus),
-          note: drift.Value(_note.text));
+      if (!_isUpdate) {
+        final contract = ContractCompanion(
+            meterTyp: drift.Value(_meterTyp),
+            provider: drift.Value(providerId),
+            basicPrice: drift.Value(
+                double.parse(_basicPrice.text.replaceAll(',', '.'))),
+            energyPrice: drift.Value(
+                double.parse(_energyPrice.text.replaceAll(',', '.'))),
+            discount:
+                drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
+            bonus: drift.Value(bonus),
+            note: drift.Value(_note.text));
 
-      await db.contractDao.createContract(contract).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Vertrag wird erstellt!',
-          ),
-        ));
-        Navigator.of(context).pop();
+        await db.contractDao.createContract(contract).then((value) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+              'Vertrag wird erstellt!',
+            ),
+          ));
+          Navigator.of(context).pop();
+        });
+      } else {
+        if (_providerExpand || _providerName.text.isNotEmpty) {
+          if (_notice.text.isEmpty) {
+            notice = 0;
+          } else {
+            notice = int.parse(_notice.text);
+          }
 
-      });
+          if (widget.provider == null) {
+            final provider = ProviderCompanion(
+                name: drift.Value(_providerName.text),
+                contractNumber: drift.Value(_contractNumber.text),
+                notice: drift.Value(notice),
+                validFrom: drift.Value(_dateBegin!),
+                validUntil: drift.Value(_dateEnd!));
+
+            providerId = await db.contractDao.createProvider(provider);
+          } else {
+            final providerData = ProviderData(
+              uid: widget.provider!.uid,
+              name: _providerName.text,
+              contractNumber: _contractNumber.text,
+              notice: int.parse(_notice.text),
+              validFrom: _dateBegin!,
+              validUntil: _dateBegin!,
+            );
+
+            await db.contractDao.updateProvider(providerData);
+            providerId = widget.provider!.uid;
+          }
+        }
+
+        final contract = ContractData(
+          uid: widget.contract!.uid,
+          meterTyp: _meterTyp,
+          provider: providerId,
+          basicPrice: double.parse(_basicPrice.text.replaceAll(',', '.')),
+          energyPrice: double.parse(_energyPrice.text.replaceAll(',', '.')),
+          discount: double.parse(_discount.text.replaceAll(',', '.')),
+          bonus: int.parse(_bonus.text),
+          note: _note.text,
+        );
+
+        await db.contractDao.updateContract(contract).then((value) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+              'Vertrag wird aktualisiert!',
+            ),
+          ));
+          Navigator.of(context).pop();
+        });
+      }
     }
+  }
+
+  void _deleteProvider() async {
+    final db = Provider.of<LocalDatabase>(context,listen: false);
+
+    await db.contractDao.deleteProvider(widget.provider!.uid).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Anbieter wird gelöscht!',
+        ),
+      ));
+    });
+
+    setState(() {
+        _providerName.clear();
+        _contractNumber.clear();
+        _notice.clear();
+    });
+
   }
 
   void _showDatePicker(BuildContext context, String typ) async {
@@ -118,6 +238,7 @@ class _AddContractState extends State<AddContract> {
           }
           return null;
         },
+        value: _meterTyp,
         isExpanded: true,
         decoration: const InputDecoration(
           label: Text('Zählertyp'),
@@ -184,8 +305,9 @@ class _AddContractState extends State<AddContract> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color:
-              _providerExpand ? Theme.of(context).primaryColorLight : Theme.of(context).hintColor,
+          color: _providerExpand
+              ? Theme.of(context).primaryColorLight
+              : Theme.of(context).hintColor,
         ),
       ),
       key: _expansionKey,
@@ -201,7 +323,16 @@ class _AddContractState extends State<AddContract> {
       },
       children: [
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isUpdate)
+              TextButton(
+                onPressed: () => _deleteProvider(),
+                child: const Text(
+                  'Anbieter löschen',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                ),
+              ),
             TextFormField(
               controller: _providerName,
               validator: (value) {
@@ -282,7 +413,7 @@ class _AddContractState extends State<AddContract> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Neuer Vertrag'),
+        title: Text(_pageName),
       ),
       body: SingleChildScrollView(
         child: Padding(

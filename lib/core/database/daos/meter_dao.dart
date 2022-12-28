@@ -36,6 +36,10 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .go();
   }
 
+  Future updateMeter(MeterData meter) async {
+    return update(db.meter).replace(meter);
+  }
+
   Future<List<MeterData>> getAllMeter() async {
     return await select(db.meter).get();
   }

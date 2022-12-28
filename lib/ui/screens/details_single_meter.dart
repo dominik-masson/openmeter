@@ -7,13 +7,17 @@ import 'package:drift/drift.dart' as drift;
 import '../../core/database/local_database.dart';
 import '../../core/provider/theme_changer.dart';
 import '../../core/services/torch_controller.dart';
-import '../widgets/entry_card.dart';
-import '../widgets/line_chart_single_meter.dart';
+import '../widgets/details_meter/cost_card.dart';
+import '../widgets/details_meter/entry_card.dart';
+import '../widgets/details_meter/meter_count_line_chart.dart';
+import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
+  final RoomData? room;
 
-  const DetailsSingleMeter({Key? key, required this.meter}) : super(key: key);
+  const DetailsSingleMeter({Key? key, required this.meter, required this.room})
+      : super(key: key);
 
   @override
   State<DetailsSingleMeter> createState() => _DetailsSingleMeterState();
@@ -24,8 +28,19 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   final TextEditingController _countercontroller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime? _selectedDate = DateTime.now();
+  String _meterName = '';
+  late MeterData _meter;
+  late RoomData? _room;
 
   final TorchController _torchController = TorchController();
+
+  @override
+  void initState() {
+    _meterName = widget.meter.number;
+    _meter = widget.meter;
+    _room = widget.room;
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -80,11 +95,36 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.meter.typ),
+        title: Text(_meterName),
         actions: [
           IconButton(
-              onPressed: () => _showBottomModel(context),
-              icon: const Icon(Icons.add))
+            onPressed: () => _showBottomModel(context),
+            icon: const Icon(Icons.add),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddScreen(
+                      meter: _meter,
+                      room: _room,
+                    ),
+                  )).then((value) {
+                if (value == null) {
+                  return;
+                }
+                _meter = value as MeterData;
+                setState(
+                  () {
+                    _meterName = _meter.number;
+                    _room;
+                  },
+                );
+              });
+            },
+            icon: const Icon(Icons.edit),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -93,22 +133,35 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           children: [
             // Zählernummer
             Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: Text(
-                widget.meter.number,
-                style: const TextStyle(
-                  fontSize: 18,
-                ),
+              padding: const EdgeInsets.only(left: 12.0, right: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _meter.note,
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    _room == null ? '' : _room!.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
             ),
             const Divider(),
             EntryCard(meter: widget.meter),
             const SizedBox(
-              height: 15,
+              height: 10,
             ),
             LineChartSingleMeter(
               meterId: widget.meter.id,
             ),
+
+            CostBar(meter: _meter),
           ],
         ),
       ),

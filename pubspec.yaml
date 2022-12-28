@@ -1,5 +1,5 @@
 name: openmeter
-description: A new Flutter project.
+description: Is a simple app to note the current meter reading and keep track of his usage.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.0.1
+version: 0.1.0
 
 environment:
   sdk: '>=2.18.4 <3.0.0'
@@ -50,6 +50,7 @@ dependencies:
   sticky_grouped_list: ^3.1.0
   fl_chart: ^0.55.2
   permission_handler: ^10.2.0
+  font_awesome_flutter: ^10.3.0
   # App Native Settings
   flutter_launcher_icons: ^0.11.0
   rename: ^2.0.1

@@ -68,7 +68,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     await db.importDB(_selectedDB!.files.single.path!).then((value) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
-          'Backup wurde wiederhergestellt!',
+          'Backup wird wiederhergestellt!',
         ),
       ));
     });
