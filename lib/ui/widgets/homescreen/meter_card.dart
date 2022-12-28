@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
 import '../../utils/meter_typ.dart';
 
@@ -43,12 +44,20 @@ class MeterCard {
         false;
   }
 
-  Widget getCard(
-      {required BuildContext context,
-      required MeterData meter,
-      RoomData? room,
-      required String date,
-      required String count}) {
+  Widget getCard({
+    required BuildContext context,
+    required MeterData meter,
+    RoomData? room,
+    required String date,
+    required String count,
+  }) {
+    final sortProvider = Provider.of<SortProvider>(context);
+
+    String roomName = '';
+    if (room != null) {
+      roomName = room.name;
+    }
+
     return Dismissible(
       key: Key('${meter.id}'),
       direction: DismissDirection.endToStart,
@@ -67,12 +76,14 @@ class MeterCard {
       ),
       child: GestureDetector(
         onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
+          Navigator.of(context)
+              .push(MaterialPageRoute(
             builder: (context) => DetailsSingleMeter(
               meter: meter,
               room: room,
             ),
-          )).then((value) {
+          ))
+              .then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
           });
         },
@@ -85,18 +96,25 @@ class MeterCard {
               child: Column(
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      meterTyps[meter.typ]['avatar'] as Widget,
-                      const SizedBox(
-                        width: 10,
+                      Row(
+                        children: [
+                          meterTyps[meter.typ]['avatar'] as Widget,
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            meter.typ,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
                       ),
-                      Text(
-                        meter.typ,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(
-                        width: 20,
-                      ),
+                      if (sortProvider.getSort == 'meter')
+                        Text(
+                          roomName,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                     ],
                   ),
                   Row(
