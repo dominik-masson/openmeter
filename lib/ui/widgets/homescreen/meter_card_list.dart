@@ -3,10 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
-import '../../core/database/local_database.dart';
-import '../../core/database/models/meter_with_room.dart';
+import '../../../core/database/local_database.dart';
+import '../../../core/database/models/meter_with_room.dart';
 
-import 'empty_data.dart';
+import '../../../core/provider/sort_provider.dart';
+import '../empty_data.dart';
 import 'meter_card.dart';
 
 class MeterCardList extends StatefulWidget {
@@ -19,9 +20,43 @@ class MeterCardList extends StatefulWidget {
 class _MeterCardListState extends State<MeterCardList> {
   final MeterCard _meterCard = const MeterCard();
 
+  _groupBy(String sortBy, MeterWithRoom element) {
+    dynamic sortedElement;
+
+    switch (sortBy) {
+      case 'room':
+        if (element.room != null) {
+          sortedElement = element.room!.name;
+        } else {
+          sortedElement = '';
+        }
+        break;
+      case 'meter':
+        sortedElement = element.meter.typ;
+        break;
+      default:
+        sortedElement = 'room';
+    }
+
+    return sortedElement;
+  }
+
+  GroupedListOrder _orderBy(String order) {
+    if (order == 'asc') {
+      return GroupedListOrder.ASC;
+    } else if (order == 'desc') {
+      return GroupedListOrder.DESC;
+    } else {
+      return GroupedListOrder.ASC;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
+    final sortProvider = Provider.of<SortProvider>(context);
+    final sortBy = sortProvider.getSort;
+    final orderBy = sortProvider.getOrder;
 
     return StreamBuilder<List<MeterWithRoom>>(
         stream: data.meterDao.watchAllMeterWithRooms(),
@@ -42,12 +77,9 @@ class _MeterCardListState extends State<MeterCardList> {
               floatingHeader: false,
               elements: meters,
               groupBy: (element) {
-                if (element.room != null) {
-                  return element.room!.name;
-                } else {
-                  return '';
-                }
+                return _groupBy(sortBy, element);
               },
+              order: _orderBy(orderBy),
               groupSeparatorBuilder: (element) => Padding(
                 padding: const EdgeInsets.only(top: 8.0, left: 2),
                 child: Text(

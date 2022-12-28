@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../screens/details_room.dart';
-import '../utils/meter_typ.dart';
+import '../../../core/database/local_database.dart';
+import '../../screens/details_room.dart';
+import '../../utils/meter_typ.dart';
 
 class RoomCard extends StatefulWidget {
   const RoomCard({Key? key}) : super(key: key);

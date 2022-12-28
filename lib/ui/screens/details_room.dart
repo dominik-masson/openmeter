@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 import '../utils/room_typ.dart';
-import '../widgets/meter_card.dart';
+import '../widgets/homescreen/meter_card.dart';
 
 class DetailsRoom extends StatefulWidget {
   final RoomData roomData;

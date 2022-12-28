@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
 import 'core/provider/cost_provider.dart';
+import 'core/provider/sort_provider.dart';
 import 'core/provider/theme_changer.dart';
 import 'ui/screens/add_contract.dart';
 
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<ThemeChanger>.value(value: ThemeChanger()),
         ChangeNotifierProvider<CostProvider>.value(value: CostProvider()),
+        ChangeNotifierProvider<SortProvider>.value(value: SortProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {
