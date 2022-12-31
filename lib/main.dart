@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
@@ -34,6 +35,15 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {
           return MaterialApp(
+            localizationsDelegates: const [
+              GlobalWidgetsLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('de', ''),
+              Locale('en', ''),
+            ],
             title: 'OpenMeter',
             debugShowCheckedModeBanner: false,
             theme: light,

@@ -56,6 +56,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       initialDate: DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 10),
       lastDate: DateTime.now(),
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      locale: const Locale('de',''),
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;
