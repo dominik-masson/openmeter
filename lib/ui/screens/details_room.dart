@@ -165,31 +165,35 @@ class _DetailsRoomState extends State<DetailsRoom> {
   Widget _dropDownMenu(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
-      child: DropdownButtonFormField(
-        value: _roomTyp,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          label: Text(
-            'Zimmertyp',
-          ),
-          icon: Icon(Icons.bedroom_parent_outlined),
-        ),
-        items: roomTyps.map((e) {
-          return DropdownMenuItem(
-            value: e,
-            child: Row(
-              children: [
-                Text(e.toString()),
-              ],
+      child: IgnorePointer(
+        ignoring: !_update,
+        child: DropdownButtonFormField(
+          value: _roomTyp,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            label: Text(
+              'Zimmertyp',
             ),
-          );
-        }).toList(),
-        onChanged: (value) {
-          _roomTyp = value.toString();
-        },
+            icon: Icon(Icons.bedroom_parent_outlined),
+          ),
+          items: roomTyps.map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: Row(
+                children: [
+                  Text(e.toString()),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            _roomTyp = value.toString();
+          },
+        ),
       ),
     );
   }
+
 
   _updateRoom(
     BuildContext context,

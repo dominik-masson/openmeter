@@ -152,6 +152,7 @@ class _CostBarState extends State<CostBar> {
           if (countValues.isEmpty) {
             _errorDate = true;
           } else {
+            _errorDate = false;
             costProvider.setCount(countValues[0], countValues[1]);
           }
         }
