@@ -4,7 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
-import '../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
 
 class AddContract extends StatefulWidget {
   final ContractData? contract;
@@ -211,6 +211,7 @@ class _AddContractState extends State<AddContract> {
       initialDate: DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 10),
       lastDate: DateTime(DateTime.now().year + 10),
+      locale: const Locale('de',''),
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;

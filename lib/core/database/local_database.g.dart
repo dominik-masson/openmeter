@@ -250,11 +250,13 @@ class Entrie extends DataClass implements Insertable<Entrie> {
   final int id;
   final int meter;
   final int count;
+  final int usage;
   final DateTime date;
   const Entrie(
       {required this.id,
       required this.meter,
       required this.count,
+      required this.usage,
       required this.date});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -262,6 +264,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
     map['id'] = Variable<int>(id);
     map['meter'] = Variable<int>(meter);
     map['count'] = Variable<int>(count);
+    map['usage'] = Variable<int>(usage);
     map['date'] = Variable<DateTime>(date);
     return map;
   }
@@ -271,6 +274,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       id: Value(id),
       meter: Value(meter),
       count: Value(count),
+      usage: Value(usage),
       date: Value(date),
     );
   }
@@ -282,6 +286,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       id: serializer.fromJson<int>(json['id']),
       meter: serializer.fromJson<int>(json['meter']),
       count: serializer.fromJson<int>(json['count']),
+      usage: serializer.fromJson<int>(json['usage']),
       date: serializer.fromJson<DateTime>(json['date']),
     );
   }
@@ -292,14 +297,18 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       'id': serializer.toJson<int>(id),
       'meter': serializer.toJson<int>(meter),
       'count': serializer.toJson<int>(count),
+      'usage': serializer.toJson<int>(usage),
       'date': serializer.toJson<DateTime>(date),
     };
   }
 
-  Entrie copyWith({int? id, int? meter, int? count, DateTime? date}) => Entrie(
+  Entrie copyWith(
+          {int? id, int? meter, int? count, int? usage, DateTime? date}) =>
+      Entrie(
         id: id ?? this.id,
         meter: meter ?? this.meter,
         count: count ?? this.count,
+        usage: usage ?? this.usage,
         date: date ?? this.date,
       );
   @override
@@ -308,13 +317,14 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           ..write('id: $id, ')
           ..write('meter: $meter, ')
           ..write('count: $count, ')
+          ..write('usage: $usage, ')
           ..write('date: $date')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, meter, count, date);
+  int get hashCode => Object.hash(id, meter, count, usage, date);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -322,6 +332,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           other.id == this.id &&
           other.meter == this.meter &&
           other.count == this.count &&
+          other.usage == this.usage &&
           other.date == this.date);
 }
 
@@ -329,31 +340,37 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
   final Value<int> id;
   final Value<int> meter;
   final Value<int> count;
+  final Value<int> usage;
   final Value<DateTime> date;
   const EntriesCompanion({
     this.id = const Value.absent(),
     this.meter = const Value.absent(),
     this.count = const Value.absent(),
+    this.usage = const Value.absent(),
     this.date = const Value.absent(),
   });
   EntriesCompanion.insert({
     this.id = const Value.absent(),
     required int meter,
     required int count,
+    required int usage,
     required DateTime date,
   })  : meter = Value(meter),
         count = Value(count),
+        usage = Value(usage),
         date = Value(date);
   static Insertable<Entrie> custom({
     Expression<int>? id,
     Expression<int>? meter,
     Expression<int>? count,
+    Expression<int>? usage,
     Expression<DateTime>? date,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (meter != null) 'meter': meter,
       if (count != null) 'count': count,
+      if (usage != null) 'usage': usage,
       if (date != null) 'date': date,
     });
   }
@@ -362,11 +379,13 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       {Value<int>? id,
       Value<int>? meter,
       Value<int>? count,
+      Value<int>? usage,
       Value<DateTime>? date}) {
     return EntriesCompanion(
       id: id ?? this.id,
       meter: meter ?? this.meter,
       count: count ?? this.count,
+      usage: usage ?? this.usage,
       date: date ?? this.date,
     );
   }
@@ -383,6 +402,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     if (count.present) {
       map['count'] = Variable<int>(count.value);
     }
+    if (usage.present) {
+      map['usage'] = Variable<int>(usage.value);
+    }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
@@ -395,6 +417,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
           ..write('id: $id, ')
           ..write('meter: $meter, ')
           ..write('count: $count, ')
+          ..write('usage: $usage, ')
           ..write('date: $date')
           ..write(')'))
         .toString();
@@ -428,13 +451,18 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
   late final GeneratedColumn<int> count = GeneratedColumn<int>(
       'count', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _usageMeta = const VerificationMeta('usage');
+  @override
+  late final GeneratedColumn<int> usage = GeneratedColumn<int>(
+      'usage', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
       'date', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, meter, count, date];
+  List<GeneratedColumn> get $columns => [id, meter, count, usage, date];
   @override
   String get aliasedName => _alias ?? 'entries';
   @override
@@ -459,6 +487,12 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
     } else if (isInserting) {
       context.missing(_countMeta);
     }
+    if (data.containsKey('usage')) {
+      context.handle(
+          _usageMeta, usage.isAcceptableOrUnknown(data['usage']!, _usageMeta));
+    } else if (isInserting) {
+      context.missing(_usageMeta);
+    }
     if (data.containsKey('date')) {
       context.handle(
           _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
@@ -480,6 +514,8 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           .read(DriftSqlType.int, data['${effectivePrefix}meter'])!,
       count: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}count'])!,
+      usage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}usage'])!,
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
     );

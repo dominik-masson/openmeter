@@ -195,35 +195,32 @@ class _CostBarState extends State<CostBar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Kostenübersicht',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Row(
-                  children: [
-                    if (_errorDate)
-                      IconButton(
-                        onPressed: () => _errorDialog(context),
-                        icon: const FaIcon(
-                          FontAwesomeIcons.circleExclamation,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                      ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Kostenübersicht',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  if (_errorDate)
                     IconButton(
-                      onPressed: () => _informationDialog(context),
-                      icon: const FaIcon(FontAwesomeIcons.circleInfo, size: 20),
+                      onPressed: () => _errorDialog(context),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.circleExclamation,
+                        color: Colors.red,
+                        size: 20,
+                      ),
                     ),
-                  ],
-                ),
+                  IconButton(
+                    onPressed: () => _informationDialog(context),
+                    icon: const FaIcon(FontAwesomeIcons.circleInfo, size: 20),
+                  ),
+                ],
+              ),
 
-              ],
-            ),
+            ],
           ),
           SizedBox(
             width: MediaQuery.of(context).size.width,

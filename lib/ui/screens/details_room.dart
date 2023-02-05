@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
-import '../utils/room_typ.dart';
+import '../../core/provider/refresh_provider.dart';
+import '../../utils/room_typ.dart';
 import '../widgets/homescreen/meter_card.dart';
 
 class DetailsRoom extends StatefulWidget {
@@ -21,7 +22,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
   bool _update = false;
   String _roomTyp = 'Sonstiges';
   late RoomData _currentRoom;
-  final MeterCard _meterCard = const MeterCard();
+  final MeterCard _meterCard = MeterCard();
 
   @override
   void initState() {
@@ -31,78 +32,88 @@ class _DetailsRoomState extends State<DetailsRoom> {
     super.initState();
   }
 
+  void _refresh() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_name.text),
-        actions: [
-          !_update
-              ? IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    setState(() {
-                      _update = true;
-                    });
-                  },
-                )
-              : IconButton(
-                  onPressed: () {
-                    _updateRoom(context);
-                    setState(() {
-                      _update = false;
-                      _name.text = _currentRoom.name;
-                    });
-                  },
-                  icon: const Icon(Icons.save),
-                )
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _dropDownMenu(context),
-                const SizedBox(
-                  height: 15,
-                ),
-                TextFormField(
-                  readOnly: !_update,
-                  controller: _name,
-                  // validator: (value) {
-                  //   if (value == null || value.isEmpty) {
-                  //     return 'Bitte geben Sie einen Zimmernamen an';
-                  //   }
-                  //   return null;
-                  // },
-                  decoration: const InputDecoration(
-                    label: Text('Zimmername'),
-                    icon: Icon(Icons.abc),
+    final refresh = Provider.of<RefreshProvider>(context);
+
+    if (refresh.refreshState){
+      _refresh();
+      refresh.setRefresh(false);
+    }
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_name.text),
+          actions: [
+            !_update
+                ? IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      setState(() {
+                        _update = true;
+                      });
+                    },
+                  )
+                : IconButton(
+                    onPressed: () {
+                      _updateRoom(context);
+                      setState(() {
+                        _update = false;
+                        _name.text = _currentRoom.name;
+                      });
+                    },
+                    icon: const Icon(Icons.save),
+                  )
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _dropDownMenu(context),
+                  const SizedBox(
+                    height: 15,
                   ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                const Text(
-                  'Zähler',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                _listMeters(_currentRoom.id),
-              ],
+                  TextFormField(
+                    readOnly: !_update,
+                    controller: _name,
+                    // validator: (value) {
+                    //   if (value == null || value.isEmpty) {
+                    //     return 'Bitte geben Sie einen Zimmernamen an';
+                    //   }
+                    //   return null;
+                    // },
+                    decoration: const InputDecoration(
+                      label: Text('Zimmername'),
+                      icon: Icon(Icons.abc),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  const Text(
+                    'Zähler',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  _listMeters(_currentRoom.id),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _listMeters(int roomId) {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
+    final db = Provider.of<LocalDatabase>(context);
     return FutureBuilder(
       future: db.roomDao.getMeterInRooms(roomId),
       builder: (context, snapshot) {
@@ -130,7 +141,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
                     }
 
                     return StreamBuilder(
-                      stream: db.meterDao.getNewestEntry(meter.id),
+                      stream: db.entryDao.getNewestEntry(meter.id),
                       builder: (context, snapshot) {
                         final entry = snapshot.data?[0];
                         final String date;
@@ -194,18 +205,16 @@ class _DetailsRoomState extends State<DetailsRoom> {
     );
   }
 
-
   _updateRoom(
     BuildContext context,
   ) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     if (_formKey.currentState!.validate()) {
-
-      if(_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name){
+      if (_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name) {
         return;
       }
 
-      if(_name.text.isEmpty){
+      if (_name.text.isEmpty) {
         _name.text = _roomTyp;
       }
 

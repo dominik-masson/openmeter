@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
-import '../../utils/room_typ.dart';
+import '../../../utils/room_typ.dart';
 
 class AddRoom {
   final _formKey = GlobalKey<FormState>();

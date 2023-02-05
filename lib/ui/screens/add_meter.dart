@@ -4,9 +4,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/refresh_provider.dart';
 import '../../core/provider/theme_changer.dart';
 import '../../core/services/torch_controller.dart';
-import '../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
 
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
@@ -24,16 +25,20 @@ class _AddScreenState extends State<AddScreen> {
   final TextEditingController _meternote = TextEditingController();
   final TextEditingController _metervalue = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   String _meterTyp = 'Stromzähler';
   int _roomId = -2; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeter = false;
+  RoomData? _room;
+
   final List<DropdownMenuItem> _roomList = [
     const DropdownMenuItem(
       value: -1,
       child: Text('Keinem Zimmer zugeordnet'),
     ),
   ];
+
   final TorchController _torchController = TorchController();
 
   @override
@@ -43,20 +48,25 @@ class _AddScreenState extends State<AddScreen> {
     } else {
       _setController();
     }
+
+    if (widget.room != null) {
+      _room = widget.room!;
+    } else {
+      _roomId = -1;
+    }
+
     super.initState();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _meternumber.dispose();
     _meternote.dispose();
     _metervalue.dispose();
+    super.dispose();
   }
 
   void _setController() {
-    if (widget.room != null) {}
-
     _pageTitle = widget.meter!.number;
     _meternumber.text = widget.meter!.number;
     _meternote.text = widget.meter!.note;
@@ -81,9 +91,7 @@ class _AddScreenState extends State<AddScreen> {
       if (!_updateMeter) {
         int meterId = await db.meterDao.createMeter(meter);
 
-
         if (_roomId != -2 || _roomId != -1) {
-
           final room = MeterInRoomCompanion(
             meterId: drift.Value(meterId),
             roomId: drift.Value(_roomId),
@@ -96,9 +104,10 @@ class _AddScreenState extends State<AddScreen> {
           count: drift.Value(int.parse(_metervalue.text)),
           date: drift.Value(DateTime.now()),
           meter: drift.Value(meterId),
+          usage: const drift.Value(0),
         );
 
-        await db.meterDao.createEntry(entry).then((value) {
+        await db.entryDao.createEntry(entry).then((value) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
               'Zähler wird erstellt!',
@@ -107,6 +116,8 @@ class _AddScreenState extends State<AddScreen> {
           Navigator.of(context).pop();
         });
       } else {
+        Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
+
         MeterData meterData = MeterData(
             typ: _meterTyp,
             note: _meternote.text,
@@ -118,12 +129,12 @@ class _AddScreenState extends State<AddScreen> {
             await db.roomDao.deleteMeter(widget.meter!.id);
           } else {
             await db.roomDao.deleteMeter(widget.meter!.id);
-            final room = MeterInRoomCompanion(
+            final roomWithMeter = MeterInRoomCompanion(
               meterId: drift.Value(widget.meter!.id),
               roomId: drift.Value(_roomId),
             );
 
-            await db.roomDao.createMeterInRoom(room);
+            await db.roomDao.createMeterInRoom(roomWithMeter);
           }
         }
 
@@ -133,7 +144,7 @@ class _AddScreenState extends State<AddScreen> {
               'Zähler wird aktualisiert!',
             ),
           ));
-          Navigator.of(context).pop(meterData);
+          Navigator.of(context).pop([meterData, _room]);
         });
       }
     }
@@ -286,9 +297,7 @@ class _AddScreenState extends State<AddScreen> {
           );
         }).toList(),
         onChanged: (value) {
-          setState(() {
-            _meterTyp = value!;
-          });
+          _meterTyp = value!;
         },
       ),
     );
@@ -305,8 +314,7 @@ class _AddScreenState extends State<AddScreen> {
 
   Widget _dropDownRoom(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
-
-    if (_updateMeter && widget.room?.id != null) {
+    if (_updateMeter) {
       return StreamBuilder(
         stream: data.roomDao.watchAllRooms(),
         builder: (context, snapshot) {
@@ -330,10 +338,20 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
                 items: _roomList,
-                // value: widget.room!.id,
-                value: widget.room!.id,
+                value: widget.room?.id ?? -1,
                 onChanged: (value) {
                   _roomId = int.parse(value.toString());
+
+                  if (value >= 0) {
+                    for (RoomData rd in roomList) {
+                      if (rd.id == value) {
+                        _room = rd;
+                        break;
+                      }
+                    }
+                  } else {
+                    _room = null;
+                  }
                 },
               ),
             );

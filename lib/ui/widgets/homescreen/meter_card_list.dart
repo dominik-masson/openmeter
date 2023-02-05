@@ -18,7 +18,7 @@ class MeterCardList extends StatefulWidget {
 }
 
 class _MeterCardListState extends State<MeterCardList> {
-  final MeterCard _meterCard = const MeterCard();
+  final MeterCard _meterCard = MeterCard();
 
   _groupBy(String sortBy, MeterWithRoom element) {
     dynamic sortedElement;
@@ -64,7 +64,7 @@ class _MeterCardListState extends State<MeterCardList> {
           final meters = snapshot.data;
 
           // print(snapshot.connectionState);
-          // print(meters);
+          // print(meters!.map((e) => e.room).toList());
 
           if (meters == null || meters.isEmpty) {
             return const EmptyData();
@@ -90,23 +90,22 @@ class _MeterCardListState extends State<MeterCardList> {
               ),
               itemBuilder: (context, element) {
                 final meterItem = element.meter;
+                // print(element.room);
                 return StreamBuilder(
-                  stream: data.meterDao.getNewestEntry(meterItem.id),
+                  stream: data.entryDao.getNewestEntry(meterItem.id),
                   builder: (context, snapshot2) {
                     final entryList = snapshot2.data;
 
-                    if (entryList == null || entryList.isEmpty) {
-                      return Container();
-                    }
-
-                    final entry = entryList[0];
                     final String date;
                     final String count;
+                    final Entrie entry;
 
-                    if (entry == null) {
+                    if (entryList == null || entryList.isEmpty) {
                       date = 'none';
                       count = 'none';
                     } else {
+                      entry = entryList[0];
+
                       date = DateFormat('dd.MM.yyyy').format(entry.date);
                       count = entry.count.toString();
                     }

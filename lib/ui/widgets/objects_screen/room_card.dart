@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../screens/details_room.dart';
-import '../../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
 
 class RoomCard extends StatefulWidget {
   const RoomCard({Key? key}) : super(key: key);
@@ -41,6 +41,7 @@ class _RoomCardState extends State<RoomCard> {
         ) ??
         false;
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -86,11 +87,17 @@ class _RoomCardState extends State<RoomCard> {
                 ),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => DetailsRoom(
-                        roomData: room,
+                    Navigator.of(context)
+                        .push(
+                      MaterialPageRoute(
+                        builder: (context) => DetailsRoom(
+                          roomData: room,
+                        ),
                       ),
-                    ));
+                    )
+                        .then((value) {
+                      setState(() {});
+                    });
                   },
                   child: Card(
                     child: Padding(

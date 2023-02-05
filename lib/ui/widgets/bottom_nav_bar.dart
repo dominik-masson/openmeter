@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/custom_icons.dart';
 import '../screens/homescreen.dart';
 import '../screens/objects.dart';
-import '../utils/custom_icons.dart';
+
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({Key? key}) : super(key: key);

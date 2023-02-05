@@ -74,6 +74,38 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     });
   }
 
+ _deleteDB(LocalDatabase db) async {
+   showDialog(
+     context: context,
+     builder: (context) => AlertDialog(
+       title: const Text('Zurücksetzen?'),
+       content: const Text('Möchten Sie Ihre Datenbank wirklich zurücksetzen und somit alle Daten löschen?'),
+       actions: [
+         TextButton(
+           onPressed: () => Navigator.of(context).pop(),
+           child: const Text('Abbrechen'),
+         ),
+         TextButton(
+           onPressed: () {
+              db.deleteDB().then((value) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text(
+                    'Datenbank wurde erfolgreich zurückgesetzt!',
+                  ),
+                ));
+                Navigator.of(context).pop();
+              });
+           },
+           child: const Text(
+             'Zurücksetzen',
+             style: TextStyle(color: Colors.red),
+           ),
+         ),
+       ],
+     ),
+   );
+ }
+
   Future<bool> _askPermission() async {
     var status = await Permission.manageExternalStorage.status;
     if (status.isGranted) {
@@ -132,6 +164,17 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
             'Importiere die Datenbank, um die Daten wiederherzustellen.',
           ),
           onTap: () => _importDB(db),
+        ),
+        ListTile(
+          leading: const Icon(Icons.replay),
+          title: const Text(
+            'Datenbank zurücksetzen',
+            style: TextStyle(fontSize: 18),
+          ),
+          subtitle: const Text(
+            'Setze die Datenbank zurück, um alle bisherigen Daten zu löschen.',
+          ),
+          onTap: () => _deleteDB(db),
         ),
       ],
     );

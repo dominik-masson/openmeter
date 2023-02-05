@@ -5,10 +5,12 @@ import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
-import '../../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
 
 class MeterCard {
-  const MeterCard();
+
+  MeterCard();
+
 
   Future<bool> _deleteMeter(
       BuildContext context, int meterId, RoomData? room) async {
@@ -53,10 +55,7 @@ class MeterCard {
   }) {
     final sortProvider = Provider.of<SortProvider>(context);
 
-    String roomName = '';
-    if (room != null) {
-      roomName = room.name;
-    }
+    String roomName = room == null ? '' : room.name;
 
     return Dismissible(
       key: Key('${meter.id}'),
@@ -77,14 +76,18 @@ class MeterCard {
       child: GestureDetector(
         onTap: () {
           Navigator.of(context)
-              .push(MaterialPageRoute(
-            builder: (context) => DetailsSingleMeter(
-              meter: meter,
-              room: room,
+              .push(
+            MaterialPageRoute(
+              builder: (context) => DetailsSingleMeter(
+                meter: meter,
+                room: room,
+                count: count,
+              ),
             ),
-          ))
+          )
               .then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
+            room = value as RoomData?;
           });
         },
         child: Padding(
@@ -149,10 +152,12 @@ class MeterCard {
                       const SizedBox(
                         width: 20,
                       ),
-                      Text(
-                        meter.note.toString(),
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.grey),
+                      Flexible(
+                        child: Text(
+                          meter.note.toString(),
+                          style:
+                              const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
                       ),
                     ],
                   ),

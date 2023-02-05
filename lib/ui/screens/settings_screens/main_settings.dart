@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/settings_screen/database_export_import.dart';
+import '../../widgets/settings_screen/database_settings.dart';
 import '../../widgets/settings_screen/theme_title.dart';
 
 class MainSettings extends StatelessWidget {

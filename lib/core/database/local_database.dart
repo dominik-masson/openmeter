@@ -52,8 +52,22 @@ class LocalDatabase extends _$LocalDatabase {
     newDB.execute('VACUUM INTO ?', [file.path]);
 
     newDB.dispose();
-
   }
+
+  Future<void> deleteDB() async {
+    const statement = 'PRAGMA foreign_keys = OFF';
+    await customStatement(statement);
+    try{
+      transaction(() async {
+        for(final table in allTables){
+          await delete(table).go();
+        }
+      });
+    }finally{
+      await customStatement(statement);
+    }
+  }
+
 }
 
 LazyDatabase _openConnection() {

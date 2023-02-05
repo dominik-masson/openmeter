@@ -27,7 +27,7 @@ class _LineChartSingleMeterState extends State<LineChartSingleMeter> {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: Provider.of<LocalDatabase>(context)
-          .meterDao
+          .entryDao
           .watchAllEntries(widget.meterId),
       builder: (context, snapshot) {
         final data = snapshot.data ?? [];
