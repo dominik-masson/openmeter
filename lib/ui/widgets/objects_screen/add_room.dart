@@ -73,6 +73,7 @@ class AddRoom {
 
   Future getAddRoom(BuildContext context) {
     return showModalBottomSheet(
+      backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),

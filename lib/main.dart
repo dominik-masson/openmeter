@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'core/database/local_database.dart';
 import 'core/provider/cost_provider.dart';
 import 'core/provider/refresh_provider.dart';
+import 'core/provider/reminder_provider.dart';
 import 'core/provider/sort_provider.dart';
 import 'core/provider/theme_changer.dart';
 
 import 'ui/screens/settings_screens/main_settings.dart';
+import 'ui/screens/settings_screens/reminder_screen.dart';
 import 'ui/widgets/bottom_nav_bar.dart';
 
 void main() {
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<CostProvider>.value(value: CostProvider()),
         ChangeNotifierProvider<SortProvider>.value(value: SortProvider()),
         ChangeNotifierProvider<RefreshProvider>.value(value: RefreshProvider()),
+        ChangeNotifierProvider<ReminderProvider>.value(value: ReminderProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {
@@ -57,6 +60,7 @@ class MyApp extends StatelessWidget {
               // 'add_contract': (_) => const AddContract(),
               'settings': (_) => const MainSettings(),
               // 'details_single_meter': (_) => DetailsSingleMeter(),
+              'reminder': (_) => const ReminderScreen(),
             },
           );
         },

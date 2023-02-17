@@ -168,12 +168,18 @@ class _AddScreenState extends State<AddScreen> {
           IconButton(
             onPressed: () {
               // _getTorch();
+              setState(() {});
               _torchController.getTorch();
             },
-            icon: Icon(
-              Icons.flashlight_on,
-              color: darkMode ? Colors.white : Colors.black,
-            ),
+            icon: _torchController.stateTorch
+                ?  const Icon(
+                    Icons.flashlight_on,
+                    // color: darkMode ? Colors.white : Colors.black,
+                  )
+                : const Icon(
+                    Icons.flashlight_off,
+                    // color: darkMode ? Colors.white : Colors.black,
+                  ),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/settings_screen/database_settings.dart';
+import '../../widgets/settings_screen/reading_reminder.dart';
 import '../../widgets/settings_screen/theme_title.dart';
 
 class MainSettings extends StatelessWidget {
@@ -17,10 +18,20 @@ class MainSettings extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              ThemeTitle(),
-              Divider(thickness: 0.5),
-              DatabaseExportImport(),
+            children: [
+              Text(
+                'Funktionen',
+                style: TextStyle(
+                    color: Theme.of(context).primaryColorLight, fontSize: 16),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const ReadingReminder(),
+              const Divider(thickness: 0.5),
+              const ThemeTitle(),
+              const Divider(thickness: 0.5),
+              const DatabaseExportImport(),
             ],
           ),
         ),

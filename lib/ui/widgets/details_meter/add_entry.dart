@@ -66,19 +66,18 @@ class AddEntry {
     }
   }
 
-  _calcUsage(){
+  _calcUsage() {
     final int count;
 
-    if(countString == 'none'){
+    if (countString == 'none') {
       count = 0;
-    }else{
+    } else {
       count = int.parse(countString);
     }
 
     final countController = int.parse(_countercontroller.text);
 
     return countController - count;
-
   }
 
   showBottomModel(BuildContext context) {
@@ -90,8 +89,8 @@ class AddEntry {
     } else {
       darkMode = false;
     }
-
     return showModalBottomSheet(
+      backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
@@ -100,92 +99,105 @@ class AddEntry {
       isScrollControlled: true,
       context: context,
       builder: (context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: Container(
-            height: 400,
-            padding: const EdgeInsets.all(25),
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  // crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: Container(
+                height: 400,
+                padding: const EdgeInsets.all(25),
+                child: Center(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      // crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Neuer Zählerstand',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Neuer Zählerstand',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {});
+                                _torchController.getTorch();
+                              },
+                              icon: _torchController.stateTorch
+                                  ? const Icon(
+                                      Icons.flashlight_on,
+                                      // color: darkMode
+                                      //     ? Colors.white
+                                      //     : Colors.black,
+                                    )
+                                  : const Icon(
+                                      Icons.flashlight_off,
+                                      // color: darkMode ? Colors.white : Colors.black,
+                                    ),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          onPressed: () {
-                            // _getTorch();
-                            _torchController.getTorch();
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        TextFormField(
+                          readOnly: true,
+                          textInputAction: TextInputAction.next,
+                          controller: _datecontroller
+                            ..text = _selectedDate != null
+                                ? DateFormat('dd.MM.yyyy')
+                                    .format(_selectedDate!)
+                                : '',
+                          onTap: () => _showDatePicker(context),
+                          decoration: const InputDecoration(
+                              icon: Icon(Icons.date_range),
+                              label: Text('Datum')),
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Bitte geben sie den Zählerstand an!';
+                            }
+                            if (int.parse(value) < 0) {
+                              return 'Bitte gebe eine positive Zahl an!';
+                            }
+                            return null;
                           },
-                          icon: Icon(
-                            Icons.flashlight_on,
-                            color: darkMode ? Colors.white : Colors.black,
-                          ),
+                          controller: _countercontroller,
+                          decoration: const InputDecoration(
+                              icon: Icon(Icons.onetwothree),
+                              label: Text('Zählerstand')),
                         ),
+                        const SizedBox(
+                          height: 30,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _saveEntry(context),
+                              icon: const Icon(Icons.check),
+                              label: const Text('Speichern'),
+                            ),
+                          ),
+                        )
                       ],
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    TextFormField(
-                      readOnly: true,
-                      textInputAction: TextInputAction.next,
-                      controller: _datecontroller
-                        ..text = _selectedDate != null
-                            ? DateFormat('dd.MM.yyyy').format(_selectedDate!)
-                            : '',
-                      onTap: () => _showDatePicker(context),
-                      decoration: const InputDecoration(
-                          icon: Icon(Icons.date_range), label: Text('Datum')),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Bitte geben sie den Zählerstand an!';
-                        }
-                        if (int.parse(value) < 0) {
-                          return 'Bitte gebe eine positive Zahl an!';
-                        }
-                        return null;
-                      },
-                      controller: _countercontroller,
-                      decoration: const InputDecoration(
-                          icon: Icon(Icons.onetwothree),
-                          label: Text('Zählerstand')),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _saveEntry(context),
-                          icon: const Icon(Icons.check),
-                          label: const Text('Speichern'),
-                        ),
-                      ),
-                    )
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

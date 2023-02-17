@@ -10,6 +10,8 @@ class TorchController {
 
   TorchController();
 
+  bool get stateTorch => _torch;
+
   Future<bool> _isTorchAvailable() async {
     try {
       return await _channel.invokeMethod(_torchAvailable) as bool;
