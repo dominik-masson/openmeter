@@ -5,9 +5,11 @@ const _primaryColor = Color(0xff32A287);
 const _darkColor = Color(0xff121B22);
 const _nightColor = Color(0xff000000);
 
+bool _materialDesign = true;
+
 ThemeData light = ThemeData(
   brightness: Brightness.light,
-  useMaterial3: true,
+  useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
   iconTheme: const IconThemeData(
@@ -17,7 +19,7 @@ ThemeData light = ThemeData(
 
 ThemeData dark = ThemeData(
   brightness: Brightness.dark,
-  useMaterial3: true,
+  useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
   backgroundColor: _darkColor,
@@ -32,7 +34,7 @@ ThemeData dark = ThemeData(
 
 ThemeData night = ThemeData(
   brightness: Brightness.dark,
-  useMaterial3: true,
+  useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
   backgroundColor: _nightColor,
@@ -99,7 +101,7 @@ class ThemeChanger extends ChangeNotifier {
     _pref.setString(keyTheme, _themeMode.toString());
   }
 
-  _saveNight() async{
+  _saveNight() async {
     await _initPrefs();
     _pref.setBool(keyNight, _nightMode);
   }

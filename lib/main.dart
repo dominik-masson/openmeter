@@ -26,15 +26,26 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  _cacheImages(BuildContext context) {
+    // reminder images
+    precacheImage(
+        const AssetImage('assets/icons/notifications_disable.png'), context);
+    precacheImage(
+        const AssetImage('assets/icons/notifications_enable.png'), context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    _cacheImages(context);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<ThemeChanger>.value(value: ThemeChanger()),
         ChangeNotifierProvider<CostProvider>.value(value: CostProvider()),
         ChangeNotifierProvider<SortProvider>.value(value: SortProvider()),
         ChangeNotifierProvider<RefreshProvider>.value(value: RefreshProvider()),
-        ChangeNotifierProvider<ReminderProvider>.value(value: ReminderProvider()),
+        ChangeNotifierProvider<ReminderProvider>.value(
+            value: ReminderProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {

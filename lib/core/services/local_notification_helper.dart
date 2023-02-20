@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -13,9 +15,13 @@ class LocalNotificationHelper {
 
   LocalNotificationHelper() {
     _localNotification = FlutterLocalNotificationsPlugin();
+    _initTimeZone();
+    _initLocalNotification();
+  }
+
+  Future<void> _initTimeZone() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Berlin'));
-    _initLocalNotification();
   }
 
   Future<void> _initLocalNotification() async {
@@ -34,9 +40,12 @@ class LocalNotificationHelper {
     request notification permission
       for android 13 and higher
    */
-  void requestPermission(){
-    if(Platform.isAndroid){
-      _localNotification.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
+  void requestPermission() {
+    if (Platform.isAndroid) {
+      _localNotification
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestPermission();
     }
   }
 
@@ -126,8 +135,8 @@ class LocalNotificationHelper {
   }
 
   void testNotification() async {
-    await _localNotification.show(
-        1, 'Test Ableseerinnerung', 'Dies ist ein Test!', _notificationDetails());
+    await _localNotification.show(1, 'Test Ableseerinnerung',
+        'Dies ist ein Test!', _notificationDetails());
   }
 
   void removeReminder() {
