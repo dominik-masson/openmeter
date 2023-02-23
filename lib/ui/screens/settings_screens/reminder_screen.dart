@@ -34,14 +34,9 @@ class _ReminderScreenState extends State<ReminderScreen> {
   int _selectedDay = 1;
 
   @override
-  void initState() {
+  initState() {
+    _activeReminder = ActiveReminder();
     super.initState();
-    _activeReminder = ActiveReminder(
-      selectedRepeat: _selectedRepeat,
-      selectedWeek: _selectedWeek,
-      selectedTime: _selectedTime,
-      selectedDay: _selectedDay,
-    );
   }
 
   _loadFromPrefs(BuildContext context, ReminderProvider reminderProvider) {
@@ -63,6 +58,13 @@ class _ReminderScreenState extends State<ReminderScreen> {
     final reminderProvider = Provider.of<ReminderProvider>(context);
 
     _loadFromPrefs(context, reminderProvider);
+
+    _activeReminder.setValues(
+      selectedRepeat: _selectedRepeat,
+      selectedWeek: _selectedWeek,
+      selectedTime: _selectedTime,
+      selectedDay: _selectedDay,
+    );
 
     return Scaffold(
       appBar: AppBar(

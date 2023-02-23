@@ -17,12 +17,14 @@ class ActiveReminder {
 
   final _monthDays = List.generate(30, (index) => index + 1, growable: false);
 
-  ActiveReminder({
+  ActiveReminder();
+
+  void setValues({
     required RepeatValues selectedRepeat,
     required String selectedWeek,
     required DateTime selectedTime,
     required int selectedDay,
-  }) {
+  }){
     _selectedRepeat = selectedRepeat;
     _selectedWeek = selectedWeek;
     _selectedTime = selectedTime;
