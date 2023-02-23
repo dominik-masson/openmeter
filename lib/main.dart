@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
 import 'core/provider/cost_provider.dart';
+import 'core/provider/display_awake_provider.dart';
 import 'core/provider/refresh_provider.dart';
 import 'core/provider/reminder_provider.dart';
 import 'core/provider/sort_provider.dart';
@@ -14,6 +15,8 @@ import 'ui/screens/settings_screens/reminder_screen.dart';
 import 'ui/widgets/bottom_nav_bar.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     Provider<LocalDatabase>(
       create: (context) => LocalDatabase(),
@@ -46,6 +49,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<RefreshProvider>.value(value: RefreshProvider()),
         ChangeNotifierProvider<ReminderProvider>.value(
             value: ReminderProvider()),
+        ChangeNotifierProvider<DisplayAwakeProvider>.value(
+            value: DisplayAwakeProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {

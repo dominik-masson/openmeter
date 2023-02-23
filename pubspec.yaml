@@ -54,6 +54,7 @@ dependencies:
   fl_chart: ^0.60.0
   permission_handler: ^10.2.0
   font_awesome_flutter: ^10.3.0
+  wakelock: ^0.6.2
   # Local Push Notification
   flutter_local_notifications: ^13.0.0
   timezone: ^0.9.1

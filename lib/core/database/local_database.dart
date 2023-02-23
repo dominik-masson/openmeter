@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
@@ -45,29 +44,29 @@ class LocalDatabase extends _$LocalDatabase {
     final appDir = await getApplicationDocumentsDirectory();
     final File file = File(p.join(appDir.path, 'meter.db'));
 
-    if(file.existsSync()){
+    if (file.existsSync()) {
       file.deleteSync();
     }
 
+    // file.copy(path);
     newDB.execute('VACUUM INTO ?', [file.path]);
 
-    newDB.dispose();
+    // https://github.com/simolus3/drift/issues/376
   }
 
   Future<void> deleteDB() async {
     const statement = 'PRAGMA foreign_keys = OFF';
     await customStatement(statement);
-    try{
+    try {
       transaction(() async {
-        for(final table in allTables){
+        for (final table in allTables) {
           await delete(table).go();
         }
       });
-    }finally{
+    } finally {
       await customStatement(statement);
     }
   }
-
 }
 
 LazyDatabase _openConnection() {
