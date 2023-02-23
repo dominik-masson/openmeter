@@ -20,6 +20,8 @@ class DisplayAwakeProvider extends ChangeNotifier {
 
     _awake = _prefs.getBool(_keyAwake) ?? false;
 
+    Wakelock.toggle(enable: _awake);
+
     notifyListeners();
   }
 
