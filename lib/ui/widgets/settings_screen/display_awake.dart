@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/provider/display_awake_provider.dart';
+import '../../../core/provider/small_feature_provider.dart';
 
 class DisplayAwake extends StatefulWidget {
   const DisplayAwake({Key? key}) : super(key: key);
@@ -16,7 +16,7 @@ class _DisplayAwakeState extends State<DisplayAwake> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<DisplayAwakeProvider>(context);
+    final provider = Provider.of<SmallFeatureProvider>(context);
 
     _awake = provider.stateAwake;
 

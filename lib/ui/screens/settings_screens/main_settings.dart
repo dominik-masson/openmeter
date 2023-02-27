@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/settings_screen/active_torch.dart';
 import '../../widgets/settings_screen/database_settings.dart';
 import '../../widgets/settings_screen/display_awake.dart';
 import '../../widgets/settings_screen/reading_reminder.dart';
@@ -31,6 +32,8 @@ class MainSettings extends StatelessWidget {
               const ReadingReminder(),
               const SizedBox(height: 5,),
               const DisplayAwake(),
+              const SizedBox(height: 5,),
+              const ActiveTorch(),
               const Divider(thickness: 0.5),
               const ThemeTitle(),
               const Divider(thickness: 0.5),

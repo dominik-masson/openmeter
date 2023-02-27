@@ -13,7 +13,8 @@ class DetailsSingleMeter extends StatefulWidget {
   final RoomData? room;
   final String count;
 
-  const DetailsSingleMeter({Key? key, required this.meter, required this.room, required this.count})
+  const DetailsSingleMeter(
+      {Key? key, required this.meter, required this.room, required this.count})
       : super(key: key);
 
   @override
@@ -21,7 +22,6 @@ class DetailsSingleMeter extends StatefulWidget {
 }
 
 class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
-
   String _meterName = '';
   String _roomName = '';
   late MeterData _meter;
@@ -45,7 +45,6 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,7 +57,9 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
         ),
         actions: [
           IconButton(
-            onPressed: () => _addEntry.showBottomModel(context),
+            onPressed: () {
+              _addEntry.showBottomModel(context);
+            },
             icon: const Icon(Icons.add),
           ),
           IconButton(

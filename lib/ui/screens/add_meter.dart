@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 import '../../core/provider/refresh_provider.dart';
-import '../../core/provider/theme_changer.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
 
@@ -152,14 +151,8 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var getMode =
-        Provider.of<ThemeChanger>(context, listen: false).getThemeMode;
-    bool darkMode;
-    if (getMode == ThemeMode.dark || getMode == ThemeMode.system) {
-      darkMode = true;
-    } else {
-      darkMode = false;
-    }
+
+    bool isTorchOn = _torchController.stateTorch;
 
     return Scaffold(
       appBar: AppBar(
@@ -167,11 +160,12 @@ class _AddScreenState extends State<AddScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              // _getTorch();
-              setState(() {});
+              setState(() {
+                isTorchOn = !isTorchOn;
+              });
               _torchController.getTorch();
             },
-            icon: _torchController.stateTorch
+            icon: isTorchOn
                 ?  const Icon(
                     Icons.flashlight_on,
                     // color: darkMode ? Colors.white : Colors.black,

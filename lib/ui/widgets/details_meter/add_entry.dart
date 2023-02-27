@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
-import '../../../core/provider/theme_changer.dart';
+import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/services/torch_controller.dart';
 
 class AddEntry {
@@ -16,9 +16,10 @@ class AddEntry {
   final MeterData meter;
   final String countString;
 
-  AddEntry({required this.meter, required this.countString});
-
   final TorchController _torchController = TorchController();
+  bool _stateTorch = false;
+
+  AddEntry({required this.meter, required this.countString});
 
   void dispose() {
     _datecontroller.dispose();
@@ -42,7 +43,7 @@ class AddEntry {
     });
   }
 
-  _saveEntry(BuildContext context) async {
+  _saveEntry(BuildContext context, SmallFeatureProvider torchProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
@@ -59,7 +60,13 @@ class AddEntry {
             content: Text('Eintrag wird hinzugefügt!'),
           ),
         );
-        Navigator.of(context).pop();
+
+        if (_torchController.stateTorch && torchProvider.stateTorch) {
+          _torchController.getTorch();
+          _stateTorch = false;
+        }
+
+        Navigator.pop(context, true);
         _countercontroller.clear();
         _selectedDate = DateTime.now();
       });
@@ -81,14 +88,16 @@ class AddEntry {
   }
 
   showBottomModel(BuildContext context) {
-    var getMode =
-        Provider.of<ThemeChanger>(context, listen: false).getThemeMode;
-    bool darkMode;
-    if (getMode == ThemeMode.dark || getMode == ThemeMode.system) {
-      darkMode = true;
-    } else {
-      darkMode = false;
+    final torchProvider =
+        Provider.of<SmallFeatureProvider>(context, listen: false);
+
+    if (torchProvider.stateTorch && !_torchController.stateTorch) {
+      _torchController.getTorch();
+      _stateTorch = true;
     }
+
+    bool isTorchOn = _torchController.stateTorch;
+
     return showModalBottomSheet(
       backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
@@ -109,89 +118,94 @@ class AddEntry {
                 child: Center(
                   child: Form(
                     key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      // crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Neuer Zählerstand',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        // crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Neuer Zählerstand',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isTorchOn = !isTorchOn;
+                                  });
+                                  _torchController.getTorch();
+                                },
+                                icon: isTorchOn
+                                    ? const Icon(
+                                        Icons.flashlight_on,
+                                        // color: darkMode
+                                        //     ? Colors.white
+                                        //     : Colors.black,
+                                      )
+                                    : const Icon(
+                                        Icons.flashlight_off,
+                                        // color: darkMode ? Colors.white : Colors.black,
+                                      ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          TextFormField(
+                            readOnly: true,
+                            textInputAction: TextInputAction.next,
+                            controller: _datecontroller
+                              ..text = _selectedDate != null
+                                  ? DateFormat('dd.MM.yyyy')
+                                      .format(_selectedDate!)
+                                  : '',
+                            onTap: () => _showDatePicker(context),
+                            decoration: const InputDecoration(
+                                icon: Icon(Icons.date_range),
+                                label: Text('Datum')),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          TextFormField(
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Bitte geben sie den Zählerstand an!';
+                              }
+                              if (int.parse(value) < 0) {
+                                return 'Bitte gebe eine positive Zahl an!';
+                              }
+                              return null;
+                            },
+                            controller: _countercontroller,
+                            decoration: const InputDecoration(
+                                icon: Icon(Icons.onetwothree),
+                                label: Text('Zählerstand')),
+                          ),
+                          const SizedBox(
+                            height: 30,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () =>
+                                    _saveEntry(context, torchProvider),
+                                icon: const Icon(Icons.check),
+                                label: const Text('Speichern'),
                               ),
                             ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {});
-                                _torchController.getTorch();
-                              },
-                              icon: _torchController.stateTorch
-                                  ? const Icon(
-                                      Icons.flashlight_on,
-                                      // color: darkMode
-                                      //     ? Colors.white
-                                      //     : Colors.black,
-                                    )
-                                  : const Icon(
-                                      Icons.flashlight_off,
-                                      // color: darkMode ? Colors.white : Colors.black,
-                                    ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        TextFormField(
-                          readOnly: true,
-                          textInputAction: TextInputAction.next,
-                          controller: _datecontroller
-                            ..text = _selectedDate != null
-                                ? DateFormat('dd.MM.yyyy')
-                                    .format(_selectedDate!)
-                                : '',
-                          onTap: () => _showDatePicker(context),
-                          decoration: const InputDecoration(
-                              icon: Icon(Icons.date_range),
-                              label: Text('Datum')),
-                        ),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        TextFormField(
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Bitte geben sie den Zählerstand an!';
-                            }
-                            if (int.parse(value) < 0) {
-                              return 'Bitte gebe eine positive Zahl an!';
-                            }
-                            return null;
-                          },
-                          controller: _countercontroller,
-                          decoration: const InputDecoration(
-                              icon: Icon(Icons.onetwothree),
-                              label: Text('Zählerstand')),
-                        ),
-                        const SizedBox(
-                          height: 30,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () => _saveEntry(context),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Speichern'),
-                            ),
-                          ),
-                        )
-                      ],
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -200,6 +214,10 @@ class AddEntry {
           },
         );
       },
-    );
+    ).then((value) {
+      if (_torchController.stateTorch && _stateTorch) {
+        _torchController.getTorch();
+      }
+    });
   }
 }
