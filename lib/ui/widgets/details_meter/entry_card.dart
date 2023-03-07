@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:openmeter/ui/widgets/details_meter/details_entry.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
-import '../../../utils/meter_typ.dart';
+import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/entry_card_provider.dart';
 
 class EntryCard extends StatelessWidget {
   final MeterData meter;
+  final DetailsEntry _detailsEntry = DetailsEntry();
 
-  const EntryCard({Key? key, required this.meter}) : super(key: key);
+  EntryCard({Key? key, required this.meter}) : super(key: key);
 
   _deleteEntry(BuildContext context, int entryId) {
     showDialog(
@@ -42,6 +45,9 @@ class EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final costProvider = Provider.of<CostProvider>(context, listen: false);
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -57,6 +63,7 @@ class EntryCard extends StatelessWidget {
                 .watchAllEntries(meter.id),
             builder: (context, snapshot) {
               final entry = snapshot.data?.reversed.toList();
+
               if (entry == null || entry.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(8.0),
@@ -68,6 +75,7 @@ class EntryCard extends StatelessWidget {
                   ),
                 );
               }
+
               return SizedBox(
                 height: 150,
                 width: double.infinity,
@@ -77,48 +85,117 @@ class EntryCard extends StatelessWidget {
                   itemCount: entry.length,
                   itemBuilder: (context, index) {
                     final item = entry[index];
-                    return SizedBox(
-                      width: 180,
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    DateFormat('dd.MM.yyyy').format(item.date),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
+                    Entrie reservedItem;
+                    final reserved = entry.reversed.toList();
+
+                    int usage = entryProvider.getUsage(item);
+
+                    String unit = meter.unit;
+
+                    return GestureDetector(
+                      onTap: () async {
+                        var value = await _detailsEntry.getDetailsAlert(
+                          context: context,
+                          entry: item,
+                          meter: meter,
+                          usage: usage,
+                          entryProvider: entryProvider,
+                          costProvider: costProvider,
+                        );
+
+                        if (value == null) {
+                          entryProvider.setStateNote(false);
+                        }
+                      },
+                      child: SizedBox(
+                        width: 240,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      DateFormat('dd.MM.yyyy')
+                                          .format(item.date),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () =>
-                                        _deleteEntry(context, item.id),
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.grey,
+                                    IconButton(
+                                      onPressed: () {
+                                        if (entry.length > 1) {
+                                          reservedItem = reserved
+                                              .elementAt(entry.length - 2);
+                                          entryProvider
+                                              .setOldDate(reservedItem.date);
+                                          entryProvider.setCurrentCount(
+                                              reservedItem.count.toString());
+                                        } else {
+                                          entryProvider.setCurrentCount('none');
+                                        }
+                                        _deleteEntry(context, item.id);
+                                      },
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.grey,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const Divider(),
-                              const SizedBox(
-                                height: 8,
-                              ),
-                              Text(
-                                '${item.count} ${meterTyps[meter.typ]['einheit']}',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              const Text(
-                                'Zählerstand',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
+                                  ],
+                                ),
+                                const Divider(),
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Text(
+                                          '${item.count} $unit',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        const Text(
+                                          'Zählerstand',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                    if (usage != -1)
+                                      Column(
+                                        children: [
+                                          Text(
+                                            '+$usage $unit',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: entryProvider.getColors(
+                                                  item.count, usage),
+                                            ),
+                                          ),
+                                          Text(
+                                            'innerhalb ${item.days} Tagen',
+                                            style: const TextStyle(
+                                                color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                    if (usage == -1)
+                                      const Text(
+                                        'Erstablesung',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

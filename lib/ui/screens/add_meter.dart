@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/entry_card_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
@@ -23,6 +24,7 @@ class _AddScreenState extends State<AddScreen> {
   final TextEditingController _meternumber = TextEditingController();
   final TextEditingController _meternote = TextEditingController();
   final TextEditingController _metervalue = TextEditingController();
+  final TextEditingController _unitController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   String _meterTyp = 'Stromzähler';
@@ -65,12 +67,17 @@ class _AddScreenState extends State<AddScreen> {
     super.dispose();
   }
 
+
+  /*
+    init values when meter is to be updated
+   */
   void _setController() {
     _pageTitle = widget.meter!.number;
     _meternumber.text = widget.meter!.number;
     _meternote.text = widget.meter!.note;
     _meterTyp = widget.meter!.typ;
     _updateMeter = true;
+    _unitController.text = widget.meter!.unit;
   }
 
   Future<void> _saveEntry() async {
@@ -79,12 +86,16 @@ class _AddScreenState extends State<AddScreen> {
     if (_meternote.text.isEmpty) {
       _meternote.text = '';
     }
+    if(_unitController.text.isEmpty){
+      _unitController.text = '';
+    }
 
     if (_formKey.currentState!.validate()) {
       final meter = MeterCompanion(
         typ: drift.Value(_meterTyp),
         number: drift.Value(_meternumber.text),
         note: drift.Value(_meternote.text),
+        unit: drift.Value(_unitController.text),
       );
 
       if (!_updateMeter) {
@@ -103,7 +114,8 @@ class _AddScreenState extends State<AddScreen> {
           count: drift.Value(int.parse(_metervalue.text)),
           date: drift.Value(DateTime.now()),
           meter: drift.Value(meterId),
-          usage: const drift.Value(0),
+          usage: const drift.Value(-1),
+          days: const drift.Value(-1),
         );
 
         await db.entryDao.createEntry(entry).then((value) {
@@ -118,10 +130,12 @@ class _AddScreenState extends State<AddScreen> {
         Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
 
         MeterData meterData = MeterData(
-            typ: _meterTyp,
-            note: _meternote.text,
-            number: _meternumber.text,
-            id: widget.meter!.id);
+          typ: _meterTyp,
+          note: _meternote.text,
+          number: _meternumber.text,
+          id: widget.meter!.id,
+          unit: _unitController.text,
+        );
 
         if (_roomId != -2) {
           if (_roomId == -1) {
@@ -151,7 +165,6 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     bool isTorchOn = _torchController.stateTorch;
 
     return Scaffold(
@@ -166,7 +179,7 @@ class _AddScreenState extends State<AddScreen> {
               _torchController.getTorch();
             },
             icon: isTorchOn
-                ?  const Icon(
+                ? const Icon(
                     Icons.flashlight_on,
                     // color: darkMode ? Colors.white : Colors.black,
                   )
@@ -187,6 +200,10 @@ class _AddScreenState extends State<AddScreen> {
               child: Column(
                 children: [
                   _dropdownMeterTyp(context),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  _unitInput(context),
                   const SizedBox(
                     height: 15,
                   ),
@@ -232,7 +249,7 @@ class _AddScreenState extends State<AddScreen> {
                         // icon: Icon(Icons.assessment_outlined),
                         icon: FaIcon(
                           FontAwesomeIcons.chartSimple,
-                          size: 18,
+                          size: 16,
                         ),
                       ),
                     ),
@@ -263,6 +280,27 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
+  Widget _unitInput(BuildContext context) {
+    if(_unitController.text.isEmpty){
+      _unitController.text = meterTyps[_meterTyp]['einheit'];
+    }
+
+    return TextFormField(
+      textInputAction: TextInputAction.next,
+      decoration: const InputDecoration(
+        icon: FaIcon(FontAwesomeIcons.ruler, size: 16,),
+        label: Text('Einheit'),
+      ),
+      controller: _unitController,
+      validator: (value) {
+        if(value == null ||value.isEmpty){
+          return 'Bitte geben Sie eine Einheit an!';
+        }
+        return null;
+      },
+    );
+  }
+
   Widget _dropdownMeterTyp(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
@@ -278,7 +316,7 @@ class _AddScreenState extends State<AddScreen> {
         decoration: const InputDecoration(
           label: Text('Zählertyp'),
           icon: Icon(Icons.gas_meter_outlined),
-          contentPadding: EdgeInsets.all(0.0),
+          // contentPadding: EdgeInsets.all(0.0),
           isDense: true,
         ),
         value: _meterTyp,
@@ -298,6 +336,7 @@ class _AddScreenState extends State<AddScreen> {
         }).toList(),
         onChanged: (value) {
           _meterTyp = value!;
+          _unitController.text = meterTyps[_meterTyp]['einheit'];
         },
       ),
     );
@@ -334,7 +373,7 @@ class _AddScreenState extends State<AddScreen> {
                   // icon: Icon(Icons.bedroom_parent_outlined),
                   icon: FaIcon(
                     FontAwesomeIcons.bed,
-                    size: 18,
+                    size: 16,
                   ),
                 ),
                 items: _roomList,
@@ -379,7 +418,7 @@ class _AddScreenState extends State<AddScreen> {
               // icon: Icon(Icons.bedroom_parent_outlined),
               icon: FaIcon(
                 FontAwesomeIcons.bed,
-                size: 18,
+                size: 16,
               ),
             ),
             value: _roomId == -2 ? -1 : _roomId,

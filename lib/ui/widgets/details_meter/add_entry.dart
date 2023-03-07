@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/services/torch_controller.dart';
 
@@ -14,12 +15,11 @@ class AddEntry {
   DateTime? _selectedDate = DateTime.now();
 
   final MeterData meter;
-  final String countString;
 
   final TorchController _torchController = TorchController();
   bool _stateTorch = false;
 
-  AddEntry({required this.meter, required this.countString});
+  AddEntry({required this.meter});
 
   void dispose() {
     _datecontroller.dispose();
@@ -43,15 +43,20 @@ class AddEntry {
     });
   }
 
-  _saveEntry(BuildContext context, SmallFeatureProvider torchProvider) async {
+  _saveEntry(BuildContext context, SmallFeatureProvider torchProvider,
+      EntryCardProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    String currentCount = entryProvider.getCurrentCount;
+    DateTime oldDate = entryProvider.getOldDate;
 
     if (_formKey.currentState!.validate()) {
       final entry = EntriesCompanion(
         meter: drift.Value(meter.id),
         date: drift.Value(_selectedDate!),
         count: drift.Value(int.parse(_countercontroller.text)),
-        usage: drift.Value(_calcUsage()),
+        usage: drift.Value(_calcUsage(currentCount)),
+        days: drift.Value(_calcDays(_selectedDate!, oldDate)),
       );
 
       await db.entryDao.createEntry(entry).then((value) {
@@ -66,6 +71,8 @@ class AddEntry {
           _stateTorch = false;
         }
 
+        entryProvider.setCurrentCount(_countercontroller.text);
+        entryProvider.setOldDate(_selectedDate!);
         Navigator.pop(context, true);
         _countercontroller.clear();
         _selectedDate = DateTime.now();
@@ -73,13 +80,13 @@ class AddEntry {
     }
   }
 
-  _calcUsage() {
-    final int count;
+  int _calcUsage(String currentCount) {
+    int count = 0;
 
-    if (countString == 'none') {
-      count = 0;
+    if (currentCount == 'none') {
+      return -1;
     } else {
-      count = int.parse(countString);
+      count = int.parse(currentCount);
     }
 
     final countController = int.parse(_countercontroller.text);
@@ -87,7 +94,14 @@ class AddEntry {
     return countController - count;
   }
 
-  showBottomModel(BuildContext context) {
+  int _calcDays(DateTime newDate, DateTime oldDate) {
+    return newDate.difference(oldDate).inDays;
+  }
+
+  showBottomModel(
+    BuildContext context,
+    EntryCardProvider entryProvider,
+  ) {
     final torchProvider =
         Provider.of<SmallFeatureProvider>(context, listen: false);
 
@@ -197,8 +211,8 @@ class AddEntry {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _saveEntry(context, torchProvider),
+                                onPressed: () => _saveEntry(
+                                    context, torchProvider, entryProvider),
                                 icon: const Icon(Icons.check),
                                 label: const Text('Speichern'),
                               ),

@@ -60,11 +60,11 @@ class CostProvider extends ChangeNotifier {
 
   setValues(double basicPrice, double energyPrice, double discount) {
     _basicPrice = basicPrice; // Grundpreis
-    _energyPrice = energyPrice; // Arbteispreis
+    _energyPrice = energyPrice; // Arbeitspreis
     _discount = discount; // Abschlag
   }
 
-  calcCost() {
+  String calcCost() {
     int count = _lastCount - _firstCount;
     double wastageNet = _energyPrice * count / 100;
     double wastage = wastageNet + _basicPrice;
@@ -74,13 +74,17 @@ class CostProvider extends ChangeNotifier {
     return _finalCost.toStringAsFixed(2);
   }
 
-  calcPayedDiscount() {
+  String calcPayedDiscount() {
     _finalPayedDiscount = _sumMonth * _discount;
     return _finalPayedDiscount.toStringAsFixed(2);
   }
 
   double calcRest() {
     return _finalPayedDiscount - _finalCost;
+  }
+
+  double calcUsage(int usage) {
+    return (usage * _energyPrice) / 100;
   }
 
   void resetValues() {

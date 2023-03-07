@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 
+import '../../core/provider/entry_card_provider.dart';
 import '../widgets/details_meter/add_entry.dart';
 import '../widgets/details_meter/cost_card.dart';
 import '../widgets/details_meter/entry_card.dart';
@@ -11,10 +13,8 @@ import 'add_meter.dart';
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
   final RoomData? room;
-  final String count;
 
-  const DetailsSingleMeter(
-      {Key? key, required this.meter, required this.room, required this.count})
+  const DetailsSingleMeter({Key? key, required this.meter, required this.room})
       : super(key: key);
 
   @override
@@ -35,7 +35,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     _meter = widget.meter;
     _room = widget.room;
     _roomName = widget.room?.name ?? '';
-    _addEntry = AddEntry(meter: _meter, countString: widget.count);
+    _addEntry = AddEntry(meter: _meter);
     super.initState();
   }
 
@@ -47,6 +47,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   @override
   Widget build(BuildContext context) {
+    final entryProvider = Provider.of<EntryCardProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_meterName),
@@ -58,7 +60,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
         actions: [
           IconButton(
             onPressed: () {
-              _addEntry.showBottomModel(context);
+              _addEntry.showBottomModel(context, entryProvider);
             },
             icon: const Icon(Icons.add),
           ),

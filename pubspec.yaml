@@ -51,15 +51,16 @@ dependencies:
   intl: ^0.17.0
   grouped_list: ^5.1.2
   sticky_grouped_list: ^3.1.0
-  fl_chart: ^0.60.0
+  fl_chart: ^0.61.0
   permission_handler: ^10.2.0
   font_awesome_flutter: ^10.3.0
   wakelock: ^0.6.2
+
   # Local Push Notification
   flutter_local_notifications: ^13.0.0
   timezone: ^0.9.1
   # App Native Settings
-  flutter_launcher_icons: ^0.11.0
+  flutter_launcher_icons: ^0.12.0
   rename: ^2.0.1
   flutter_native_splash: ^2.2.16
   file_picker: ^5.2.4

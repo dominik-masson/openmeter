@@ -144,14 +144,14 @@ class _DetailsRoomState extends State<DetailsRoom> {
                       stream: db.entryDao.getNewestEntry(meter.id),
                       builder: (context, snapshot) {
                         final entry = snapshot.data?[0];
-                        final String date;
+                        final DateTime? date;
                         final String count;
 
                         if (entry == null) {
-                          date = 'none';
+                          date = null;
                           count = 'none';
                         } else {
-                          date = DateFormat('dd.MM.yyyy').format(entry.date);
+                          date = entry.date;
                           count = entry.count.toString();
                         }
 

@@ -6,5 +6,5 @@ class Meter extends Table{
   TextColumn get typ => text()();
   TextColumn get note => text()();
   TextColumn get number => text()();
-
+  TextColumn get unit => text()();
 }

@@ -96,26 +96,28 @@ class _MeterCardListState extends State<MeterCardList> {
                   builder: (context, snapshot2) {
                     final entryList = snapshot2.data;
 
-                    final String date;
+                    final DateTime? date;
                     final String count;
                     final Entrie entry;
 
                     if (entryList == null || entryList.isEmpty) {
-                      date = 'none';
+                      date = null;
                       count = 'none';
                     } else {
                       entry = entryList[0];
 
-                      date = DateFormat('dd.MM.yyyy').format(entry.date);
+                      // date = DateFormat('dd.MM.yyyy').format(entry.date);
+                      date = entry.date;
                       count = entry.count.toString();
                     }
 
                     return _meterCard.getCard(
-                        context: context,
-                        meter: meterItem,
-                        room: element.room,
-                        date: date,
-                        count: count);
+                      context: context,
+                      meter: meterItem,
+                      room: element.room,
+                      date: date,
+                      count: count,
+                    );
                   },
                 );
               },

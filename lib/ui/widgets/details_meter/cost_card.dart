@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/entry_card_provider.dart';
 
 class CostBar extends StatefulWidget {
   final MeterData meter;
@@ -51,6 +52,7 @@ class _CostBarState extends State<CostBar> {
       initialDate: firstDate ? _oneYearEarly! : DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 10),
       lastDate: DateTime.now(),
+      locale: const Locale('de', ''),
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;
@@ -75,7 +77,11 @@ class _CostBarState extends State<CostBar> {
       builder: (context) => AlertDialog(
         title: const Text('Infos zu Werten'),
         content: const Text(
-            'Alle errechneten Werte sind nur grobe Schätzungen und spiegeln nicht zwangsweise die Realität wieder.'),
+          'Alle errechneten Werte sind nur grobe Schätzungen und spiegeln nicht zwangsweise die Realität wieder.',
+          style: TextStyle(
+            fontSize: 16,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -92,7 +98,11 @@ class _CostBarState extends State<CostBar> {
       builder: (context) => AlertDialog(
         title: const Text('Fehler beim Datum'),
         content: const Text(
-            'Ein gewähltes Datum stimmt nicht mit den vorhandenen Einträgen überein. Bitte wähle ein neues Datum um die Werte zu berechnen!'),
+          'Ein gewähltes Datum stimmt nicht mit den vorhandenen Einträgen überein. Bitte wähle ein neues Datum um die Werte zu berechnen!',
+          style: TextStyle(
+            fontSize: 16,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -133,6 +143,8 @@ class _CostBarState extends State<CostBar> {
   Widget build(BuildContext context) {
     final costProvider = Provider.of<CostProvider>(context);
     final db = Provider.of<LocalDatabase>(context);
+    final entryCardProvider =
+        Provider.of<EntryCardProvider>(context, listen: false);
 
     final months = _calcDifferenceMont();
 
@@ -163,23 +175,27 @@ class _CostBarState extends State<CostBar> {
             final contractData = snapshot.data;
 
             if (contractData == null) {
+              entryCardProvider.setContractData(false);
               return Container();
+            } else {
+              entryCardProvider.setContractData(true);
             }
 
-            if (entryData.length >= 11 && countValues.isNotEmpty) {
-              costProvider.setValues(
-                contractData.basicPrice,
-                contractData.energyPrice,
-                contractData.discount,
-              );
+            costProvider.setValues(
+              contractData.basicPrice,
+              contractData.energyPrice,
+              contractData.discount,
+            );
+            costProvider.setSumMont(months);
 
-              costProvider.setSumMont(months);
-            }
-
-            return _card(
+            if(entryData.length > 11) {
+              return _card(
               context,
               costProvider,
             );
+            } else{
+              return Container();
+            }
           },
         );
       },
@@ -219,7 +235,6 @@ class _CostBarState extends State<CostBar> {
                   ),
                 ],
               ),
-
             ],
           ),
           SizedBox(
@@ -313,6 +328,4 @@ class _CostBarState extends State<CostBar> {
       ),
     );
   }
-
-
 }

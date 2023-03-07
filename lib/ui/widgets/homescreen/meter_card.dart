@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
 import '../../../utils/meter_typ.dart';
 
 class MeterCard {
-
   MeterCard();
-
 
   Future<bool> _deleteMeter(
       BuildContext context, int meterId, RoomData? room) async {
@@ -50,12 +50,21 @@ class MeterCard {
     required BuildContext context,
     required MeterData meter,
     RoomData? room,
-    required String date,
+    required DateTime? date,
     required String count,
   }) {
     final sortProvider = Provider.of<SortProvider>(context);
 
     String roomName = room == null ? '' : room.name;
+
+    final entryProvider = Provider.of<EntryCardProvider>(context, listen: false);
+
+    String dateText = 'none';
+
+    if(date != null){
+      dateText = DateFormat('dd.MM.yyyy').format(date);
+    }
+
 
     return Dismissible(
       key: Key('${meter.id}'),
@@ -75,13 +84,15 @@ class MeterCard {
       ),
       child: GestureDetector(
         onTap: () {
+
+              entryProvider.setCurrentCount(count);
+              entryProvider.setOldDate(date ?? DateTime.now());
           Navigator.of(context)
               .push(
             MaterialPageRoute(
               builder: (context) => DetailsSingleMeter(
                 meter: meter,
                 room: room,
-                count: count,
               ),
             ),
           )
@@ -140,7 +151,7 @@ class MeterCard {
                       Column(
                         children: [
                           Text(
-                            '$count ${meterTyps[meter.typ]['einheit']}',
+                            '$count ${meter.unit}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           const Text(
@@ -165,7 +176,7 @@ class MeterCard {
                     height: 10,
                   ),
                   Text(
-                    'zuletzt geändert: $date',
+                    'zuletzt geändert: $dateText',
                   ),
                 ],
               ),

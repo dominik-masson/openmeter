@@ -112,16 +112,17 @@ class _AddContractState extends State<AddContract> {
 
       if (!_isUpdate) {
         final contract = ContractCompanion(
-            meterTyp: drift.Value(_meterTyp),
-            provider: drift.Value(providerId),
-            basicPrice: drift.Value(
-                double.parse(_basicPrice.text.replaceAll(',', '.'))),
-            energyPrice: drift.Value(
-                double.parse(_energyPrice.text.replaceAll(',', '.'))),
-            discount:
-                drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
-            bonus: drift.Value(bonus),
-            note: drift.Value(_note.text));
+          meterTyp: drift.Value(_meterTyp),
+          provider: drift.Value(providerId),
+          basicPrice:
+              drift.Value(double.parse(_basicPrice.text.replaceAll(',', '.'))),
+          energyPrice:
+              drift.Value(double.parse(_energyPrice.text.replaceAll(',', '.'))),
+          discount:
+              drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
+          bonus: drift.Value(bonus),
+          note: drift.Value(_note.text),
+        );
 
         await db.contractDao.createContract(contract).then((value) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -132,6 +133,8 @@ class _AddContractState extends State<AddContract> {
           Navigator.of(context).pop();
         });
       } else {
+        // Update contract
+
         if (_providerExpand || _providerName.text.isNotEmpty) {
           if (_notice.text.isEmpty) {
             notice = 0;
@@ -187,7 +190,7 @@ class _AddContractState extends State<AddContract> {
   }
 
   void _deleteProvider() async {
-    final db = Provider.of<LocalDatabase>(context,listen: false);
+    final db = Provider.of<LocalDatabase>(context, listen: false);
 
     await db.contractDao.deleteProvider(widget.provider!.uid).then((value) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -198,11 +201,10 @@ class _AddContractState extends State<AddContract> {
     });
 
     setState(() {
-        _providerName.clear();
-        _contractNumber.clear();
-        _notice.clear();
+      _providerName.clear();
+      _contractNumber.clear();
+      _notice.clear();
     });
-
   }
 
   void _showDatePicker(BuildContext context, String typ) async {
@@ -211,7 +213,7 @@ class _AddContractState extends State<AddContract> {
       initialDate: DateTime.now(),
       firstDate: DateTime(DateTime.now().year - 10),
       lastDate: DateTime(DateTime.now().year + 10),
-      locale: const Locale('de',''),
+      locale: const Locale('de', ''),
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;

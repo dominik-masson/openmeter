@@ -8,4 +8,6 @@ class Entries extends Table{
   IntColumn get count => integer()();
   IntColumn get usage => integer()();
   DateTimeColumn get date => dateTime()();
+  IntColumn get days => integer()();
+  TextColumn get note => text().nullable()();
 }
