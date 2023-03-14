@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
+import 'core/provider/chart_provider.dart';
 import 'core/provider/cost_provider.dart';
 import 'core/provider/entry_card_provider.dart';
 import 'core/provider/small_feature_provider.dart';
@@ -36,10 +37,14 @@ class MyApp extends StatelessWidget {
         const AssetImage('assets/icons/notifications_disable.png'), context);
     precacheImage(
         const AssetImage('assets/icons/notifications_enable.png'), context);
+
+    // chart image
+    precacheImage(const AssetImage('assets/icons/no_data.png'), context);
   }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsFlutterBinding.ensureInitialized();
     _cacheImages(context);
 
     return MultiProvider(
@@ -52,7 +57,9 @@ class MyApp extends StatelessWidget {
             value: ReminderProvider()),
         ChangeNotifierProvider<SmallFeatureProvider>.value(
             value: SmallFeatureProvider()),
-        ChangeNotifierProvider<EntryCardProvider>.value(value: EntryCardProvider()),
+        ChangeNotifierProvider<EntryCardProvider>.value(
+            value: EntryCardProvider()),
+        ChangeNotifierProvider<ChartProvider>.value(value: ChartProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {
