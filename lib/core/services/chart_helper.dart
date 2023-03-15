@@ -9,13 +9,17 @@ class ChartHelper {
       result.addAll({entries[i].date.millisecondsSinceEpoch: entries[i].count});
 
       for (int j = i + 1; j < entries.length; j++) {
-
         if (entries[i].date.month == entries[j].date.month &&
             entries[i].date.year == entries[j].date.year) {
           int count = entries[j].count + entries[j].usage;
-          result.update(
-              entries[i].date.millisecondsSinceEpoch, (value) => value = count);
-          i++;
+
+          if (result.containsKey(entries[i].date.millisecondsSinceEpoch)) {
+            result.update(entries[i].date.millisecondsSinceEpoch,
+                (value) => value = count);
+            i++;
+          } else {
+            i++;
+          }
         }
       }
       i++;
