@@ -10,18 +10,20 @@ import 'daos/contract_dao.dart';
 import 'daos/entry_dao.dart';
 import 'daos/meter_dao.dart';
 import 'daos/room_dao.dart';
+import 'daos/tags_dao.dart';
 import 'tables/contract.dart';
 import 'tables/entries.dart';
 import 'tables/meter.dart';
 import 'tables/room.dart';
+import 'tables/tags.dart';
 
 part 'local_database.g.dart';
 
 // create => flutter pub run build_runner build
 
 @DriftDatabase(
-    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider],
-    daos: [MeterDao, EntryDao, RoomDao, ContractDao])
+    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider, Tags],
+    daos: [MeterDao, EntryDao, RoomDao, ContractDao, TagsDao])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 

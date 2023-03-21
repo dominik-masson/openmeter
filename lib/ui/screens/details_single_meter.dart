@@ -18,8 +18,9 @@ import 'add_meter.dart';
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
   final RoomData? room;
+  final List<String> tagsId;
 
-  const DetailsSingleMeter({Key? key, required this.meter, required this.room})
+  const DetailsSingleMeter({Key? key, required this.meter, required this.room, required this.tagsId})
       : super(key: key);
 
   @override
@@ -103,6 +104,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                     builder: (context) => AddScreen(
                       meter: _meter,
                       room: _room,
+                      tagsId: widget.tagsId,
                     ),
                   )).then((value) {
                 if (value == null) {

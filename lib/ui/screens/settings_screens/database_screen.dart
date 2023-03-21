@@ -74,19 +74,20 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     });
   }
 
- _deleteDB(LocalDatabase db) async {
-   showDialog(
-     context: context,
-     builder: (context) => AlertDialog(
-       title: const Text('Zurücksetzen?'),
-       content: const Text('Möchten Sie Ihre Datenbank wirklich zurücksetzen und somit alle Daten löschen?'),
-       actions: [
-         TextButton(
-           onPressed: () => Navigator.of(context).pop(),
-           child: const Text('Abbrechen'),
-         ),
-         TextButton(
-           onPressed: () {
+  _deleteDB(LocalDatabase db) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zurücksetzen?'),
+        content: const Text(
+            'Möchten Sie Ihre Datenbank wirklich zurücksetzen und somit alle Daten löschen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () {
               db.deleteDB().then((value) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text(
@@ -95,16 +96,16 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                 ));
                 Navigator.of(context).pop();
               });
-           },
-           child: const Text(
-             'Zurücksetzen',
-             style: TextStyle(color: Colors.red),
-           ),
-         ),
-       ],
-     ),
-   );
- }
+            },
+            child: const Text(
+              'Zurücksetzen',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<bool> _askPermission() async {
     var status = await Permission.manageExternalStorage.status;
@@ -132,51 +133,63 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Datenbank',
-          style: TextStyle(
-              color: Theme.of(context).primaryColorLight, fontSize: 16),
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        ListTile(
-          leading: const Icon(Icons.cloud_upload),
-          title: const Text(
-            'Datenbank exportieren',
-            style: TextStyle(fontSize: 18),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Datenbankeinstellungen'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Image.asset(
+              'assets/icons/database_icon.png',
+              width: 150,
+            ),
           ),
-          subtitle: const Text(
-            'Erstelle und speichere ein Backup deiner Daten.',
+          const SizedBox(
+            height: 50,
           ),
-          onTap: () => _exportDB(db),
-        ),
-        ListTile(
-          leading: const Icon(Icons.cloud_download),
-          title: const Text(
-            'Datenbank importieren',
-            style: TextStyle(fontSize: 18),
+          ListTile(
+            leading: const Icon(Icons.cloud_upload),
+            title: const Text(
+              'Datenbank exportieren',
+              style: TextStyle(fontSize: 18),
+            ),
+            subtitle: const Text(
+              'Erstelle und speichere ein Backup deiner Daten.',
+            ),
+            onTap: () => _exportDB(db),
           ),
-          subtitle: const Text(
-            'Importiere die Datenbank, um die Daten wiederherzustellen.',
+          const SizedBox(
+            height: 10,
           ),
-          onTap: () => _importDB(db),
-        ),
-        ListTile(
-          leading: const Icon(Icons.replay),
-          title: const Text(
-            'Datenbank zurücksetzen',
-            style: TextStyle(fontSize: 18),
+          ListTile(
+            leading: const Icon(Icons.cloud_download),
+            title: const Text(
+              'Datenbank importieren',
+              style: TextStyle(fontSize: 18),
+            ),
+            subtitle: const Text(
+              'Importiere die Datenbank, um die Daten wiederherzustellen.',
+            ),
+            onTap: () => _importDB(db),
           ),
-          subtitle: const Text(
-            'Setze die Datenbank zurück, um alle bisherigen Daten zu löschen.',
+          const SizedBox(
+            height: 10,
           ),
-          onTap: () => _deleteDB(db),
-        ),
-      ],
+          ListTile(
+            leading: const Icon(Icons.replay),
+            title: const Text(
+              'Datenbank zurücksetzen',
+              style: TextStyle(fontSize: 18),
+            ),
+            subtitle: const Text(
+              'Setze die Datenbank zurück, um alle bisherigen Daten zu löschen.',
+            ),
+            onTap: () => _deleteDB(db),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -70,6 +70,7 @@ class _MeterCardListState extends State<MeterCardList> {
             return const EmptyData();
           }
 
+
           return Padding(
             padding: const EdgeInsets.only(left: 8.0, right: 8),
             child: GroupedListView(
@@ -90,6 +91,14 @@ class _MeterCardListState extends State<MeterCardList> {
               ),
               itemBuilder: (context, element) {
                 final meterItem = element.meter;
+
+                String? tagsId = meterItem.tag;
+                List<String> listTagsId = [];
+
+                if(tagsId != null){
+                  listTagsId = tagsId.split(';');
+                }
+
                 // print(element.room);
                 return StreamBuilder(
                   stream: data.entryDao.getNewestEntry(meterItem.id),
@@ -117,6 +126,7 @@ class _MeterCardListState extends State<MeterCardList> {
                       room: element.room,
                       date: date,
                       count: count,
+                      tags: listTagsId,
                     );
                   },
                 );

@@ -25,12 +25,15 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
     return await db.into(db.meter).insert(meter);
   }
 
-
   Future<int> deleteMeter(int meterId) async {
     batch((batch) =>
         batch.deleteWhere(db.entries, (tbl) => tbl.meter.equals(meterId)));
     return await (db.delete(db.meter)..where((tbl) => tbl.id.equals(meterId)))
         .go();
+  }
+
+  Future<List<MeterData>> getMeterByTag(String tagId) async {
+    return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId))).get();
   }
 
   Future updateMeter(MeterData meter) async {
@@ -45,12 +48,10 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
     return select(db.meter).watch();
   }
 
-
   Future<MeterData> getSingleMeter(int meterId) {
     return (select(db.meter)..where((tbl) => tbl.id.equals(meterId)))
         .getSingle();
   }
-
 
   Stream<List<MeterWithRoom>> watchAllMeterWithRooms() {
     final query = select(db.meter).join([
@@ -70,7 +71,8 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
       (rows) {
         return rows.map((row) {
           return MeterWithRoom(
-              meter: row.readTable(db.meter), room: row.readTableOrNull(db.room));
+              meter: row.readTable(db.meter),
+              room: row.readTableOrNull(db.room));
         }).toList();
       },
     );

@@ -14,7 +14,9 @@ import 'core/provider/theme_changer.dart';
 
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/screens/settings_screens/reminder_screen.dart';
+import 'ui/screens/settings_screens/tags_screen.dart';
 import 'ui/widgets/bottom_nav_bar.dart';
+import 'ui/screens/settings_screens/database_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,6 +88,8 @@ class MyApp extends StatelessWidget {
               'settings': (_) => const MainSettings(),
               // 'details_single_meter': (_) => DetailsSingleMeter(),
               'reminder': (_) => const ReminderScreen(),
+              'database_export_import': (_) => const DatabaseExportImport(),
+              'tags_screen': (_) => const TagsScreen(),
             },
           );
         },

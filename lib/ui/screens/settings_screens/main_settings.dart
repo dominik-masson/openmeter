@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/settings_screen/active_torch.dart';
-import '../../widgets/settings_screen/database_settings.dart';
+import '../../widgets/settings_screen/tags_tile.dart';
+import 'database_screen.dart';
+import '../../widgets/settings_screen/database_listtile.dart';
 import '../../widgets/settings_screen/display_awake.dart';
 import '../../widgets/settings_screen/reading_reminder.dart';
 import '../../widgets/settings_screen/theme_title.dart';
@@ -21,6 +23,10 @@ class MainSettings extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const DatabaseSettings(),
+              const SizedBox(height: 5,),
+              const TagsTile(),
+              const Divider(thickness: 0.5),
               Text(
                 'Funktionen',
                 style: TextStyle(
@@ -36,8 +42,7 @@ class MainSettings extends StatelessWidget {
               const ActiveTorch(),
               const Divider(thickness: 0.5),
               const ThemeTitle(),
-              const Divider(thickness: 0.5),
-              const DatabaseExportImport(),
+
             ],
           ),
         ),

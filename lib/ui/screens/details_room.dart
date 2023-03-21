@@ -40,76 +40,76 @@ class _DetailsRoomState extends State<DetailsRoom> {
   Widget build(BuildContext context) {
     final refresh = Provider.of<RefreshProvider>(context);
 
-    if (refresh.refreshState){
+    if (refresh.refreshState) {
       _refresh();
       refresh.setRefresh(false);
     }
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(_name.text),
-          actions: [
-            !_update
-                ? IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      setState(() {
-                        _update = true;
-                      });
-                    },
-                  )
-                : IconButton(
-                    onPressed: () {
-                      _updateRoom(context);
-                      setState(() {
-                        _update = false;
-                        _name.text = _currentRoom.name;
-                      });
-                    },
-                    icon: const Icon(Icons.save),
-                  )
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Form(
-              key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _dropDownMenu(context),
-                  const SizedBox(
-                    height: 15,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_name.text),
+        actions: [
+          !_update
+              ? IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () {
+                    setState(() {
+                      _update = true;
+                    });
+                  },
+                )
+              : IconButton(
+                  onPressed: () {
+                    _updateRoom(context);
+                    setState(() {
+                      _update = false;
+                      _name.text = _currentRoom.name;
+                    });
+                  },
+                  icon: const Icon(Icons.save),
+                )
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _dropDownMenu(context),
+                const SizedBox(
+                  height: 15,
+                ),
+                TextFormField(
+                  readOnly: !_update,
+                  controller: _name,
+                  // validator: (value) {
+                  //   if (value == null || value.isEmpty) {
+                  //     return 'Bitte geben Sie einen Zimmernamen an';
+                  //   }
+                  //   return null;
+                  // },
+                  decoration: const InputDecoration(
+                    label: Text('Zimmername'),
+                    icon: Icon(Icons.abc),
                   ),
-                  TextFormField(
-                    readOnly: !_update,
-                    controller: _name,
-                    // validator: (value) {
-                    //   if (value == null || value.isEmpty) {
-                    //     return 'Bitte geben Sie einen Zimmernamen an';
-                    //   }
-                    //   return null;
-                    // },
-                    decoration: const InputDecoration(
-                      label: Text('Zimmername'),
-                      icon: Icon(Icons.abc),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 30,
-                  ),
-                  const Text(
-                    'Zähler',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  _listMeters(_currentRoom.id),
-                ],
-              ),
+                ),
+                const SizedBox(
+                  height: 30,
+                ),
+                const Text(
+                  'Zähler',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                _listMeters(_currentRoom.id),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _listMeters(int roomId) {
@@ -140,6 +140,13 @@ class _DetailsRoomState extends State<DetailsRoom> {
                       return Container();
                     }
 
+                    String? tagsId = meter.tag;
+                    List<String> listTagsId = [];
+
+                    if (tagsId != null) {
+                      listTagsId = tagsId.split(';');
+                    }
+
                     return StreamBuilder(
                       stream: db.entryDao.getNewestEntry(meter.id),
                       builder: (context, snapshot) {
@@ -156,11 +163,13 @@ class _DetailsRoomState extends State<DetailsRoom> {
                         }
 
                         return _meterCard.getCard(
-                            context: context,
-                            meter: meter,
-                            room: _currentRoom,
-                            date: date,
-                            count: count);
+                          context: context,
+                          meter: meter,
+                          room: _currentRoom,
+                          date: date,
+                          count: count,
+                          tags: listTagsId,
+                        );
                       },
                     );
                   },

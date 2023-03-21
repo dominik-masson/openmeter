@@ -37,8 +37,13 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
       'unit', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
   @override
-  List<GeneratedColumn> get $columns => [id, typ, note, number, unit];
+  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
+      'tag', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [id, typ, note, number, unit, tag];
   @override
   String get aliasedName => _alias ?? 'meter';
   @override
@@ -75,6 +80,10 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
+    if (data.containsKey('tag')) {
+      context.handle(
+          _tagMeta, tag.isAcceptableOrUnknown(data['tag']!, _tagMeta));
+    }
     return context;
   }
 
@@ -94,6 +103,8 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
           .read(DriftSqlType.string, data['${effectivePrefix}number'])!,
       unit: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      tag: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tag']),
     );
   }
 
@@ -109,12 +120,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
   final String note;
   final String number;
   final String unit;
+  final String? tag;
   const MeterData(
       {required this.id,
       required this.typ,
       required this.note,
       required this.number,
-      required this.unit});
+      required this.unit,
+      this.tag});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -123,6 +136,9 @@ class MeterData extends DataClass implements Insertable<MeterData> {
     map['note'] = Variable<String>(note);
     map['number'] = Variable<String>(number);
     map['unit'] = Variable<String>(unit);
+    if (!nullToAbsent || tag != null) {
+      map['tag'] = Variable<String>(tag);
+    }
     return map;
   }
 
@@ -133,6 +149,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: Value(note),
       number: Value(number),
       unit: Value(unit),
+      tag: tag == null && nullToAbsent ? const Value.absent() : Value(tag),
     );
   }
 
@@ -145,6 +162,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: serializer.fromJson<String>(json['note']),
       number: serializer.fromJson<String>(json['number']),
       unit: serializer.fromJson<String>(json['unit']),
+      tag: serializer.fromJson<String?>(json['tag']),
     );
   }
   @override
@@ -156,17 +174,24 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       'note': serializer.toJson<String>(note),
       'number': serializer.toJson<String>(number),
       'unit': serializer.toJson<String>(unit),
+      'tag': serializer.toJson<String?>(tag),
     };
   }
 
   MeterData copyWith(
-          {int? id, String? typ, String? note, String? number, String? unit}) =>
+          {int? id,
+          String? typ,
+          String? note,
+          String? number,
+          String? unit,
+          Value<String?> tag = const Value.absent()}) =>
       MeterData(
         id: id ?? this.id,
         typ: typ ?? this.typ,
         note: note ?? this.note,
         number: number ?? this.number,
         unit: unit ?? this.unit,
+        tag: tag.present ? tag.value : this.tag,
       );
   @override
   String toString() {
@@ -175,13 +200,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           ..write('typ: $typ, ')
           ..write('note: $note, ')
           ..write('number: $number, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('tag: $tag')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, typ, note, number, unit);
+  int get hashCode => Object.hash(id, typ, note, number, unit, tag);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -190,7 +216,8 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           other.typ == this.typ &&
           other.note == this.note &&
           other.number == this.number &&
-          other.unit == this.unit);
+          other.unit == this.unit &&
+          other.tag == this.tag);
 }
 
 class MeterCompanion extends UpdateCompanion<MeterData> {
@@ -199,12 +226,14 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
   final Value<String> note;
   final Value<String> number;
   final Value<String> unit;
+  final Value<String?> tag;
   const MeterCompanion({
     this.id = const Value.absent(),
     this.typ = const Value.absent(),
     this.note = const Value.absent(),
     this.number = const Value.absent(),
     this.unit = const Value.absent(),
+    this.tag = const Value.absent(),
   });
   MeterCompanion.insert({
     this.id = const Value.absent(),
@@ -212,6 +241,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     required String note,
     required String number,
     required String unit,
+    this.tag = const Value.absent(),
   })  : typ = Value(typ),
         note = Value(note),
         number = Value(number),
@@ -222,6 +252,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     Expression<String>? note,
     Expression<String>? number,
     Expression<String>? unit,
+    Expression<String>? tag,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -229,6 +260,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       if (note != null) 'note': note,
       if (number != null) 'number': number,
       if (unit != null) 'unit': unit,
+      if (tag != null) 'tag': tag,
     });
   }
 
@@ -237,13 +269,15 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       Value<String>? typ,
       Value<String>? note,
       Value<String>? number,
-      Value<String>? unit}) {
+      Value<String>? unit,
+      Value<String?>? tag}) {
     return MeterCompanion(
       id: id ?? this.id,
       typ: typ ?? this.typ,
       note: note ?? this.note,
       number: number ?? this.number,
       unit: unit ?? this.unit,
+      tag: tag ?? this.tag,
     );
   }
 
@@ -265,6 +299,9 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (tag.present) {
+      map['tag'] = Variable<String>(tag.value);
+    }
     return map;
   }
 
@@ -275,7 +312,8 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
           ..write('typ: $typ, ')
           ..write('note: $note, ')
           ..write('number: $number, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('tag: $tag')
           ..write(')'))
         .toString();
   }
@@ -1748,6 +1786,209 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
   }
 }
 
+class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+      'color', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [id, name, color];
+  @override
+  String get aliasedName => _alias ?? 'tags';
+  @override
+  String get actualTableName => 'tags';
+  @override
+  VerificationContext validateIntegrity(Insertable<Tag> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Tag map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Tag(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      color: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}color'])!,
+    );
+  }
+
+  @override
+  $TagsTable createAlias(String alias) {
+    return $TagsTable(attachedDatabase, alias);
+  }
+}
+
+class Tag extends DataClass implements Insertable<Tag> {
+  final int id;
+  final String name;
+  final int color;
+  const Tag({required this.id, required this.name, required this.color});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['color'] = Variable<int>(color);
+    return map;
+  }
+
+  TagsCompanion toCompanion(bool nullToAbsent) {
+    return TagsCompanion(
+      id: Value(id),
+      name: Value(name),
+      color: Value(color),
+    );
+  }
+
+  factory Tag.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Tag(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      color: serializer.fromJson<int>(json['color']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'color': serializer.toJson<int>(color),
+    };
+  }
+
+  Tag copyWith({int? id, String? name, int? color}) => Tag(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        color: color ?? this.color,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('Tag(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, color);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Tag &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.color == this.color);
+}
+
+class TagsCompanion extends UpdateCompanion<Tag> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> color;
+  const TagsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.color = const Value.absent(),
+  });
+  TagsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int color,
+  })  : name = Value(name),
+        color = Value(color);
+  static Insertable<Tag> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? color,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (color != null) 'color': color,
+    });
+  }
+
+  TagsCompanion copyWith(
+      {Value<int>? id, Value<String>? name, Value<int>? color}) {
+    return TagsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      color: color ?? this.color,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TagsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   late final $MeterTable meter = $MeterTable(this);
@@ -1756,16 +1997,18 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   late final $MeterInRoomTable meterInRoom = $MeterInRoomTable(this);
   late final $ProviderTable provider = $ProviderTable(this);
   late final $ContractTable contract = $ContractTable(this);
+  late final $TagsTable tags = $TagsTable(this);
   late final MeterDao meterDao = MeterDao(this as LocalDatabase);
   late final EntryDao entryDao = EntryDao(this as LocalDatabase);
   late final RoomDao roomDao = RoomDao(this as LocalDatabase);
   late final ContractDao contractDao = ContractDao(this as LocalDatabase);
+  late final TagsDao tagsDao = TagsDao(this as LocalDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [meter, entries, room, meterInRoom, provider, contract];
+      [meter, entries, room, meterInRoom, provider, contract, tags];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [

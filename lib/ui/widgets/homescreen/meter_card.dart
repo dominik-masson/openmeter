@@ -8,6 +8,7 @@ import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
 import '../../../utils/meter_typ.dart';
+import '../tags_screen/tag_chip.dart';
 
 class MeterCard {
   MeterCard();
@@ -52,16 +53,19 @@ class MeterCard {
     RoomData? room,
     required DateTime? date,
     required String count,
+    required List<String> tags,
   }) {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
     final sortProvider = Provider.of<SortProvider>(context);
 
     String roomName = room == null ? '' : room.name;
 
-    final entryProvider = Provider.of<EntryCardProvider>(context, listen: false);
+    final entryProvider =
+        Provider.of<EntryCardProvider>(context, listen: false);
 
     String dateText = 'none';
 
-    if(date != null){
+    if (date != null) {
       dateText = DateFormat('dd.MM.yyyy').format(date);
     }
 
@@ -84,15 +88,15 @@ class MeterCard {
       ),
       child: GestureDetector(
         onTap: () {
-
-              entryProvider.setCurrentCount(count);
-              entryProvider.setOldDate(date ?? DateTime.now());
+          entryProvider.setCurrentCount(count);
+          entryProvider.setOldDate(date ?? DateTime.now());
           Navigator.of(context)
               .push(
             MaterialPageRoute(
               builder: (context) => DetailsSingleMeter(
                 meter: meter,
                 room: room,
+                tagsId: tags,
               ),
             ),
           )
@@ -172,6 +176,39 @@ class MeterCard {
                       ),
                     ],
                   ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  if (tags.isNotEmpty)
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      height: 30,
+                      child: ListView.builder(
+                        itemCount: tags.length,
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) => FutureBuilder(
+                            future:
+                                db.tagsDao.getSingleTag(int.parse(tags[index])),
+                            builder: (context, snapshot) {
+                              if (snapshot.data != null) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(left:8.0),
+                                  child: SizedBox(
+                                    width: 70,
+                                    child: TagChip(
+                                      tag: snapshot.data!,
+                                      checked: false,
+                                      delete: false,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Container();
+                              }
+                            }),
+                      ),
+                    ),
                   const SizedBox(
                     height: 10,
                   ),

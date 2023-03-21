@@ -4,16 +4,18 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
-import '../../core/provider/entry_card_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
+import '../widgets/tags_screen/tag_chip.dart';
 
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
   final RoomData? room;
+  final List<String> tagsId;
 
-  const AddScreen({Key? key, required this.meter, required this.room})
+  const AddScreen(
+      {Key? key, required this.meter, required this.room, required this.tagsId})
       : super(key: key);
 
   @override
@@ -32,6 +34,9 @@ class _AddScreenState extends State<AddScreen> {
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeter = false;
   RoomData? _room;
+  List<String> _tagsId = [];
+  final List<int> _tagChecked = [];
+  int _firstLoad = 0;
 
   final List<DropdownMenuItem> _roomList = [
     const DropdownMenuItem(
@@ -56,6 +61,10 @@ class _AddScreenState extends State<AddScreen> {
       _roomId = -1;
     }
 
+    if (widget.tagsId.isNotEmpty) {
+      _tagsId = widget.tagsId;
+    }
+
     super.initState();
   }
 
@@ -66,7 +75,6 @@ class _AddScreenState extends State<AddScreen> {
     _metervalue.dispose();
     super.dispose();
   }
-
 
   /*
     init values when meter is to be updated
@@ -82,12 +90,20 @@ class _AddScreenState extends State<AddScreen> {
 
   Future<void> _saveEntry() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    String? tagsId;
 
+    // handle empty Note and Units
     if (_meternote.text.isEmpty) {
       _meternote.text = '';
     }
-    if(_unitController.text.isEmpty){
+    if (_unitController.text.isEmpty) {
       _unitController.text = '';
+    }
+
+    // handle selected tags
+    if (_tagsId.isNotEmpty) {
+      _tagsId.sort();
+      tagsId = _tagsId.join(';');
     }
 
     if (_formKey.currentState!.validate()) {
@@ -96,6 +112,7 @@ class _AddScreenState extends State<AddScreen> {
         number: drift.Value(_meternumber.text),
         note: drift.Value(_meternote.text),
         unit: drift.Value(_unitController.text),
+        tag: drift.Value(tagsId),
       );
 
       if (!_updateMeter) {
@@ -135,6 +152,7 @@ class _AddScreenState extends State<AddScreen> {
           number: _meternumber.text,
           id: widget.meter!.id,
           unit: _unitController.text,
+          tag: tagsId,
         );
 
         if (_roomId != -2) {
@@ -171,6 +189,10 @@ class _AddScreenState extends State<AddScreen> {
       appBar: AppBar(
         title: Text(_pageTitle),
         actions: [
+          IconButton(
+            onPressed: _saveEntry,
+            icon: const Icon(Icons.save),
+          ),
           IconButton(
             onPressed: () {
               setState(() {
@@ -260,6 +282,10 @@ class _AddScreenState extends State<AddScreen> {
                   const SizedBox(
                     height: 30,
                   ),
+                  _tags(context),
+                  const SizedBox(
+                    height: 30,
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: SizedBox(
@@ -280,20 +306,120 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
+  Widget _tags(BuildContext context) {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              FaIcon(
+                FontAwesomeIcons.tags,
+                color: Theme.of(context).indicatorColor,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Tags',
+                style: TextStyle(
+                  color: Theme.of(context).indicatorColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          StreamBuilder(
+            stream: db.tagsDao.watchAllTags(),
+            builder: (context, snapshot) {
+              final List<Tag> tags = snapshot.data ?? [];
+
+              if (tags.isEmpty) {
+                return Container();
+              }
+              return SizedBox(
+                height: 50,
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      Widget child = Container();
+
+                      if (_tagChecked.contains(index) ||
+                          _tagsId.contains(tags[index].id.toString())) {
+                        child = Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TagChip(
+                            delete: false,
+                            checked: true,
+                            tag: tags[index],
+                          ),
+                        );
+                      } else {
+                        child = Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TagChip(
+                            delete: false,
+                            checked: false,
+                            tag: tags[index],
+                          ),
+                        );
+                      }
+
+                      return GestureDetector(
+                        onTap: () {
+                          if (_tagChecked.contains(index) ||
+                              _tagsId.contains(tags[index].id.toString())) {
+                            _tagsId.remove(tags[index].id.toString());
+                            setState(() {
+                              _tagChecked.remove(index);
+                            });
+                          } else {
+                            _tagsId.add(tags[index].id.toString());
+
+                            setState(() {
+                              _tagChecked.add(index);
+                            });
+                          }
+                        },
+                        child: SizedBox(width: 120, child: child),
+                      );
+                    }),
+              );
+            },
+          ),
+          Divider(
+            color: Theme.of(context).indicatorColor,
+            thickness: 0.4,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _unitInput(BuildContext context) {
-    if(_unitController.text.isEmpty){
+    if (_unitController.text.isEmpty) {
       _unitController.text = meterTyps[_meterTyp]['einheit'];
     }
 
     return TextFormField(
       textInputAction: TextInputAction.next,
       decoration: const InputDecoration(
-        icon: FaIcon(FontAwesomeIcons.ruler, size: 16,),
+        icon: FaIcon(
+          FontAwesomeIcons.ruler,
+          size: 16,
+        ),
         label: Text('Einheit'),
       ),
       controller: _unitController,
       validator: (value) {
-        if(value == null ||value.isEmpty){
+        if (value == null || value.isEmpty) {
           return 'Bitte geben Sie eine Einheit an!';
         }
         return null;
@@ -349,6 +475,7 @@ class _AddScreenState extends State<AddScreen> {
         child: Text('${e.typ}: ${e.name}'),
       );
     }));
+
   }
 
   Widget _dropDownRoom(BuildContext context) {
@@ -359,7 +486,11 @@ class _AddScreenState extends State<AddScreen> {
         builder: (context, snapshot) {
           final roomList = snapshot.data ?? [];
 
-          _createRoomDropDown(roomList);
+
+          if (_firstLoad != 2) {
+            _createRoomDropDown(roomList);
+            _firstLoad++;
+          }
 
           if (_roomList.length != 1) {
             return Padding(
@@ -377,7 +508,7 @@ class _AddScreenState extends State<AddScreen> {
                   ),
                 ),
                 items: _roomList,
-                value: widget.room?.id ?? -1,
+                value: _room?.id ?? -1,
                 onChanged: (value) {
                   _roomId = int.parse(value.toString());
 
@@ -405,7 +536,10 @@ class _AddScreenState extends State<AddScreen> {
       builder: (context, snapshot) {
         final roomList = snapshot.data ?? [];
 
-        _createRoomDropDown(roomList);
+        if (_firstLoad != 2) {
+          _createRoomDropDown(roomList);
+          _firstLoad++;
+        }
 
         return Padding(
           padding: const EdgeInsets.only(right: 4),
