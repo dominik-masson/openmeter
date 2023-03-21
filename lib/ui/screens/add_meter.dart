@@ -7,6 +7,7 @@ import '../../core/database/local_database.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
+import '../widgets/tags_screen/add_tags.dart';
 import '../widgets/tags_screen/tag_chip.dart';
 
 class AddScreen extends StatefulWidget {
@@ -23,6 +24,8 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
+  final AddTags _addTags = AddTags();
+
   final TextEditingController _meternumber = TextEditingController();
   final TextEditingController _meternote = TextEditingController();
   final TextEditingController _metervalue = TextEditingController();
@@ -314,25 +317,21 @@ class _AddScreenState extends State<AddScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              FaIcon(
-                FontAwesomeIcons.tags,
-                color: Theme.of(context).indicatorColor,
-                size: 20,
-              ),
-              const SizedBox(
-                width: 15,
-              ),
-              Text(
-                'Tags',
-                style: TextStyle(
-                  color: Theme.of(context).indicatorColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          ListTile(
+            contentPadding: const EdgeInsets.all(0),
+            title: const Text('Tags'),
+            leading: FaIcon(
+              FontAwesomeIcons.tags,
+              size: 20,
+              color: Theme.of(context).indicatorColor,
+            ),
+            trailing: IconButton(
+              onPressed: () {
+                _addTags.getAddTags(context);
+              },
+              icon: Icon(Icons.add,
+              color: Theme.of(context).indicatorColor,
+            )),
           ),
           StreamBuilder(
             stream: db.tagsDao.watchAllTags(),
@@ -475,7 +474,6 @@ class _AddScreenState extends State<AddScreen> {
         child: Text('${e.typ}: ${e.name}'),
       );
     }));
-
   }
 
   Widget _dropDownRoom(BuildContext context) {
@@ -485,7 +483,6 @@ class _AddScreenState extends State<AddScreen> {
         stream: data.roomDao.watchAllRooms(),
         builder: (context, snapshot) {
           final roomList = snapshot.data ?? [];
-
 
           if (_firstLoad != 2) {
             _createRoomDropDown(roomList);

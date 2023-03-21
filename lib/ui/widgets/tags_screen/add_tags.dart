@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
@@ -61,7 +59,6 @@ class AddTags {
         _pickedIndex = 0;
 
         Navigator.of(context).pop();
-
       });
     }
   }

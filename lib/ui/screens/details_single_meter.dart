@@ -172,7 +172,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             // Zählernummer
             _meterInformationWidget(),
             const Divider(),
-            if (_meter.tag!.isNotEmpty) _tags(),
+            if (_meter.tag != null && _meter.tag!.isNotEmpty) _tags(),
             EntryCard(meter: widget.meter),
             const SizedBox(
               height: 10,

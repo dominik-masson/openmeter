@@ -175,29 +175,5 @@ class TagChip extends StatelessWidget {
         }
       },
     );
-
-    //   if (delete) {
-    //     return Chip(
-    //       label: Text(tag.name),
-    //       backgroundColor: Color(tag.color),
-    //       onDeleted: () => _deleteDialog(context),
-    //     );
-    //   } else {
-    //     if (checked) {
-    //       return Chip(
-    //         label: Text(tag.name),
-    //         backgroundColor: Color(tag.color),
-    //         avatar: const Icon(
-    //           Icons.check,
-    //           color: Colors.white,
-    //         ),
-    //       );
-    //     } else {
-    //       return Chip(
-    //         label: Text(tag.name),
-    //         backgroundColor: Color(tag.color),
-    //       );
-    //     }
-    //   }
   }
 }
