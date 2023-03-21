@@ -13,6 +13,7 @@ import '../widgets/details_meter/charts/usage_line_chart.dart';
 import '../widgets/details_meter/cost_card.dart';
 import '../widgets/details_meter/entry_card.dart';
 import '../widgets/details_meter/charts/count_bar_chart.dart';
+import '../widgets/tags_screen/tag_chip.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
@@ -20,7 +21,8 @@ class DetailsSingleMeter extends StatefulWidget {
   final RoomData? room;
   final List<String> tagsId;
 
-  const DetailsSingleMeter({Key? key, required this.meter, required this.room, required this.tagsId})
+  const DetailsSingleMeter(
+      {Key? key, required this.meter, required this.room, required this.tagsId})
       : super(key: key);
 
   @override
@@ -73,6 +75,42 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _tags() {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+    return Column(
+      children: [
+        Container(
+          height: 30,
+          padding: const EdgeInsets.only(left: 8),
+          child: ListView.builder(
+            itemCount: _meter.tag!.length,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) => FutureBuilder(
+              future: db.tagsDao.getSingleTag(int.parse(_meter.tag![index])),
+              builder: (context, tag) {
+                if (tag.data != null) {
+                  return SizedBox(
+                    width: 70,
+                    child: TagChip(
+                      checked: false,
+                      delete: false,
+                      tag: tag.data!,
+                    ),
+                  );
+                } else {
+                  return Container();
+                }
+              },
+            ),
+          ),
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+      ],
     );
   }
 
@@ -134,6 +172,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             // Zählernummer
             _meterInformationWidget(),
             const Divider(),
+            if (_meter.tag!.isNotEmpty) _tags(),
             EntryCard(meter: widget.meter),
             const SizedBox(
               height: 10,

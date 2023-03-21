@@ -42,6 +42,10 @@ class MyApp extends StatelessWidget {
 
     // chart image
     precacheImage(const AssetImage('assets/icons/no_data.png'), context);
+
+    // Settings screens
+    precacheImage(const AssetImage('assets/icons/database_icon.png'), context);
+    precacheImage(const AssetImage('assets/icons/tag.png'), context);
   }
 
   @override

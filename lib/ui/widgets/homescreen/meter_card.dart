@@ -69,7 +69,6 @@ class MeterCard {
       dateText = DateFormat('dd.MM.yyyy').format(date);
     }
 
-
     return Dismissible(
       key: Key('${meter.id}'),
       direction: DismissDirection.endToStart,
@@ -79,7 +78,12 @@ class MeterCard {
       background: Container(
         alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.all(50),
-        color: Colors.red,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.all(
+            Radius.circular(8),
+          ),
+        ),
         child: const Icon(
           Icons.delete,
           color: Colors.white,
@@ -193,7 +197,7 @@ class MeterCard {
                             builder: (context, snapshot) {
                               if (snapshot.data != null) {
                                 return Padding(
-                                  padding: const EdgeInsets.only(left:8.0),
+                                  padding: const EdgeInsets.only(left: 8.0),
                                   child: SizedBox(
                                     width: 70,
                                     child: TagChip(
