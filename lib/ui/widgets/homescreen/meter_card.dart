@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
 import '../../../utils/meter_typ.dart';
@@ -57,6 +58,7 @@ class MeterCard {
   }) {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final sortProvider = Provider.of<SortProvider>(context);
+    final smallProvider = Provider.of<SmallFeatureProvider>(context);
 
     String roomName = room == null ? '' : room.name;
 
@@ -183,7 +185,7 @@ class MeterCard {
                   const SizedBox(
                     height: 10,
                   ),
-                  if (tags.isNotEmpty)
+                  if (tags.isNotEmpty && smallProvider.getShowTags)
                     Container(
                       alignment: Alignment.centerLeft,
                       height: 30,

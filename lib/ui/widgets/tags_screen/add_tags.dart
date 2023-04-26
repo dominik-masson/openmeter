@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/theme_changer.dart';
 
 class AddTags {
   final TextEditingController _nameController = TextEditingController();
@@ -115,7 +116,6 @@ class AddTags {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white70,
                           ),
                         ),
                         GridView.builder(
@@ -160,6 +160,7 @@ class AddTags {
                               onPressed: () => _saveTag(context),
                               icon: const Icon(Icons.check),
                               label: const Text('Speichern'),
+
                             ),
                           ),
                         )

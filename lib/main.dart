@@ -10,6 +10,7 @@ import 'core/provider/small_feature_provider.dart';
 import 'core/provider/refresh_provider.dart';
 import 'core/provider/reminder_provider.dart';
 import 'core/provider/sort_provider.dart';
+import 'core/provider/stats_provider.dart';
 import 'core/provider/theme_changer.dart';
 
 import 'ui/screens/settings_screens/main_settings.dart';
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<EntryCardProvider>.value(
             value: EntryCardProvider()),
         ChangeNotifierProvider<ChartProvider>.value(value: ChartProvider()),
+        ChangeNotifierProvider<StatsProvider>.value(value: StatsProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {

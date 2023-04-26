@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _primaryColor = Color(0xff32A287);
+
 const _darkColor = Color(0xff121B22);
 const _nightColor = Color(0xff000000);
 
@@ -12,9 +13,7 @@ ThemeData light = ThemeData(
   useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
-  iconTheme: const IconThemeData(
-    color: Color(0xffffffff),
-  ),
+
 );
 
 ThemeData dark = ThemeData(
@@ -22,7 +21,6 @@ ThemeData dark = ThemeData(
   useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
-  backgroundColor: _darkColor,
   scaffoldBackgroundColor: _darkColor,
   appBarTheme: const AppBarTheme(
     color: _darkColor,
@@ -37,7 +35,6 @@ ThemeData night = ThemeData(
   useMaterial3: _materialDesign,
   colorSchemeSeed: _primaryColor,
   primaryColorLight: _primaryColor,
-  backgroundColor: _nightColor,
   scaffoldBackgroundColor: _nightColor,
   appBarTheme: const AppBarTheme(
     color: _nightColor,

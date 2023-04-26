@@ -323,14 +323,14 @@ class _AddScreenState extends State<AddScreen> {
             leading: FaIcon(
               FontAwesomeIcons.tags,
               size: 20,
-              color: Theme.of(context).indicatorColor,
+              color: Theme.of(context).hintColor,
             ),
             trailing: IconButton(
               onPressed: () {
                 _addTags.getAddTags(context);
               },
               icon: Icon(Icons.add,
-              color: Theme.of(context).indicatorColor,
+              color: Theme.of(context).iconTheme.color,
             )),
           ),
           StreamBuilder(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/small_feature_provider.dart';
 import '../../widgets/tags_screen/add_tags.dart';
 import '../../widgets/tags_screen/tag_chip.dart';
 
@@ -16,6 +18,7 @@ class TagsScreen extends StatefulWidget {
 
 class _TagsScreenState extends State<TagsScreen> {
   final _addTags = AddTags();
+  bool _showTags = true;
 
   @override
   void dispose() {
@@ -46,6 +49,9 @@ class _TagsScreenState extends State<TagsScreen> {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
+    final smallProvider = Provider.of<SmallFeatureProvider>(context, listen: false);
+
+    _showTags = smallProvider.getShowTags;
 
     return Scaffold(
       appBar: AppBar(
@@ -113,6 +119,30 @@ class _TagsScreenState extends State<TagsScreen> {
             const SizedBox(
               height: 30,
             ),
+            SwitchListTile(
+              title: const Text('Tags anzeigen'),
+              subtitle: const Text(
+                  'Ermöglicht das anzeigen eines Tags auf der Startseite.'),
+              secondary: _showTags
+                  ? FaIcon(
+                      FontAwesomeIcons.eye,
+                      color: Theme.of(context).indicatorColor,
+                    )
+                  : FaIcon(
+                      FontAwesomeIcons.eyeSlash,
+                      color: Theme.of(context).indicatorColor,
+                    ),
+              value: _showTags,
+              onChanged: (value) {
+                setState(() {
+                  _showTags = value;
+                });
+                smallProvider.setShowTags(_showTags);
+              },
+            ),
+            const SizedBox(
+              height: 30,
+            ),
             const Text(
               'Informationen:',
               style: TextStyle(
@@ -122,7 +152,7 @@ class _TagsScreenState extends State<TagsScreen> {
             ),
             const Text(
                 'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
-                    'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
+                'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
           ],
         ),
       ),

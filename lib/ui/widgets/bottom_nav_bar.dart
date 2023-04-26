@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../utils/custom_icons.dart';
 import '../screens/homescreen.dart';
 import '../screens/objects.dart';
+import '../screens/stats_screen.dart';
 
 
 class BottomNavBar extends StatefulWidget {
@@ -17,6 +18,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   final List _screen = const [
     HomeScreen(),
+
     ObjectsScreen(),
   ];
 
@@ -34,7 +36,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(CustomIcons.voltmeter), label: 'Zähler'),
-          BottomNavigationBarItem(icon: Icon(Icons.widgets), label: 'Objekte')
+
+          BottomNavigationBarItem(icon: Icon(Icons.widgets), label: 'Objekte'),
+
         ],
       ),
     );

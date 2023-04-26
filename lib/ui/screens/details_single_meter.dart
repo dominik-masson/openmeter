@@ -80,20 +80,24 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   Widget _tags() {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final List<String> tags = _meter.tag!.split(';');
+
+
     return Column(
       children: [
         Container(
           height: 30,
           padding: const EdgeInsets.only(left: 8),
           child: ListView.builder(
-            itemCount: _meter.tag!.length,
+            itemCount: tags.length,
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) => FutureBuilder(
-              future: db.tagsDao.getSingleTag(int.parse(_meter.tag![index])),
+              future: db.tagsDao.getSingleTag(int.parse(tags[index])),
               builder: (context, tag) {
                 if (tag.data != null) {
-                  return SizedBox(
-                    width: 70,
+                  return Container(
+                    width: 100,
+                    padding: const EdgeInsets.only(left: 8),
                     child: TagChip(
                       checked: false,
                       delete: false,
