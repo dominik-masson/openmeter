@@ -18,7 +18,7 @@ class MeterCardList extends StatefulWidget {
 }
 
 class _MeterCardListState extends State<MeterCardList> {
-  final MeterCard _meterCard = const MeterCard();
+  final MeterCard _meterCard = MeterCard();
 
   _groupBy(String sortBy, MeterWithRoom element) {
     dynamic sortedElement;
@@ -64,11 +64,12 @@ class _MeterCardListState extends State<MeterCardList> {
           final meters = snapshot.data;
 
           // print(snapshot.connectionState);
-          // print(meters);
+          // print(meters!.map((e) => e.room).toList());
 
           if (meters == null || meters.isEmpty) {
             return const EmptyData();
           }
+
 
           return Padding(
             padding: const EdgeInsets.only(left: 8.0, right: 8),
@@ -90,33 +91,43 @@ class _MeterCardListState extends State<MeterCardList> {
               ),
               itemBuilder: (context, element) {
                 final meterItem = element.meter;
+
+                String? tagsId = meterItem.tag;
+                List<String> listTagsId = [];
+
+                if(tagsId != null){
+                  listTagsId = tagsId.split(';');
+                }
+
+                // print(element.room);
                 return StreamBuilder(
-                  stream: data.meterDao.getNewestEntry(meterItem.id),
+                  stream: data.entryDao.getNewestEntry(meterItem.id),
                   builder: (context, snapshot2) {
                     final entryList = snapshot2.data;
 
-                    if (entryList == null || entryList.isEmpty) {
-                      return Container();
-                    }
-
-                    final entry = entryList[0];
-                    final String date;
+                    final DateTime? date;
                     final String count;
+                    final Entrie entry;
 
-                    if (entry == null) {
-                      date = 'none';
+                    if (entryList == null || entryList.isEmpty) {
+                      date = null;
                       count = 'none';
                     } else {
-                      date = DateFormat('dd.MM.yyyy').format(entry.date);
+                      entry = entryList[0];
+
+                      // date = DateFormat('dd.MM.yyyy').format(entry.date);
+                      date = entry.date;
                       count = entry.count.toString();
                     }
 
                     return _meterCard.getCard(
-                        context: context,
-                        meter: meterItem,
-                        room: element.room,
-                        date: date,
-                        count: count);
+                      context: context,
+                      meter: meterItem,
+                      room: element.room,
+                      date: date,
+                      count: count,
+                      tags: listTagsId,
+                    );
                   },
                 );
               },

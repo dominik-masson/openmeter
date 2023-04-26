@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../screens/details_single_meter.dart';
-import '../../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
+import '../tags_screen/tag_chip.dart';
 
 class MeterCard {
-  const MeterCard();
+  MeterCard();
 
   Future<bool> _deleteMeter(
       BuildContext context, int meterId, RoomData? room) async {
@@ -48,14 +52,23 @@ class MeterCard {
     required BuildContext context,
     required MeterData meter,
     RoomData? room,
-    required String date,
+    required DateTime? date,
     required String count,
+    required List<String> tags,
   }) {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
     final sortProvider = Provider.of<SortProvider>(context);
+    final smallProvider = Provider.of<SmallFeatureProvider>(context);
 
-    String roomName = '';
-    if (room != null) {
-      roomName = room.name;
+    String roomName = room == null ? '' : room.name;
+
+    final entryProvider =
+        Provider.of<EntryCardProvider>(context, listen: false);
+
+    String dateText = 'none';
+
+    if (date != null) {
+      dateText = DateFormat('dd.MM.yyyy').format(date);
     }
 
     return Dismissible(
@@ -67,7 +80,12 @@ class MeterCard {
       background: Container(
         alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.all(50),
-        color: Colors.red,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.all(
+            Radius.circular(8),
+          ),
+        ),
         child: const Icon(
           Icons.delete,
           color: Colors.white,
@@ -76,15 +94,21 @@ class MeterCard {
       ),
       child: GestureDetector(
         onTap: () {
+          entryProvider.setCurrentCount(count);
+          entryProvider.setOldDate(date ?? DateTime.now());
           Navigator.of(context)
-              .push(MaterialPageRoute(
-            builder: (context) => DetailsSingleMeter(
-              meter: meter,
-              room: room,
+              .push(
+            MaterialPageRoute(
+              builder: (context) => DetailsSingleMeter(
+                meter: meter,
+                room: room,
+                tagsId: tags,
+              ),
             ),
-          ))
+          )
               .then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
+            room = value as RoomData?;
           });
         },
         child: Padding(
@@ -137,7 +161,7 @@ class MeterCard {
                       Column(
                         children: [
                           Text(
-                            '$count ${meterTyps[meter.typ]['einheit']}',
+                            '$count ${meter.unit}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           const Text(
@@ -149,18 +173,53 @@ class MeterCard {
                       const SizedBox(
                         width: 20,
                       ),
-                      Text(
-                        meter.note.toString(),
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.grey),
+                      Flexible(
+                        child: Text(
+                          meter.note.toString(),
+                          style:
+                              const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(
                     height: 10,
                   ),
+                  if (tags.isNotEmpty && smallProvider.getShowTags)
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      height: 30,
+                      child: ListView.builder(
+                        itemCount: tags.length,
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) => FutureBuilder(
+                            future:
+                                db.tagsDao.getSingleTag(int.parse(tags[index])),
+                            builder: (context, snapshot) {
+                              if (snapshot.data != null) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: SizedBox(
+                                    width: 70,
+                                    child: TagChip(
+                                      tag: snapshot.data!,
+                                      checked: false,
+                                      delete: false,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Container();
+                              }
+                            }),
+                      ),
+                    ),
+                  const SizedBox(
+                    height: 10,
+                  ),
                   Text(
-                    'zuletzt geändert: $date',
+                    'zuletzt geändert: $dateText',
                   ),
                 ],
               ),

@@ -1,22 +1,28 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import 'package:drift/drift.dart' as drift;
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../core/database/local_database.dart';
-import '../../core/provider/theme_changer.dart';
-import '../../core/services/torch_controller.dart';
+
+import '../../core/provider/chart_provider.dart';
+import '../../core/provider/entry_card_provider.dart';
+import '../widgets/details_meter/add_entry.dart';
+import '../widgets/details_meter/charts/count_line_chart.dart';
+import '../widgets/details_meter/charts/usage_line_chart.dart';
 import '../widgets/details_meter/cost_card.dart';
 import '../widgets/details_meter/entry_card.dart';
-import '../widgets/details_meter/meter_count_line_chart.dart';
+import '../widgets/details_meter/charts/count_bar_chart.dart';
+import '../widgets/tags_screen/tag_chip.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
   final RoomData? room;
+  final List<String> tagsId;
 
-  const DetailsSingleMeter({Key? key, required this.meter, required this.room})
+  const DetailsSingleMeter(
+      {Key? key, required this.meter, required this.room, required this.tagsId})
       : super(key: key);
 
   @override
@@ -24,81 +30,112 @@ class DetailsSingleMeter extends StatefulWidget {
 }
 
 class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
-  final TextEditingController _datecontroller = TextEditingController();
-  final TextEditingController _countercontroller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  DateTime? _selectedDate = DateTime.now();
   String _meterName = '';
+  String _roomName = '';
   late MeterData _meter;
   late RoomData? _room;
 
-  final TorchController _torchController = TorchController();
+  int _activeChartWidget = 0;
+
+  late final AddEntry _addEntry;
 
   @override
   void initState() {
     _meterName = widget.meter.number;
     _meter = widget.meter;
     _room = widget.room;
+    _roomName = widget.room?.name ?? '';
+    _addEntry = AddEntry(meter: _meter);
     super.initState();
   }
 
   @override
   void dispose() {
-    _datecontroller.dispose();
-    _countercontroller.dispose();
-
+    _addEntry.dispose();
     super.dispose();
   }
 
-  void _showDatePicker(BuildContext context) async {
-    await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(DateTime.now().year - 10),
-      lastDate: DateTime.now(),
-    ).then((pickedDate) {
-      if (pickedDate == null) {
-        return;
-      }
-
-      setState(() {
-        _selectedDate = pickedDate;
-        _datecontroller.text = DateFormat('dd.MM.yyyy').format(_selectedDate!);
-      });
-    });
+  Widget _meterInformationWidget() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12.0, right: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            _meter.note,
+            style: const TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          Text(
+            _roomName,
+            style: const TextStyle(
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  _saveEntry() async {
+  Widget _tags() {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final List<String> tags = _meter.tag!.split(';');
 
-    if (_formKey.currentState!.validate()) {
-      final entry = EntriesCompanion(
-        meter: drift.Value(widget.meter.id),
-        date: drift.Value(_selectedDate!),
-        count: drift.Value(int.parse(_countercontroller.text)),
-      );
 
-      await db.meterDao.createEntry(entry).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Eintrag wird hinzugefügt!'),
+    return Column(
+      children: [
+        Container(
+          height: 30,
+          padding: const EdgeInsets.only(left: 8),
+          child: ListView.builder(
+            itemCount: tags.length,
+            scrollDirection: Axis.horizontal,
+            itemBuilder: (context, index) => FutureBuilder(
+              future: db.tagsDao.getSingleTag(int.parse(tags[index])),
+              builder: (context, tag) {
+                if (tag.data != null) {
+                  return Container(
+                    width: 100,
+                    padding: const EdgeInsets.only(left: 8),
+                    child: TagChip(
+                      checked: false,
+                      delete: false,
+                      tag: tag.data!,
+                    ),
+                  );
+                } else {
+                  return Container();
+                }
+              },
+            ),
           ),
-        );
-        Navigator.of(context).pop();
-        _countercontroller.clear();
-        _selectedDate = DateTime.now();
-      });
-    }
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_meterName),
+        leading: BackButton(
+          onPressed: () {
+            Navigator.of(context).pop(_room);
+          },
+        ),
         actions: [
           IconButton(
-            onPressed: () => _showBottomModel(context),
+            onPressed: () {
+              _addEntry.showBottomModel(context, entryProvider);
+            },
             icon: const Icon(Icons.add),
           ),
           IconButton(
@@ -109,16 +146,20 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                     builder: (context) => AddScreen(
                       meter: _meter,
                       room: _room,
+                      tagsId: widget.tagsId,
                     ),
                   )).then((value) {
                 if (value == null) {
                   return;
                 }
-                _meter = value as MeterData;
+
+                _meter = value[0] as MeterData;
+                _room = value[1] as RoomData?;
+
                 setState(
                   () {
                     _meterName = _meter.number;
-                    _room;
+                    _roomName = _room?.name ?? '';
                   },
                 );
               });
@@ -130,151 +171,60 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Zählernummer
-            Padding(
-              padding: const EdgeInsets.only(left: 12.0, right: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _meter.note,
-                    style: const TextStyle(
-                      fontSize: 18,
-                    ),
-                  ),
-                  Text(
-                    _room == null ? '' : _room!.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _meterInformationWidget(),
             const Divider(),
+            if (_meter.tag != null && _meter.tag!.isNotEmpty) _tags(),
             EntryCard(meter: widget.meter),
             const SizedBox(
               height: 10,
             ),
-            LineChartSingleMeter(
-              meterId: widget.meter.id,
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      height: 340,
+                      enableInfiniteScroll: false,
+                      viewportFraction: 1,
+                      onPageChanged: (index, reason) {
+                        setState(() {
+                          _activeChartWidget = index;
+                        });
+                      },
+                    ),
+                    items: [
+                      if (!chartProvider.getLineChart)
+                        CountBarChart(
+                          meter: _meter,
+                        ),
+                      if (chartProvider.getLineChart)
+                        CountLineChart(
+                          meter: _meter,
+                        ),
+                      UsageLineChart(meter: _meter),
+                    ],
+                  ),
+                ),
+                AnimatedSmoothIndicator(
+                  activeIndex: _activeChartWidget,
+                  count: 2,
+                  effect: WormEffect(
+                    activeDotColor: Theme.of(context).primaryColorLight,
+                    dotHeight: 10,
+                    dotWidth: 10,
+                  ),
+                ),
+              ],
             ),
 
             CostBar(meter: _meter),
           ],
         ),
       ),
-    );
-  }
-
-  _showBottomModel(BuildContext context) {
-    var getMode =
-        Provider.of<ThemeChanger>(context, listen: false).getThemeMode;
-    bool darkMode;
-    if (getMode == ThemeMode.dark || getMode == ThemeMode.system) {
-      darkMode = true;
-    } else {
-      darkMode = false;
-    }
-
-    return showModalBottomSheet(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      isScrollControlled: true,
-      context: context,
-      builder: (context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: Container(
-            height: 400,
-            padding: const EdgeInsets.all(25),
-            child: Center(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  // crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Neuer Zählerstand',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            // _getTorch();
-                            _torchController.getTorch();
-                          },
-                          icon: Icon(
-                            Icons.flashlight_on,
-                            color: darkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    TextFormField(
-                      readOnly: true,
-                      textInputAction: TextInputAction.next,
-                      controller: _datecontroller
-                        ..text = _selectedDate != null
-                            ? DateFormat('dd.MM.yyyy').format(_selectedDate!)
-                            : '',
-                      onTap: () => _showDatePicker(context),
-                      decoration: const InputDecoration(
-                          icon: Icon(Icons.date_range), label: Text('Datum')),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Bitte geben sie den Zählerstand an!';
-                        }
-                        if (int.parse(value) < 0) {
-                          return 'Bitte gebe eine positive Zahl an!';
-                        }
-                        return null;
-                      },
-                      controller: _countercontroller,
-                      decoration: const InputDecoration(
-                          icon: Icon(Icons.onetwothree),
-                          label: Text('Zählerstand')),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _saveEntry,
-                          icon: const Icon(Icons.check),
-                          label: const Text('Speichern'),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

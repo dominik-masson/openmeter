@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
@@ -11,18 +10,20 @@ import 'daos/contract_dao.dart';
 import 'daos/entry_dao.dart';
 import 'daos/meter_dao.dart';
 import 'daos/room_dao.dart';
+import 'daos/tags_dao.dart';
 import 'tables/contract.dart';
 import 'tables/entries.dart';
 import 'tables/meter.dart';
 import 'tables/room.dart';
+import 'tables/tags.dart';
 
 part 'local_database.g.dart';
 
 // create => flutter pub run build_runner build
 
 @DriftDatabase(
-    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider],
-    daos: [MeterDao, EntryDao, RoomDao, ContractDao])
+    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider, Tags],
+    daos: [MeterDao, EntryDao, RoomDao, ContractDao, TagsDao])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
@@ -45,14 +46,28 @@ class LocalDatabase extends _$LocalDatabase {
     final appDir = await getApplicationDocumentsDirectory();
     final File file = File(p.join(appDir.path, 'meter.db'));
 
-    if(file.existsSync()){
+    if (file.existsSync()) {
       file.deleteSync();
     }
 
+    // file.copy(path);
     newDB.execute('VACUUM INTO ?', [file.path]);
 
-    newDB.dispose();
+    // https://github.com/simolus3/drift/issues/376
+  }
 
+  Future<void> deleteDB() async {
+    const statement = 'PRAGMA foreign_keys = OFF';
+    await customStatement(statement);
+    try {
+      transaction(() async {
+        for (final table in allTables) {
+          await delete(table).go();
+        }
+      });
+    } finally {
+      await customStatement(statement);
+    }
   }
 }
 

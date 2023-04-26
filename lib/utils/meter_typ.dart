@@ -59,7 +59,7 @@ Map<String, dynamic> meterTyps = {
     ),
   },
   'Heizung': {
-    'einheit': 'Einheit',
+    'einheit': 'kWh',
     'anbieter': 'Heizungsgebühren',
     'avatar': const CircleAvatar(
       backgroundColor: Colors.orange,

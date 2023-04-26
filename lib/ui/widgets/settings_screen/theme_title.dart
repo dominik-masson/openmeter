@@ -22,6 +22,7 @@ class _ThemeTitleState extends State<ThemeTitle> {
   Widget build(BuildContext context) {
     final themeChanger = Provider.of<ThemeChanger>(context, listen: false);
     _night = themeChanger.getNightMode;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
-import '../utils/room_typ.dart';
+import '../../core/provider/refresh_provider.dart';
+import '../../utils/room_typ.dart';
 import '../widgets/homescreen/meter_card.dart';
 
 class DetailsRoom extends StatefulWidget {
@@ -21,7 +22,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
   bool _update = false;
   String _roomTyp = 'Sonstiges';
   late RoomData _currentRoom;
-  final MeterCard _meterCard = const MeterCard();
+  final MeterCard _meterCard = MeterCard();
 
   @override
   void initState() {
@@ -31,8 +32,18 @@ class _DetailsRoomState extends State<DetailsRoom> {
     super.initState();
   }
 
+  void _refresh() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final refresh = Provider.of<RefreshProvider>(context);
+
+    if (refresh.refreshState) {
+      _refresh();
+      refresh.setRefresh(false);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(_name.text),
@@ -102,7 +113,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
   }
 
   Widget _listMeters(int roomId) {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
+    final db = Provider.of<LocalDatabase>(context);
     return FutureBuilder(
       future: db.roomDao.getMeterInRooms(roomId),
       builder: (context, snapshot) {
@@ -129,27 +140,36 @@ class _DetailsRoomState extends State<DetailsRoom> {
                       return Container();
                     }
 
+                    String? tagsId = meter.tag;
+                    List<String> listTagsId = [];
+
+                    if (tagsId != null) {
+                      listTagsId = tagsId.split(';');
+                    }
+
                     return StreamBuilder(
-                      stream: db.meterDao.getNewestEntry(meter.id),
+                      stream: db.entryDao.getNewestEntry(meter.id),
                       builder: (context, snapshot) {
                         final entry = snapshot.data?[0];
-                        final String date;
+                        final DateTime? date;
                         final String count;
 
                         if (entry == null) {
-                          date = 'none';
+                          date = null;
                           count = 'none';
                         } else {
-                          date = DateFormat('dd.MM.yyyy').format(entry.date);
+                          date = entry.date;
                           count = entry.count.toString();
                         }
 
                         return _meterCard.getCard(
-                            context: context,
-                            meter: meter,
-                            room: _currentRoom,
-                            date: date,
-                            count: count);
+                          context: context,
+                          meter: meter,
+                          room: _currentRoom,
+                          date: date,
+                          count: count,
+                          tags: listTagsId,
+                        );
                       },
                     );
                   },
@@ -165,28 +185,31 @@ class _DetailsRoomState extends State<DetailsRoom> {
   Widget _dropDownMenu(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
-      child: DropdownButtonFormField(
-        value: _roomTyp,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          label: Text(
-            'Zimmertyp',
-          ),
-          icon: Icon(Icons.bedroom_parent_outlined),
-        ),
-        items: roomTyps.map((e) {
-          return DropdownMenuItem(
-            value: e,
-            child: Row(
-              children: [
-                Text(e.toString()),
-              ],
+      child: IgnorePointer(
+        ignoring: !_update,
+        child: DropdownButtonFormField(
+          value: _roomTyp,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            label: Text(
+              'Zimmertyp',
             ),
-          );
-        }).toList(),
-        onChanged: (value) {
-          _roomTyp = value.toString();
-        },
+            icon: Icon(Icons.bedroom_parent_outlined),
+          ),
+          items: roomTyps.map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: Row(
+                children: [
+                  Text(e.toString()),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            _roomTyp = value.toString();
+          },
+        ),
       ),
     );
   }
@@ -196,12 +219,11 @@ class _DetailsRoomState extends State<DetailsRoom> {
   ) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     if (_formKey.currentState!.validate()) {
-
-      if(_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name){
+      if (_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name) {
         return;
       }
 
-      if(_name.text.isEmpty){
+      if (_name.text.isEmpty) {
         _name.text = _roomTyp;
       }
 

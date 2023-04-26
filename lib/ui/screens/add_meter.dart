@@ -4,15 +4,19 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
-import '../../core/provider/theme_changer.dart';
+import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
-import '../utils/meter_typ.dart';
+import '../../../utils/meter_typ.dart';
+import '../widgets/tags_screen/add_tags.dart';
+import '../widgets/tags_screen/tag_chip.dart';
 
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
   final RoomData? room;
+  final List<String> tagsId;
 
-  const AddScreen({Key? key, required this.meter, required this.room})
+  const AddScreen(
+      {Key? key, required this.meter, required this.room, required this.tagsId})
       : super(key: key);
 
   @override
@@ -20,20 +24,30 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
+  final AddTags _addTags = AddTags();
+
   final TextEditingController _meternumber = TextEditingController();
   final TextEditingController _meternote = TextEditingController();
   final TextEditingController _metervalue = TextEditingController();
+  final TextEditingController _unitController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   String _meterTyp = 'Stromzähler';
   int _roomId = -2; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeter = false;
+  RoomData? _room;
+  List<String> _tagsId = [];
+  final List<int> _tagChecked = [];
+  int _firstLoad = 0;
+
   final List<DropdownMenuItem> _roomList = [
     const DropdownMenuItem(
       value: -1,
       child: Text('Keinem Zimmer zugeordnet'),
     ),
   ];
+
   final TorchController _torchController = TorchController();
 
   @override
@@ -43,32 +57,56 @@ class _AddScreenState extends State<AddScreen> {
     } else {
       _setController();
     }
+
+    if (widget.room != null) {
+      _room = widget.room!;
+    } else {
+      _roomId = -1;
+    }
+
+    if (widget.tagsId.isNotEmpty) {
+      _tagsId = widget.tagsId;
+    }
+
     super.initState();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _meternumber.dispose();
     _meternote.dispose();
     _metervalue.dispose();
+    super.dispose();
   }
 
+  /*
+    init values when meter is to be updated
+   */
   void _setController() {
-    if (widget.room != null) {}
-
     _pageTitle = widget.meter!.number;
     _meternumber.text = widget.meter!.number;
     _meternote.text = widget.meter!.note;
     _meterTyp = widget.meter!.typ;
     _updateMeter = true;
+    _unitController.text = widget.meter!.unit;
   }
 
   Future<void> _saveEntry() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    String? tagsId;
 
+    // handle empty Note and Units
     if (_meternote.text.isEmpty) {
       _meternote.text = '';
+    }
+    if (_unitController.text.isEmpty) {
+      _unitController.text = '';
+    }
+
+    // handle selected tags
+    if (_tagsId.isNotEmpty) {
+      _tagsId.sort();
+      tagsId = _tagsId.join(';');
     }
 
     if (_formKey.currentState!.validate()) {
@@ -76,14 +114,14 @@ class _AddScreenState extends State<AddScreen> {
         typ: drift.Value(_meterTyp),
         number: drift.Value(_meternumber.text),
         note: drift.Value(_meternote.text),
+        unit: drift.Value(_unitController.text),
+        tag: drift.Value(tagsId),
       );
 
       if (!_updateMeter) {
         int meterId = await db.meterDao.createMeter(meter);
 
-
         if (_roomId != -2 || _roomId != -1) {
-
           final room = MeterInRoomCompanion(
             meterId: drift.Value(meterId),
             roomId: drift.Value(_roomId),
@@ -96,9 +134,11 @@ class _AddScreenState extends State<AddScreen> {
           count: drift.Value(int.parse(_metervalue.text)),
           date: drift.Value(DateTime.now()),
           meter: drift.Value(meterId),
+          usage: const drift.Value(-1),
+          days: const drift.Value(-1),
         );
 
-        await db.meterDao.createEntry(entry).then((value) {
+        await db.entryDao.createEntry(entry).then((value) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
               'Zähler wird erstellt!',
@@ -107,23 +147,28 @@ class _AddScreenState extends State<AddScreen> {
           Navigator.of(context).pop();
         });
       } else {
+        Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
+
         MeterData meterData = MeterData(
-            typ: _meterTyp,
-            note: _meternote.text,
-            number: _meternumber.text,
-            id: widget.meter!.id);
+          typ: _meterTyp,
+          note: _meternote.text,
+          number: _meternumber.text,
+          id: widget.meter!.id,
+          unit: _unitController.text,
+          tag: tagsId,
+        );
 
         if (_roomId != -2) {
           if (_roomId == -1) {
             await db.roomDao.deleteMeter(widget.meter!.id);
           } else {
             await db.roomDao.deleteMeter(widget.meter!.id);
-            final room = MeterInRoomCompanion(
+            final roomWithMeter = MeterInRoomCompanion(
               meterId: drift.Value(widget.meter!.id),
               roomId: drift.Value(_roomId),
             );
 
-            await db.roomDao.createMeterInRoom(room);
+            await db.roomDao.createMeterInRoom(roomWithMeter);
           }
         }
 
@@ -133,7 +178,7 @@ class _AddScreenState extends State<AddScreen> {
               'Zähler wird aktualisiert!',
             ),
           ));
-          Navigator.of(context).pop(meterData);
+          Navigator.of(context).pop([meterData, _room]);
         });
       }
     }
@@ -141,28 +186,32 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var getMode =
-        Provider.of<ThemeChanger>(context, listen: false).getThemeMode;
-    bool darkMode;
-    if (getMode == ThemeMode.dark || getMode == ThemeMode.system) {
-      darkMode = true;
-    } else {
-      darkMode = false;
-    }
+    bool isTorchOn = _torchController.stateTorch;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_pageTitle),
         actions: [
           IconButton(
+            onPressed: _saveEntry,
+            icon: const Icon(Icons.save),
+          ),
+          IconButton(
             onPressed: () {
-              // _getTorch();
+              setState(() {
+                isTorchOn = !isTorchOn;
+              });
               _torchController.getTorch();
             },
-            icon: Icon(
-              Icons.flashlight_on,
-              color: darkMode ? Colors.white : Colors.black,
-            ),
+            icon: isTorchOn
+                ? const Icon(
+                    Icons.flashlight_on,
+                    // color: darkMode ? Colors.white : Colors.black,
+                  )
+                : const Icon(
+                    Icons.flashlight_off,
+                    // color: darkMode ? Colors.white : Colors.black,
+                  ),
           ),
         ],
       ),
@@ -176,6 +225,10 @@ class _AddScreenState extends State<AddScreen> {
               child: Column(
                 children: [
                   _dropdownMeterTyp(context),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  _unitInput(context),
                   const SizedBox(
                     height: 15,
                   ),
@@ -221,7 +274,7 @@ class _AddScreenState extends State<AddScreen> {
                         // icon: Icon(Icons.assessment_outlined),
                         icon: FaIcon(
                           FontAwesomeIcons.chartSimple,
-                          size: 18,
+                          size: 16,
                         ),
                       ),
                     ),
@@ -229,6 +282,10 @@ class _AddScreenState extends State<AddScreen> {
                     height: 15,
                   ),
                   _dropDownRoom(context),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  _tags(context),
                   const SizedBox(
                     height: 30,
                   ),
@@ -252,6 +309,123 @@ class _AddScreenState extends State<AddScreen> {
     );
   }
 
+  Widget _tags(BuildContext context) {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.all(0),
+            title: const Text('Tags'),
+            leading: FaIcon(
+              FontAwesomeIcons.tags,
+              size: 20,
+              color: Theme.of(context).hintColor,
+            ),
+            trailing: IconButton(
+              onPressed: () {
+                _addTags.getAddTags(context);
+              },
+              icon: Icon(Icons.add,
+              color: Theme.of(context).iconTheme.color,
+            )),
+          ),
+          StreamBuilder(
+            stream: db.tagsDao.watchAllTags(),
+            builder: (context, snapshot) {
+              final List<Tag> tags = snapshot.data ?? [];
+
+              if (tags.isEmpty) {
+                return Container();
+              }
+              return SizedBox(
+                height: 50,
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      Widget child = Container();
+
+                      if (_tagChecked.contains(index) ||
+                          _tagsId.contains(tags[index].id.toString())) {
+                        child = Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TagChip(
+                            delete: false,
+                            checked: true,
+                            tag: tags[index],
+                          ),
+                        );
+                      } else {
+                        child = Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TagChip(
+                            delete: false,
+                            checked: false,
+                            tag: tags[index],
+                          ),
+                        );
+                      }
+
+                      return GestureDetector(
+                        onTap: () {
+                          if (_tagChecked.contains(index) ||
+                              _tagsId.contains(tags[index].id.toString())) {
+                            _tagsId.remove(tags[index].id.toString());
+                            setState(() {
+                              _tagChecked.remove(index);
+                            });
+                          } else {
+                            _tagsId.add(tags[index].id.toString());
+
+                            setState(() {
+                              _tagChecked.add(index);
+                            });
+                          }
+                        },
+                        child: SizedBox(width: 120, child: child),
+                      );
+                    }),
+              );
+            },
+          ),
+          Divider(
+            color: Theme.of(context).indicatorColor,
+            thickness: 0.4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _unitInput(BuildContext context) {
+    if (_unitController.text.isEmpty) {
+      _unitController.text = meterTyps[_meterTyp]['einheit'];
+    }
+
+    return TextFormField(
+      textInputAction: TextInputAction.next,
+      decoration: const InputDecoration(
+        icon: FaIcon(
+          FontAwesomeIcons.ruler,
+          size: 16,
+        ),
+        label: Text('Einheit'),
+      ),
+      controller: _unitController,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Bitte geben Sie eine Einheit an!';
+        }
+        return null;
+      },
+    );
+  }
+
   Widget _dropdownMeterTyp(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
@@ -267,7 +441,7 @@ class _AddScreenState extends State<AddScreen> {
         decoration: const InputDecoration(
           label: Text('Zählertyp'),
           icon: Icon(Icons.gas_meter_outlined),
-          contentPadding: EdgeInsets.all(0.0),
+          // contentPadding: EdgeInsets.all(0.0),
           isDense: true,
         ),
         value: _meterTyp,
@@ -286,9 +460,8 @@ class _AddScreenState extends State<AddScreen> {
           );
         }).toList(),
         onChanged: (value) {
-          setState(() {
-            _meterTyp = value!;
-          });
+          _meterTyp = value!;
+          _unitController.text = meterTyps[_meterTyp]['einheit'];
         },
       ),
     );
@@ -305,14 +478,16 @@ class _AddScreenState extends State<AddScreen> {
 
   Widget _dropDownRoom(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
-
-    if (_updateMeter && widget.room?.id != null) {
+    if (_updateMeter) {
       return StreamBuilder(
         stream: data.roomDao.watchAllRooms(),
         builder: (context, snapshot) {
           final roomList = snapshot.data ?? [];
 
-          _createRoomDropDown(roomList);
+          if (_firstLoad != 2) {
+            _createRoomDropDown(roomList);
+            _firstLoad++;
+          }
 
           if (_roomList.length != 1) {
             return Padding(
@@ -326,14 +501,24 @@ class _AddScreenState extends State<AddScreen> {
                   // icon: Icon(Icons.bedroom_parent_outlined),
                   icon: FaIcon(
                     FontAwesomeIcons.bed,
-                    size: 18,
+                    size: 16,
                   ),
                 ),
                 items: _roomList,
-                // value: widget.room!.id,
-                value: widget.room!.id,
+                value: _room?.id ?? -1,
                 onChanged: (value) {
                   _roomId = int.parse(value.toString());
+
+                  if (value >= 0) {
+                    for (RoomData rd in roomList) {
+                      if (rd.id == value) {
+                        _room = rd;
+                        break;
+                      }
+                    }
+                  } else {
+                    _room = null;
+                  }
                 },
               ),
             );
@@ -348,7 +533,10 @@ class _AddScreenState extends State<AddScreen> {
       builder: (context, snapshot) {
         final roomList = snapshot.data ?? [];
 
-        _createRoomDropDown(roomList);
+        if (_firstLoad != 2) {
+          _createRoomDropDown(roomList);
+          _firstLoad++;
+        }
 
         return Padding(
           padding: const EdgeInsets.only(right: 4),
@@ -361,7 +549,7 @@ class _AddScreenState extends State<AddScreen> {
               // icon: Icon(Icons.bedroom_parent_outlined),
               icon: FaIcon(
                 FontAwesomeIcons.bed,
-                size: 18,
+                size: 16,
               ),
             ),
             value: _roomId == -2 ? -1 : _roomId,
