@@ -14,6 +14,9 @@ Over time, many more features are to be added and eventually the app will be rel
 
 ### Current functions
 
+- create tags and assign them to meters
+- local notifications
+- keep display awake
 - part meter in rooms 
 - dark mode
 - toggle flashlight 
