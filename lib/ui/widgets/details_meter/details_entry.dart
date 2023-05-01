@@ -6,7 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
-import '../../../utils/meter_typ.dart';
+
 
 class DetailsEntry {
   bool _stateNote = false; // if ture => write some note

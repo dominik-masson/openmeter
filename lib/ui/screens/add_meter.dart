@@ -415,6 +415,7 @@ class _AddScreenState extends State<AddScreen> {
           size: 16,
         ),
         label: Text('Einheit'),
+        hintText: 'm^3 entspricht m\u00B3'
       ),
       controller: _unitController,
       validator: (value) {

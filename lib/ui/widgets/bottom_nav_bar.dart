@@ -18,7 +18,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   final List _screen = const [
     HomeScreen(),
-
+    // StatsScreen(),
     ObjectsScreen(),
   ];
 
@@ -36,7 +36,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(CustomIcons.voltmeter), label: 'Zähler'),
-
+          // BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Statistik'),
           BottomNavigationBarItem(icon: Icon(Icons.widgets), label: 'Objekte'),
 
         ],

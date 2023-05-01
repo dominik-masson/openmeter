@@ -7,6 +7,7 @@ import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
+import '../../../utils/convert_meter_unit.dart';
 import '../../screens/details_single_meter.dart';
 import '../../../utils/meter_typ.dart';
 import '../tags_screen/tag_chip.dart';
@@ -160,9 +161,10 @@ class MeterCard {
                       ),
                       Column(
                         children: [
-                          Text(
-                            '$count ${meter.unit}',
-                            style: const TextStyle(fontSize: 14),
+                          ConvertMeterUnit().getUnitWidget(
+                            count: count,
+                            unit: meter.unit,
+                            textStyle: const TextStyle(fontSize: 16),
                           ),
                           const Text(
                             "Zählerstand",

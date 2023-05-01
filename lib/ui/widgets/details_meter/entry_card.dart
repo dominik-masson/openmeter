@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../utils/convert_meter_unit.dart';
 
 class EntryCard extends StatelessWidget {
   final MeterData meter;
@@ -159,9 +160,10 @@ class EntryCard extends StatelessWidget {
                                   children: [
                                     Column(
                                       children: [
-                                        Text(
-                                          '${item.count} $unit',
-                                          style: const TextStyle(fontSize: 16),
+                                        ConvertMeterUnit().getUnitWidget(
+                                          count: item.count.toString(),
+                                          unit: unit,
+                                          textStyle: const TextStyle(fontSize: 16),
                                         ),
                                         const Text(
                                           'Zählerstand',
@@ -172,9 +174,10 @@ class EntryCard extends StatelessWidget {
                                     if (usage != -1)
                                       Column(
                                         children: [
-                                          Text(
-                                            '+$usage $unit',
-                                            style: TextStyle(
+                                          ConvertMeterUnit().getUnitWidget(
+                                            count: '+$usage',
+                                            unit: unit,
+                                            textStyle: TextStyle(
                                               fontSize: 16,
                                               color: entryProvider.getColors(
                                                   item.count, usage),
