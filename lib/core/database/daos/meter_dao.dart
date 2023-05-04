@@ -33,7 +33,8 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
   }
 
   Future<List<MeterData>> getMeterByTag(String tagId) async {
-    return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId))).get();
+    return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId)))
+        .get();
   }
 
   Future updateMeter(MeterData meter) async {
@@ -76,5 +77,15 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         }).toList();
       },
     );
+  }
+
+  Future<List<String?>> getAllMeterTyps() async {
+    final query = selectOnly(db.meter, distinct: true)..addColumns([meter.typ]);
+
+    List<String?> result = await query.map((row) => row.read(meter.typ)).get();
+
+    result.sort((a, b) => a!.compareTo(b!),);
+
+    return result;
   }
 }

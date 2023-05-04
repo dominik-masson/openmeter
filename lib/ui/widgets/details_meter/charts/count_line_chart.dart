@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/database/local_database.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
 class CountLineChart extends StatefulWidget {
@@ -20,6 +21,7 @@ class CountLineChart extends StatefulWidget {
 class _CountLineChartState extends State<CountLineChart> {
   bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   List<LineChartBarData> _lineData(List<Entrie> entries) {
     List<FlSpot> spots = entries.map((e) {
@@ -138,7 +140,7 @@ class _CountLineChartState extends State<CountLineChart> {
             final String dateFormat = DateFormat('dd.MM.yyyy').format(date);
 
             return LineTooltipItem(
-              '$dateFormat \n ${e.y.toInt()}  ${widget.meter.unit}',
+              '$dateFormat \n ${e.y.toInt()}  ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -183,8 +185,9 @@ class _CountLineChartState extends State<CountLineChart> {
 
         if (_twelveMonths && entries.length > 12) {
           List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              newEntries.getRange(newEntries.length - 12, newEntries.length).toList();
+          finalEntries = newEntries
+              .getRange(newEntries.length - 12, newEntries.length)
+              .toList();
         } else {
           finalEntries = entries;
         }
@@ -192,8 +195,6 @@ class _CountLineChartState extends State<CountLineChart> {
         if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
         }
-
-
 
         return SizedBox(
           height: 300,
@@ -257,9 +258,10 @@ class _CountLineChartState extends State<CountLineChart> {
                 if (!isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 5),
-                    child: Text(
-                      widget.meter.unit,
-                      style: const TextStyle(
+                    child: _convertMeterUnit.getUnitWidget(
+                      count: '',
+                      unit: widget.meter.unit,
+                      textStyle: const TextStyle(
                         fontSize: 12,
                       ),
                     ),

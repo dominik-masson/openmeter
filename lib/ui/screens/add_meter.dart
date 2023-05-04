@@ -7,6 +7,7 @@ import '../../core/database/local_database.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
+import '../../utils/convert_meter_unit.dart';
 import '../widgets/tags_screen/add_tags.dart';
 import '../widgets/tags_screen/tag_chip.dart';
 
@@ -25,6 +26,8 @@ class AddScreen extends StatefulWidget {
 
 class _AddScreenState extends State<AddScreen> {
   final AddTags _addTags = AddTags();
+
+  final ConvertMeterUnit convertMeterUnit = ConvertMeterUnit();
 
   final TextEditingController _meternumber = TextEditingController();
   final TextEditingController _meternote = TextEditingController();
@@ -326,12 +329,13 @@ class _AddScreenState extends State<AddScreen> {
               color: Theme.of(context).hintColor,
             ),
             trailing: IconButton(
-              onPressed: () {
-                _addTags.getAddTags(context);
-              },
-              icon: Icon(Icons.add,
-              color: Theme.of(context).iconTheme.color,
-            )),
+                onPressed: () {
+                  _addTags.getAddTags(context);
+                },
+                icon: Icon(
+                  Icons.add,
+                  color: Theme.of(context).iconTheme.color,
+                )),
           ),
           StreamBuilder(
             stream: db.tagsDao.watchAllTags(),
@@ -403,27 +407,54 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   Widget _unitInput(BuildContext context) {
-    if (_unitController.text.isEmpty) {
+    if (_unitController.text.isEmpty && _firstLoad == 0) {
       _unitController.text = meterTyps[_meterTyp]['einheit'];
     }
 
-    return TextFormField(
-      textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(
-        icon: FaIcon(
-          FontAwesomeIcons.ruler,
-          size: 16,
+    return Row(
+      children: [
+        Flexible(
+          child: TextFormField(
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+                icon: FaIcon(
+                  FontAwesomeIcons.ruler,
+                  size: 16,
+                ),
+                label: Text('Einheit'),
+                hintText: 'm^3 entspricht m\u00B3'),
+            controller: _unitController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Bitte geben Sie eine Einheit an!';
+              }
+              return null;
+            },
+            onChanged: (value) {
+              setState(() {});
+            },
+          ),
         ),
-        label: Text('Einheit'),
-        hintText: 'm^3 entspricht m\u00B3'
-      ),
-      controller: _unitController,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Bitte geben Sie eine Einheit an!';
-        }
-        return null;
-      },
+        Column(
+          children: [
+            const Text(
+              'Vorschau',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            convertMeterUnit.getUnitWidget(
+              count: '',
+              unit: _unitController.text,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 19,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

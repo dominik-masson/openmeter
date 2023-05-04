@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/database/local_database.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
 class CountBarChart extends StatefulWidget {
@@ -22,6 +23,7 @@ class _CountBarChartState extends State<CountBarChart> {
   bool _twelveMonths = true;
 
   final ChartHelper _helper = ChartHelper();
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   AxisTitles _bottomTitles() {
     return AxisTitles(
@@ -117,7 +119,7 @@ class _CountBarChartState extends State<CountBarChart> {
           String formatDate = DateFormat('MM.yyyy').format(date);
 
           String text =
-              '$formatDate \n  ${rod.toY.round().toString()} ${widget.meter.unit}';
+              '$formatDate \n  ${rod.toY.round().toString()} ${_convertMeterUnit.getUnitString(widget.meter.unit)}';
 
           return BarTooltipItem(
             text,
@@ -182,8 +184,9 @@ class _CountBarChartState extends State<CountBarChart> {
 
         if (_twelveMonths && entries.length > 12) {
           List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              newEntries.getRange(newEntries.length - 12, newEntries.length).toList();
+          finalEntries = newEntries
+              .getRange(newEntries.length - 12, newEntries.length)
+              .toList();
         } else {
           finalEntries = entries;
         }
@@ -251,9 +254,10 @@ class _CountBarChartState extends State<CountBarChart> {
                 if (!isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 10),
-                    child: Text(
-                      widget.meter.unit,
-                      style: const TextStyle(
+                    child: _convertMeterUnit.getUnitWidget(
+                      count: '',
+                      unit: widget.meter.unit,
+                      textStyle: const TextStyle(
                         fontSize: 12,
                       ),
                     ),

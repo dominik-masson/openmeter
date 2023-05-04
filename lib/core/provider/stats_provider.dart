@@ -1,16 +1,25 @@
 import 'package:flutter/cupertino.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StatsProvider extends ChangeNotifier {
   late SharedPreferences _prefs;
   final String _keyListTags = 'selected_tags';
   final String _keyHandleTags = 'handle_tags';
+  List<String?> _meterTypsList = [];
 
   List<String> _tagsIds = [];
   int _handleTags = 1;
 
   StatsProvider() {
     _loadFromPrefs();
+  }
+
+  List<String?> get getMeterTyps => _meterTypsList;
+
+  void setMeterTyps(List<String?> items){
+    _meterTypsList = items;
+    notifyListeners();
   }
 
   _initPrefs() async {
@@ -45,4 +54,5 @@ class StatsProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
 class UsageLineChart extends StatefulWidget {
@@ -19,6 +20,7 @@ class UsageLineChart extends StatefulWidget {
 class _UsageLineChartState extends State<UsageLineChart> {
   bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   List<LineChartBarData> _lineData(List<Entrie> entries) {
     List<FlSpot> spots = entries.map((e) {
@@ -142,7 +144,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
             final String dateFormat = DateFormat('dd.MM.yyyy').format(date);
 
             return LineTooltipItem(
-              '$dateFormat \n ${e.y.toInt()} ${widget.meter.unit}',
+              '$dateFormat \n ${e.y.toInt()} ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -189,13 +191,14 @@ class _UsageLineChartState extends State<UsageLineChart> {
 
         if (_twelveMonths && entries.length > 12) {
           List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              newEntries.getRange(newEntries.length - 12, newEntries.length).toList();
+          finalEntries = newEntries
+              .getRange(newEntries.length - 12, newEntries.length)
+              .toList();
         } else {
           finalEntries = entries;
         }
 
-        if(finalEntries.isEmpty || finalEntries.length == 1){
+        if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
         }
 
@@ -242,15 +245,18 @@ class _UsageLineChartState extends State<UsageLineChart> {
                 if (!isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 5),
-                    child: Text(
-                      widget.meter.unit,
-                      style: const TextStyle(
+                    child: _convertMeterUnit.getUnitWidget(
+                      count: '',
+                      unit: widget.meter.unit,
+                      textStyle: const TextStyle(
                         fontSize: 12,
                       ),
                     ),
                   ),
                 if (!isEmpty) _lastMonths(finalEntries),
-                if(isEmpty) NoEntry().getNoData('Es sind keine oder zu wenige Einträge vorhanden'),
+                if (isEmpty)
+                  NoEntry().getNoData(
+                      'Es sind keine oder zu wenige Einträge vorhanden'),
               ],
             ),
           ),

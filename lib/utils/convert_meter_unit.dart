@@ -1,6 +1,22 @@
 import 'package:flutter/material.dart';
 
 class ConvertMeterUnit {
+  String getUnitString(String unit) {
+    final List<String> split = unit.split('^');
+
+    if (split.length == 1) {
+      return split.elementAt(0);
+    }
+
+    switch(split.elementAt(1)){
+      case '3':
+        return '${split.elementAt(0)}\u00B3';
+      default:
+        return '${split.elementAt(0)}\u00B2';
+    }
+
+  }
+
   Widget getUnitWidget({
     required String count,
     required String unit,
@@ -15,10 +31,12 @@ class ConvertMeterUnit {
       );
     }
 
+    String countText = count.isEmpty ? split[0] : '$count ${split[0]}';
+
     return RichText(
       text: TextSpan(children: [
         TextSpan(
-          text: '$count ${split[0]}',
+          text: countText,
           style: textStyle,
         ),
         WidgetSpan(

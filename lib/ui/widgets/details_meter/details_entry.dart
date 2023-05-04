@@ -6,11 +6,12 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
-
+import '../../../utils/convert_meter_unit.dart';
 
 class DetailsEntry {
   bool _stateNote = false; // if ture => write some note
   final TextEditingController _noteController = TextEditingController();
+  final ConvertMeterUnit convertMeterUnit = ConvertMeterUnit();
 
   late Entrie _entry;
   late EntryCardProvider _entryProvider;
@@ -79,9 +80,10 @@ class DetailsEntry {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '+$usage ${meter.unit}',
-                  style: TextStyle(
+                convertMeterUnit.getUnitWidget(
+                  count: '+$usage',
+                  unit: meter.unit,
+                  textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
                       entry.count,
@@ -116,12 +118,10 @@ class DetailsEntry {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${_entryProvider.getDailyUsage(
-                    usage,
-                    entry.days,
-                  )} ${meter.unit}',
-                  style: TextStyle(
+                convertMeterUnit.getUnitWidget(
+                  count: _entryProvider.getDailyUsage(usage, entry.days),
+                  unit: meter.unit,
+                  textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
                       entry.count,
@@ -129,6 +129,19 @@ class DetailsEntry {
                     ),
                   ),
                 ),
+                // Text(
+                //   '${_entryProvider.getDailyUsage(
+                //     usage,
+                //     entry.days,
+                //   )} ${meter.unit}',
+                //   style: TextStyle(
+                //     fontSize: 16,
+                //     color: _entryProvider.getColors(
+                //       entry.count,
+                //       usage,
+                //     ),
+                //   ),
+                // ),
                 const Text(
                   'pro Tag',
                   style: TextStyle(color: Colors.grey),
@@ -164,9 +177,10 @@ class DetailsEntry {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '+$usage ${meter.unit}',
-                  style: TextStyle(
+                convertMeterUnit.getUnitWidget(
+                  count: '+$usage',
+                  unit: meter.unit,
+                  textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
                       entry.count,
@@ -183,12 +197,10 @@ class DetailsEntry {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${_entryProvider.getDailyUsage(
-                    usage,
-                    entry.days,
-                  )} ${meter.unit}',
-                  style: TextStyle(
+                convertMeterUnit.getUnitWidget(
+                  count: _entryProvider.getDailyUsage(usage, entry.days),
+                  unit: meter.unit,
+                  textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
                       entry.count,
@@ -234,16 +246,14 @@ class DetailsEntry {
 
     return Column(
       children: [
-        if (!contract)
-          _noContractWidget(context, usage, meter, entry),
+        if (!contract) _noContractWidget(context, usage, meter, entry),
         if (contract)
-          _contractWidget(
-              context, usage, meter,  entry, costProvider),
+          _contractWidget(context, usage, meter, entry, costProvider),
       ],
     );
   }
 
-  _firstCount(BuildContext context){
+  _firstCount(BuildContext context) {
     return Column(
       children: [
         const Center(
@@ -255,7 +265,10 @@ class DetailsEntry {
             ),
           ),
         ),
-        if (_stateNote) _noteWidget(context,),
+        if (_stateNote)
+          _noteWidget(
+            context,
+          ),
       ],
     );
   }
@@ -305,9 +318,10 @@ class DetailsEntry {
                         DateFormat('dd.MM.yyyy').format(entry.date),
                         style: const TextStyle(fontSize: 16),
                       ),
-                      Text(
-                        '${entry.count} ${meter.unit}',
-                        style: const TextStyle(fontSize: 16),
+                      convertMeterUnit.getUnitWidget(
+                        count: entry.count.toString(),
+                        unit: meter.unit,
+                        textStyle: const TextStyle(fontSize: 16),
                       ),
                     ],
                   ),
@@ -320,8 +334,7 @@ class DetailsEntry {
                   const SizedBox(
                     height: 5,
                   ),
-                  if (usage == -1)
-                    _firstCount(context),
+                  if (usage == -1) _firstCount(context),
                   if (usage != -1)
                     _information(
                       context: context,
