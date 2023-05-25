@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../screens/details_room.dart';
 import '../../../utils/meter_typ.dart';
 
@@ -14,6 +15,8 @@ class RoomCard extends StatefulWidget {
 
 class _RoomCardState extends State<RoomCard> {
   Future<bool> _deleteRoom(BuildContext context, int roomId) async {
+    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
+
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -29,6 +32,9 @@ class _RoomCardState extends State<RoomCard> {
                   Provider.of<LocalDatabase>(context, listen: false)
                       .roomDao
                       .deleteRoom(roomId);
+
+                  autoBackUp.setHasUpdate(true);
+
                   Navigator.of(context).pop(true);
                 },
                 child: const Text(

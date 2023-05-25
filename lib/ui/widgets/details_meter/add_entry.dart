@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/services/torch_controller.dart';
@@ -58,6 +59,8 @@ class AddEntry {
         usage: drift.Value(_calcUsage(currentCount)),
         days: drift.Value(_calcDays(_selectedDate!, oldDate)),
       );
+
+      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
 
       await db.entryDao.createEntry(entry).then((value) {
         ScaffoldMessenger.of(context).showSnackBar(

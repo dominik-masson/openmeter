@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../utils/room_typ.dart';
 import '../widgets/homescreen/meter_card.dart';
@@ -218,6 +219,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
     BuildContext context,
   ) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
+
     if (_formKey.currentState!.validate()) {
       if (_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name) {
         return;
@@ -237,6 +240,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
           ),
         ));
       });
+
+      autoBackUp.setHasUpdate(true);
     }
   }
 }

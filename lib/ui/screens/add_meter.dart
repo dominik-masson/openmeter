@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
@@ -120,6 +121,8 @@ class _AddScreenState extends State<AddScreen> {
         unit: drift.Value(_unitController.text),
         tag: drift.Value(tagsId),
       );
+
+      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
 
       if (!_updateMeter) {
         int meterId = await db.meterDao.createMeter(meter);

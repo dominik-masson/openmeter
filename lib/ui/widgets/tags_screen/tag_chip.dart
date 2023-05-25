@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 
 class TagChip extends StatelessWidget {
   final Tag tag;
@@ -51,6 +52,9 @@ class TagChip extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
+                Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                    .setHasUpdate(true);
+
                 Navigator.of(context).pop();
               },
               child: const Text('Abbrechen'),

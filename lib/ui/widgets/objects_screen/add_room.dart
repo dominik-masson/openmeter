@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../utils/room_typ.dart';
 
 class AddRoom {
@@ -52,6 +53,9 @@ class AddRoom {
       if (_nameController.text.isEmpty) {
         _nameController.text = _roomTyp;
       }
+
+      Provider.of<DatabaseSettingsProvider>(context, listen: false)
+          .setHasUpdate(true);
 
       final room = RoomCompanion(
         typ: drift.Value(_roomTyp),

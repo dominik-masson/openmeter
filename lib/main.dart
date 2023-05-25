@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/database/local_database.dart';
 import 'core/provider/chart_provider.dart';
 import 'core/provider/cost_provider.dart';
+import 'core/provider/database_settings_provider.dart';
 import 'core/provider/entry_card_provider.dart';
 import 'core/provider/small_feature_provider.dart';
 import 'core/provider/refresh_provider.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
             value: EntryCardProvider()),
         ChangeNotifierProvider<ChartProvider>.value(value: ChartProvider()),
         ChangeNotifierProvider<StatsProvider>.value(value: StatsProvider()),
+        ChangeNotifierProvider<DatabaseSettingsProvider>.value(value: DatabaseSettingsProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {

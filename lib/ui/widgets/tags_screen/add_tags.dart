@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/theme_changer.dart';
 
 class AddTags {
@@ -42,6 +43,9 @@ class AddTags {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
+
+      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
+
       final int pickedColor = _listColors[_pickedIndex].value;
 
       final tag = TagsCompanion(

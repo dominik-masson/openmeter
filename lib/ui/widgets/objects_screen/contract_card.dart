@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../screens/add_contract.dart';
 import '../../../utils/meter_typ.dart';
 
@@ -15,6 +16,9 @@ class ContractCard extends StatefulWidget {
 class _ContractCardState extends State<ContractCard> {
   Future<bool> _deleteContract(
       BuildContext context, int contractId, int providerId) async {
+
+    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
+
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -35,6 +39,9 @@ class _ContractCardState extends State<ContractCard> {
                   Provider.of<LocalDatabase>(context, listen: false)
                       .contractDao
                       .deleteContract(contractId);
+
+                  autoBackUp.setHasUpdate(true);
+
                   Navigator.of(context).pop(true);
                 },
                 child: const Text(

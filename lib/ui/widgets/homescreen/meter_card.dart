@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
@@ -18,6 +19,7 @@ class MeterCard {
   Future<bool> _deleteMeter(
       BuildContext context, int meterId, RoomData? room) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
 
     return await showDialog(
           context: context,
@@ -36,6 +38,8 @@ class MeterCard {
                   }
 
                   db.meterDao.deleteMeter(meterId);
+
+                  autoBackUp.setHasUpdate(true);
                   Navigator.of(context).pop(true);
                 },
                 child: const Text(

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 import '../../../utils/meter_typ.dart';
+import '../../core/provider/database_settings_provider.dart';
 
 class AddContract extends StatefulWidget {
   final ContractData? contract;
@@ -87,6 +88,8 @@ class _AddContractState extends State<AddContract> {
     int notice;
 
     if (_formKey.currentState!.validate()) {
+      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
+
       if (!_isUpdate && (_providerExpand || _providerName.text.isNotEmpty)) {
         if (_notice.text.isEmpty) {
           notice = 0;
@@ -199,6 +202,9 @@ class _AddContractState extends State<AddContract> {
         ),
       ));
     });
+
+    Provider.of<DatabaseSettingsProvider>(context, listen: false)
+        .setHasUpdate(true);
 
     setState(() {
       _providerName.clear();

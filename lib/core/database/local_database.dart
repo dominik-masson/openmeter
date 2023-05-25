@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
@@ -30,8 +31,18 @@ class LocalDatabase extends _$LocalDatabase {
   @override
   int get schemaVersion => 1;
 
-  Future<void> exportInto(String path) async {
-    final newPath = p.join(path, 'meter.db');
+  Future<void> exportInto(String path, bool isBackup) async {
+    String newPath = '';
+    DateTime date = DateTime.now();
+
+    String formattedDate = DateFormat('yyyy_mm_dd_hh_mm_ss').format(date);
+
+    if (isBackup) {
+      newPath = p.join(path, 'meter_$formattedDate.db');
+    } else {
+      newPath = p.join(path, 'meter.db');
+    }
+
     final File file = await File(newPath).create(recursive: true);
 
     if (file.existsSync()) {
