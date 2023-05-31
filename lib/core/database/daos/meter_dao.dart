@@ -84,8 +84,18 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
 
     List<String?> result = await query.map((row) => row.read(meter.typ)).get();
 
-    result.sort((a, b) => a!.compareTo(b!),);
+    result.sort(
+      (a, b) => a!.compareTo(b!),
+    );
 
     return result;
+  }
+
+  Future<int?> getTableLength() async {
+    var count = db.meter.id.count();
+
+    return await (db.selectOnly(db.meter)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
   }
 }

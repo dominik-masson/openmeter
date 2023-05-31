@@ -7,10 +7,10 @@ class DatabaseSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: const Text(
-        'Datenbankeinstellungen',
+        'Daten und Speicher',
         style: TextStyle(fontSize: 18),
       ),
-      leading: const Icon(Icons.cloud),
+      leading: const Icon(Icons.data_usage),
       subtitle: const Text(
           'Erstelle ein Backup deiner Datenbank oder importiere eine vorhandene Datenbank.'),
       onTap: () => Navigator.of(context).pushNamed('database_export_import'),

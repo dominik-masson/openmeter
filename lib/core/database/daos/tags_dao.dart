@@ -31,4 +31,12 @@ class TagsDao extends DatabaseAccessor<LocalDatabase> with _$TagsDaoMixin {
     return await (db.select(db.tags)..where((tbl) => tbl.id.equals(tagId)))
         .getSingle();
   }
+
+  Future<int?> getTableLength() async {
+    var count = db.tags.id.count();
+
+    return await (db.selectOnly(db.tags)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
+  }
 }

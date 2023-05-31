@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/services/database_settings_helper.dart';
+import '../../widgets/settings_screen/database_stats.dart';
 
 class DatabaseExportImport extends StatefulWidget {
   const DatabaseExportImport({Key? key}) : super(key: key);
@@ -19,8 +20,13 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
   String autoBackupDirectory = '';
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     _databaseHelper = DatabaseSettingsHelper(context);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
     final provider = Provider.of<DatabaseSettingsProvider>(context);
 
@@ -29,62 +35,67 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Datenbankeinstellungen'),
+        title: const Text('Daten und Speicher'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Image.asset(
-              'assets/icons/database_icon.png',
-              width: 150,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Center(
+            //   child: Image.asset(
+            //     'assets/icons/database_icon.png',
+            //     width: 150,
+            //   ),
+            // ),
+            // const SizedBox(
+            //   height: 50,
+            // ),
+            // _databaseInformationWidget(),
+            DatabaseStats(databaseSettingsHelper: _databaseHelper),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.cloud_upload),
+              title: const Text(
+                'Daten exportieren',
+                style: TextStyle(fontSize: 18),
+              ),
+              subtitle: const Text(
+                'Erstelle und speichere ein Backup deiner Daten.',
+              ),
+              onTap: () => _databaseHelper.exportDB(db),
             ),
-          ),
-          const SizedBox(
-            height: 50,
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_upload),
-            title: const Text(
-              'Datenbank exportieren',
-              style: TextStyle(fontSize: 18),
+            const SizedBox(
+              height: 10,
             ),
-            subtitle: const Text(
-              'Erstelle und speichere ein Backup deiner Daten.',
+            ListTile(
+              leading: const Icon(Icons.cloud_download),
+              title: const Text(
+                'Daten importieren',
+                style: TextStyle(fontSize: 18),
+              ),
+              subtitle: const Text(
+                'Importiere deine gespeicherten Daten.',
+              ),
+              onTap: () => _databaseHelper.importDB(db),
             ),
-            onTap: () => _databaseHelper.exportDB(db),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_download),
-            title: const Text(
-              'Datenbank importieren',
-              style: TextStyle(fontSize: 18),
+            const SizedBox(
+              height: 10,
             ),
-            subtitle: const Text(
-              'Importiere die Datenbank, um die Daten wiederherzustellen.',
+            ListTile(
+              leading: const Icon(Icons.replay),
+              title: const Text(
+                'Daten zurücksetzen',
+                style: TextStyle(fontSize: 18),
+              ),
+              subtitle: const Text(
+                'Setze die Daten zurück, um alle bisherigen Daten zu löschen.',
+              ),
+              onTap: () => _databaseHelper.deleteDB(db),
             ),
-            onTap: () => _databaseHelper.importDB(db),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          ListTile(
-            leading: const Icon(Icons.replay),
-            title: const Text(
-              'Datenbank zurücksetzen',
-              style: TextStyle(fontSize: 18),
-            ),
-            subtitle: const Text(
-              'Setze die Datenbank zurück, um alle bisherigen Daten zu löschen.',
-            ),
-            onTap: () => _databaseHelper.deleteDB(db),
-          ),
-          const Divider(),
-          _autoBackupWidget(provider),
-        ],
+            const Divider(),
+            _autoBackupWidget(provider),
+          ],
+        ),
       ),
     );
   }

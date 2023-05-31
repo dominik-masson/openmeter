@@ -78,4 +78,12 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
 
     return meterList.get();
   }
+  Future<int?> getTableLength() async {
+    var count = db.room.id.count();
+
+    return await (db.selectOnly(db.room)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
+  }
+
 }

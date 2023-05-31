@@ -28,27 +28,38 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
   Future<List<Entrie>> getLastEntry(int meterId) async {
     return await (db.select(db.entries)
           ..where((tbl) => tbl.meter.equals(meterId))
-          ..orderBy([(tbl) => OrderingTerm(expression: tbl.count,mode: OrderingMode.desc)]))
-          .get();
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.count, mode: OrderingMode.desc)
+          ]))
+        .get();
   }
 
   Stream<List<Entrie>> watchAllEntries(int meterId) {
     return (select(db.entries)
-      ..where((tbl) => tbl.meter.equals(meterId))
-      ..orderBy([(tbl) => OrderingTerm.asc(tbl.date)]))
+          ..where((tbl) => tbl.meter.equals(meterId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.date)]))
         .watch();
   }
 
   Stream<List<Entrie>> getNewestEntry(int meterId) {
     return (select(db.entries)
-      ..where((tbl) => tbl.meter.equals(meterId))
-      ..orderBy([
-        ((tbl) => OrderingTerm(
-          expression: tbl.date,
-          mode: OrderingMode.desc,
-        ))
-      ])
-      ..limit(1))
+          ..where((tbl) => tbl.meter.equals(meterId))
+          ..orderBy([
+            ((tbl) => OrderingTerm(
+                  expression: tbl.date,
+                  mode: OrderingMode.desc,
+                ))
+          ])
+          ..limit(1))
         .watch();
+  }
+
+  Future<int?> getTableLength() async {
+    var count = db.entries.id.count();
+
+    return await (db.selectOnly(db.entries)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
   }
 }

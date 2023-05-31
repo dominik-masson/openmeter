@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -59,80 +58,80 @@ class _MeterCardListState extends State<MeterCardList> {
     final orderBy = sortProvider.getOrder;
 
     return StreamBuilder<List<MeterWithRoom>>(
-        stream: data.meterDao.watchAllMeterWithRooms(),
-        builder: (context, snapshot) {
-          final meters = snapshot.data;
+      stream: data.meterDao.watchAllMeterWithRooms(),
+      builder: (context, snapshot) {
+        final meters = snapshot.data;
 
-          // print(snapshot.connectionState);
-          // print(meters!.map((e) => e.room).toList());
+        // print(snapshot.connectionState);
+        // print(meters!.map((e) => e.room).toList());
 
-          if (meters == null || meters.isEmpty) {
-            return const EmptyData();
-          }
+        if (meters == null || meters.isEmpty) {
+          return const EmptyData();
+        }
 
-
-          return Padding(
-            padding: const EdgeInsets.only(left: 8.0, right: 8),
-            child: GroupedListView(
-              stickyHeaderBackgroundColor: Theme.of(context).canvasColor,
-              floatingHeader: false,
-              elements: meters,
-              groupBy: (element) {
-                return _groupBy(sortBy, element);
-              },
-              order: _orderBy(orderBy),
-              groupSeparatorBuilder: (element) => Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 2),
-                child: Text(
-                  element,
-                  style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.bold),
-                ),
+        return Padding(
+          padding: const EdgeInsets.only(left: 8.0, right: 8),
+          child: GroupedListView(
+            stickyHeaderBackgroundColor: Theme.of(context).canvasColor,
+            floatingHeader: false,
+            elements: meters,
+            groupBy: (element) {
+              return _groupBy(sortBy, element);
+            },
+            order: _orderBy(orderBy),
+            groupSeparatorBuilder: (element) => Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 2),
+              child: Text(
+                element,
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
-              itemBuilder: (context, element) {
-                final meterItem = element.meter;
-
-                String? tagsId = meterItem.tag;
-                List<String> listTagsId = [];
-
-                if(tagsId != null){
-                  listTagsId = tagsId.split(';');
-                }
-
-                // print(element.room);
-                return StreamBuilder(
-                  stream: data.entryDao.getNewestEntry(meterItem.id),
-                  builder: (context, snapshot2) {
-                    final entryList = snapshot2.data;
-
-                    final DateTime? date;
-                    final String count;
-                    final Entrie entry;
-
-                    if (entryList == null || entryList.isEmpty) {
-                      date = null;
-                      count = 'none';
-                    } else {
-                      entry = entryList[0];
-
-                      // date = DateFormat('dd.MM.yyyy').format(entry.date);
-                      date = entry.date;
-                      count = entry.count.toString();
-                    }
-
-                    return _meterCard.getCard(
-                      context: context,
-                      meter: meterItem,
-                      room: element.room,
-                      date: date,
-                      count: count,
-                      tags: listTagsId,
-                    );
-                  },
-                );
-              },
             ),
-          );
-        });
+            itemBuilder: (context, element) {
+              final meterItem = element.meter;
+
+              String? tagsId = meterItem.tag;
+              List<String> listTagsId = [];
+
+              if (tagsId != null) {
+                listTagsId = tagsId.split(';');
+              }
+
+              // print(element.room);
+              return StreamBuilder(
+                stream: data.entryDao.getNewestEntry(meterItem.id),
+                builder: (context, snapshot2) {
+                  final entryList = snapshot2.data;
+
+                  final DateTime? date;
+                  final String count;
+                  final Entrie entry;
+
+                  if (entryList == null || entryList.isEmpty) {
+                    date = null;
+                    count = 'none';
+                  } else {
+                    entry = entryList[0];
+
+                    // date = DateFormat('dd.MM.yyyy').format(entry.date);
+                    date = entry.date;
+                    count = entry.count.toString();
+                  }
+
+                  return _meterCard.getCard(
+                    context: context,
+                    meter: meterItem,
+                    room: element.room,
+                    date: date,
+                    count: count,
+                    tags: listTagsId,
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }
