@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
 
 class EntryCardProvider extends ChangeNotifier {
@@ -65,7 +66,7 @@ class EntryCardProvider extends ChangeNotifier {
   String getDailyUsage(int usage, int days) {
     double div = usage / days;
 
-    return div.toStringAsFixed(2);
+    return ConvertCount.convertDouble(div);
   }
 
 }

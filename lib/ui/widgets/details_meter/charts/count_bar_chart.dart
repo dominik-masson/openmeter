@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/database/local_database.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
@@ -119,7 +120,7 @@ class _CountBarChartState extends State<CountBarChart> {
           String formatDate = DateFormat('MM.yyyy').format(date);
 
           String text =
-              '$formatDate \n  ${rod.toY.round().toString()} ${_convertMeterUnit.getUnitString(widget.meter.unit)}';
+              '$formatDate \n  ${ConvertCount.convertCount(rod.toY.toInt())} ${_convertMeterUnit.getUnitString(widget.meter.unit)}';
 
           return BarTooltipItem(
             text,

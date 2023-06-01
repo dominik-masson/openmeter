@@ -48,7 +48,7 @@ dependencies:
   shared_preferences: ^2.0.15
   provider: ^6.0.4
   #
-  intl: ^0.17.0
+  intl: any
   grouped_list: ^5.1.2
   sticky_grouped_list: ^3.1.0
   fl_chart: ^0.61.0

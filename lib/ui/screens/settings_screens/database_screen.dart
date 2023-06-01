@@ -88,7 +88,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                 style: TextStyle(fontSize: 18),
               ),
               subtitle: const Text(
-                'Setze die Daten zurück, um alle bisherigen Daten zu löschen.',
+                'Lösche alle gespeicherten Daten.',
               ),
               onTap: () => _databaseHelper.deleteDB(db),
             ),

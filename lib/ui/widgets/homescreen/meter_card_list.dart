@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -6,6 +7,7 @@ import '../../../core/database/local_database.dart';
 import '../../../core/database/models/meter_with_room.dart';
 
 import '../../../core/provider/sort_provider.dart';
+import '../../../utils/convert_count.dart';
 import '../empty_data.dart';
 import 'meter_card.dart';
 
@@ -115,7 +117,8 @@ class _MeterCardListState extends State<MeterCardList> {
 
                     // date = DateFormat('dd.MM.yyyy').format(entry.date);
                     date = entry.date;
-                    count = entry.count.toString();
+
+                    count = ConvertCount.convertCount(entry.count);
                   }
 
                   return _meterCard.getCard(

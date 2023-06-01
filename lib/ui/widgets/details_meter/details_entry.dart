@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
 class DetailsEntry {
@@ -81,7 +82,7 @@ class DetailsEntry {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 convertMeterUnit.getUnitWidget(
-                  count: '+$usage',
+                  count: '+${ConvertCount.convertCount(usage)}',
                   unit: meter.unit,
                   textStyle: TextStyle(
                     fontSize: 16,
@@ -100,7 +101,7 @@ class DetailsEntry {
             Column(
               children: [
                 Text(
-                  '${usageCost.toStringAsFixed(2)} €',
+                  '${ConvertCount.convertDouble(usageCost)} €',
                   style: const TextStyle(fontSize: 16),
                 ),
               ],
@@ -178,7 +179,7 @@ class DetailsEntry {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 convertMeterUnit.getUnitWidget(
-                  count: '+$usage',
+                  count: '+${ConvertCount.convertCount(usage)}',
                   unit: meter.unit,
                   textStyle: TextStyle(
                     fontSize: 16,
@@ -319,7 +320,7 @@ class DetailsEntry {
                         style: const TextStyle(fontSize: 16),
                       ),
                       convertMeterUnit.getUnitWidget(
-                        count: entry.count.toString(),
+                        count: ConvertCount.convertCount(entry.count),
                         unit: meter.unit,
                         textStyle: const TextStyle(fontSize: 16),
                       ),

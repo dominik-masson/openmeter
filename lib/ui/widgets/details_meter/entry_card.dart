@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
 class EntryCard extends StatelessWidget {
@@ -161,7 +162,7 @@ class EntryCard extends StatelessWidget {
                                     Column(
                                       children: [
                                         ConvertMeterUnit().getUnitWidget(
-                                          count: item.count.toString(),
+                                          count: ConvertCount.convertCount(item.count),
                                           unit: unit,
                                           textStyle: const TextStyle(fontSize: 16),
                                         ),
@@ -175,7 +176,7 @@ class EntryCard extends StatelessWidget {
                                       Column(
                                         children: [
                                           ConvertMeterUnit().getUnitWidget(
-                                            count: '+$usage',
+                                            count: '+${ConvertCount.convertCount(usage)}',
                                             unit: unit,
                                             textStyle: TextStyle(
                                               fontSize: 16,

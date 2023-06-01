@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/database/local_database.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
@@ -140,7 +141,7 @@ class _CountLineChartState extends State<CountLineChart> {
             final String dateFormat = DateFormat('dd.MM.yyyy').format(date);
 
             return LineTooltipItem(
-              '$dateFormat \n ${e.y.toInt()}  ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
+              '$dateFormat \n ${ConvertCount.convertCount(e.y.toInt())}  ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

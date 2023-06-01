@@ -20,7 +20,8 @@ class MeterCard {
   Future<bool> _deleteMeter(
       BuildContext context, int meterId, RoomData? room) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
-    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
+    final autoBackUp =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
 
     return await showDialog(
           context: context,
@@ -154,6 +155,7 @@ class MeterCard {
                         children: [
                           Text(
                             meter.number,
+                            style: const TextStyle(fontSize: 16),
                           ),
                           const Text(
                             "Zählernummer",
