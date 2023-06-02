@@ -10,16 +10,16 @@ import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
-class CountBarChart extends StatefulWidget {
+class UsageBarChart extends StatefulWidget {
   final MeterData meter;
 
-  const CountBarChart({Key? key, required this.meter}) : super(key: key);
+  const UsageBarChart({Key? key, required this.meter}) : super(key: key);
 
   @override
-  State<CountBarChart> createState() => _CountBarChartState();
+  State<UsageBarChart> createState() => _UsageBarChartState();
 }
 
-class _CountBarChartState extends State<CountBarChart> {
+class _UsageBarChartState extends State<UsageBarChart> {
   final NoEntry _noData = NoEntry();
   bool _twelveMonths = true;
 
@@ -214,7 +214,7 @@ class _CountBarChartState extends State<CountBarChart> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Zählerstand',
+                        'Verbrauch',
                         style: TextStyle(fontSize: 16),
                       ),
                       Row(

@@ -12,7 +12,7 @@ import '../widgets/details_meter/charts/count_line_chart.dart';
 import '../widgets/details_meter/charts/usage_line_chart.dart';
 import '../widgets/details_meter/cost_card.dart';
 import '../widgets/details_meter/entry_card.dart';
-import '../widgets/details_meter/charts/count_bar_chart.dart';
+import '../widgets/details_meter/charts/usage_bar_chart.dart';
 import '../widgets/tags_screen/tag_chip.dart';
 import 'add_meter.dart';
 
@@ -81,7 +81,6 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   Widget _tags() {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final List<String> tags = _meter.tag!.split(';');
-
 
     return Column(
       children: [
@@ -198,14 +197,14 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                     ),
                     items: [
                       if (!chartProvider.getLineChart)
-                        CountBarChart(
+                        UsageBarChart(
                           meter: _meter,
                         ),
                       if (chartProvider.getLineChart)
-                        CountLineChart(
-                          meter: _meter,
-                        ),
-                      UsageLineChart(meter: _meter),
+                        UsageLineChart(meter: _meter),
+                      CountLineChart(
+                        meter: _meter,
+                      ),
                     ],
                   ),
                 ),

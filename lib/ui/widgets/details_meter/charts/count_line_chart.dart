@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
-import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
@@ -215,37 +214,23 @@ class _CountLineChartState extends State<CountLineChart> {
                           fontSize: 16,
                         ),
                       ),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              if (finalEntries.length >= 12) {
-                                setState(() {
-                                  _twelveMonths = !_twelveMonths;
-                                });
-                              }
-                            },
-                            child: Text(
-                              'letzte 12 Monate',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _twelveMonths
-                                    ? Theme.of(context).primaryColorLight
-                                    : Colors.grey,
-                              ),
-                            ),
+                      TextButton(
+                        onPressed: () {
+                          if (finalEntries.length >= 12) {
+                            setState(() {
+                              _twelveMonths = !_twelveMonths;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'letzte 12 Monate',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _twelveMonths
+                                ? Theme.of(context).primaryColorLight
+                                : Colors.grey,
                           ),
-                          IconButton(
-                            onPressed: () {
-                              Provider.of<ChartProvider>(context, listen: false)
-                                  .setLineChart(false);
-                            },
-                            icon: Icon(
-                              Icons.bar_chart,
-                              color: Theme.of(context).hintColor,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),

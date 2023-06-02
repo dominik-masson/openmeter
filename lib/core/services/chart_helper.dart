@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 import '../database/local_database.dart';
 
 class ChartHelper {
@@ -5,21 +7,36 @@ class ChartHelper {
 
   Map<int, int> getSumInMonths(List<Entrie> entries) {
     Map<int, int> result = {};
+
     for (int i = 0; i < entries.length;) {
-      result.addAll({entries[i].date.millisecondsSinceEpoch: entries[i].count});
+      DateTime date = DateTime.fromMillisecondsSinceEpoch(
+          entries[i].date.millisecondsSinceEpoch);
+
+      if (entries[i].usage == -1) {
+        result.addAll({date.millisecondsSinceEpoch: 0});
+      } else {
+        result.addAll({date.millisecondsSinceEpoch: entries[i].usage});
+      }
 
       for (int j = i + 1; j < entries.length; j++) {
         if (entries[i].date.month == entries[j].date.month &&
             entries[i].date.year == entries[j].date.year) {
-          int count = entries[j].count + entries[j].usage;
+          int hasDate = 0;
 
-          if (result.containsKey(entries[i].date.millisecondsSinceEpoch)) {
-            result.update(entries[i].date.millisecondsSinceEpoch,
-                (value) => value = count);
-            i++;
-          } else {
-            i++;
+          result.forEach((key, value) {
+            DateTime date = DateTime.fromMillisecondsSinceEpoch(key);
+
+            if (date.month == entries[j].date.month &&
+                date.year == entries[j].date.year) {
+              hasDate = key;
+            }
+          });
+
+          if (hasDate != 0) {
+            result.update(hasDate, (value) => value += entries[j].usage);
           }
+
+          i++;
         }
       }
       i++;
