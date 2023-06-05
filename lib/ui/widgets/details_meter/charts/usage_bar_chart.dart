@@ -192,7 +192,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
           finalEntries = entries;
         }
 
-        if (finalEntries.isEmpty) {
+        if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
         } else {
           sumMonths = _helper.getSumInMonths(finalEntries);

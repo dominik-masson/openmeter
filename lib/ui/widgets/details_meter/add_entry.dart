@@ -84,17 +84,17 @@ class AddEntry {
   }
 
   int _calcUsage(String currentCount) {
-    int count = 0;
+    double count = 0;
 
     if (currentCount == 'none') {
       return -1;
     } else {
-      count = int.parse(currentCount);
+      count = double.parse(currentCount);
     }
 
     final countController = int.parse(_countercontroller.text);
 
-    return countController - count;
+    return (countController - count).toInt();
   }
 
   int _calcDays(DateTime newDate, DateTime oldDate) {
