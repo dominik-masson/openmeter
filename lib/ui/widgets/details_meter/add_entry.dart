@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:openmeter/utils/convert_count.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -60,7 +61,8 @@ class AddEntry {
         days: drift.Value(_calcDays(_selectedDate!, oldDate)),
       );
 
-      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
+      Provider.of<DatabaseSettingsProvider>(context, listen: false)
+          .setHasUpdate(true);
 
       await db.entryDao.createEntry(entry).then((value) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,17 +86,17 @@ class AddEntry {
   }
 
   int _calcUsage(String currentCount) {
-    double count = 0;
+    int count = 0;
 
     if (currentCount == 'none') {
       return -1;
     } else {
-      count = double.parse(currentCount);
+      count = ConvertCount.convertString(currentCount);
     }
 
     final countController = int.parse(_countercontroller.text);
 
-    return (countController - count).toInt();
+    return countController - count;
   }
 
   int _calcDays(DateTime newDate, DateTime oldDate) {
