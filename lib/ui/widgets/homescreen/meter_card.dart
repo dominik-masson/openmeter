@@ -115,6 +115,7 @@ class MeterCard {
           )
               .then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
+            entryProvider.removeAllSelectedEntries();
             room = value as RoomData?;
           });
         },

@@ -9,6 +9,8 @@ import '../../../core/provider/entry_card_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
+// TODO: set note is not working
+
 class DetailsEntry {
   bool _stateNote = false; // if ture => write some note
   final TextEditingController _noteController = TextEditingController();

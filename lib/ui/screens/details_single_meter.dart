@@ -6,6 +6,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/database/local_database.dart';
 
 import '../../core/provider/chart_provider.dart';
+import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/entry_card_provider.dart';
 import '../widgets/details_meter/add_entry.dart';
 import '../widgets/details_meter/charts/count_line_chart.dart';
@@ -122,51 +123,12 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     final entryProvider = Provider.of<EntryCardProvider>(context);
     final chartProvider = Provider.of<ChartProvider>(context);
 
+    bool hasSelectedEntries = entryProvider.getHasSelectedEntries;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_meterName),
-        leading: BackButton(
-          onPressed: () {
-            Navigator.of(context).pop(_room);
-          },
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              _addEntry.showBottomModel(context, entryProvider);
-            },
-            icon: const Icon(Icons.add),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddScreen(
-                      meter: _meter,
-                      room: _room,
-                      tagsId: widget.tagsId,
-                    ),
-                  )).then((value) {
-                if (value == null) {
-                  return;
-                }
-
-                _meter = value[0] as MeterData;
-                _room = value[1] as RoomData?;
-
-                setState(
-                  () {
-                    _meterName = _meter.number;
-                    _roomName = _room?.name ?? '';
-                  },
-                );
-              });
-            },
-            icon: const Icon(Icons.edit),
-          ),
-        ],
-      ),
+      appBar: hasSelectedEntries
+          ? _selectedAppBar(entryProvider)
+          : _unselectedAppBar(entryProvider),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,6 +186,76 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           ],
         ),
       ),
+    );
+  }
+
+  AppBar _unselectedAppBar(EntryCardProvider entryProvider) {
+    return AppBar(
+      title: Text(_meterName),
+      leading: BackButton(
+        onPressed: () {
+          Navigator.of(context).pop(_room);
+        },
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {
+            _addEntry.showBottomModel(context, entryProvider);
+          },
+          icon: const Icon(Icons.add),
+        ),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddScreen(
+                    meter: _meter,
+                    room: _room,
+                    tagsId: widget.tagsId,
+                  ),
+                )).then((value) {
+              if (value == null) {
+                return;
+              }
+
+              _meter = value[0] as MeterData;
+              _room = value[1] as RoomData?;
+
+              setState(
+                () {
+                  _meterName = _meter.number;
+                  _roomName = _room?.name ?? '';
+                },
+              );
+            });
+          },
+          icon: const Icon(Icons.edit),
+        ),
+      ],
+    );
+  }
+
+  AppBar _selectedAppBar(EntryCardProvider entryProvider) {
+    return AppBar(
+      title: Text('${entryProvider.getSelectedEntriesLength} ausgewählt'),
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: () {
+          entryProvider.removeAllSelectedEntries();
+
+        },
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {
+            entryProvider.deleteAllSelectedEntries(context);
+            Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                .setHasUpdate(true);
+          },
+          icon: const Icon(Icons.delete),
+        ),
+      ],
     );
   }
 }

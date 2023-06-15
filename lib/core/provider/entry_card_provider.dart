@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
+import 'database_settings_provider.dart';
 
 class EntryCardProvider extends ChangeNotifier {
+  Map<Entrie, bool> _entries = {};
+  int _selectedEntriesLength = 0;
+
+  bool _hasSelectedEntries = false;
   String _count = 'none';
   DateTime _oldDate = DateTime.now();
   bool _contractData = false;
@@ -17,6 +23,77 @@ class EntryCardProvider extends ChangeNotifier {
 
   bool get getStateNote => _setStateNote;
 
+  bool get getHasSelectedEntries => _hasSelectedEntries;
+
+  int get getSelectedEntriesLength => _selectedEntriesLength;
+
+  Map<Entrie, bool> get getAllEntries => _entries;
+
+  void setAllEntries(List<Entrie> entry) {
+    _entries.removeWhere((key, value) => value == false || value == true);
+
+    for (Entrie item in entry) {
+      _entries.addAll({item: false});
+    }
+
+    // notifyListeners();
+  }
+
+  void setSelectedEntriesLength(int value) {
+    _selectedEntriesLength = value;
+  }
+
+  void setSelectedEntry(Entrie entry) {
+    _entries.update(entry, (value) => value = !value);
+    _hasSelectedEntries = true;
+
+    int count = 0;
+    _entries.forEach((key, value) {
+      if (value == true) {
+        count += 1;
+      }
+    });
+    _selectedEntriesLength = count;
+
+    if (_selectedEntriesLength == 0) {
+      _hasSelectedEntries = false;
+    }
+
+    notifyListeners();
+  }
+
+  void deleteAllSelectedEntries(BuildContext context) {
+
+    Entrie newLastEntry = _entries.keys.elementAt(1);
+
+    setCurrentCount(newLastEntry.count.toString());
+    setOldDate(newLastEntry.date);
+
+
+    _entries.forEach((key, value) {
+      if (value == true) {
+        Provider.of<LocalDatabase>(context, listen: false)
+            .entryDao
+            .deleteEntry(key.id);
+      }
+    });
+
+    _entries.removeWhere((key, value) => value == true);
+
+    _hasSelectedEntries = false;
+
+    notifyListeners();
+  }
+
+  void removeAllSelectedEntries() {
+    _hasSelectedEntries = false;
+
+    _entries.forEach((key, value) {
+      if (value == true) value = false;
+    });
+
+    notifyListeners();
+  }
 
   void setCurrentCount(String count) {
     _count = count;
@@ -68,5 +145,4 @@ class EntryCardProvider extends ChangeNotifier {
 
     return ConvertCount.convertDouble(div);
   }
-
 }
