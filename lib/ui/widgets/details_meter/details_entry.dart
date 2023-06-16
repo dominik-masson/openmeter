@@ -64,13 +64,13 @@ class DetailsEntry {
     );
   }
 
-  _contractWidget(
-    BuildContext context,
-    int usage,
-    MeterData meter,
-    Entrie entry,
-    CostProvider costProvider,
-  ) {
+  _contractWidget({
+    required BuildContext context,
+    required int usage,
+    required String unit,
+    required Entrie entry,
+    required CostProvider costProvider,
+  }) {
     double usageCost = costProvider.calcUsage(usage);
     double dailyCost = usageCost / entry.days;
 
@@ -85,7 +85,7 @@ class DetailsEntry {
               children: [
                 convertMeterUnit.getUnitWidget(
                   count: '+${ConvertCount.convertCount(usage)}',
-                  unit: meter.unit,
+                  unit: unit,
                   textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
@@ -123,7 +123,7 @@ class DetailsEntry {
               children: [
                 convertMeterUnit.getUnitWidget(
                   count: _entryProvider.getDailyUsage(usage, entry.days),
-                  unit: meter.unit,
+                  unit: unit,
                   textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
@@ -132,19 +132,6 @@ class DetailsEntry {
                     ),
                   ),
                 ),
-                // Text(
-                //   '${_entryProvider.getDailyUsage(
-                //     usage,
-                //     entry.days,
-                //   )} ${meter.unit}',
-                //   style: TextStyle(
-                //     fontSize: 16,
-                //     color: _entryProvider.getColors(
-                //       entry.count,
-                //       usage,
-                //     ),
-                //   ),
-                // ),
                 const Text(
                   'pro Tag',
                   style: TextStyle(color: Colors.grey),
@@ -166,12 +153,12 @@ class DetailsEntry {
     );
   }
 
-  _noContractWidget(
-    BuildContext context,
-    int usage,
-    MeterData meter,
-    Entrie entry,
-  ) {
+  _noContractWidget({
+    required BuildContext context,
+    required int usage,
+    required Entrie entry,
+    required String unit,
+  }) {
     return Column(
       children: [
         Row(
@@ -182,7 +169,7 @@ class DetailsEntry {
               children: [
                 convertMeterUnit.getUnitWidget(
                   count: '+${ConvertCount.convertCount(usage)}',
-                  unit: meter.unit,
+                  unit: unit,
                   textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
@@ -202,7 +189,7 @@ class DetailsEntry {
               children: [
                 convertMeterUnit.getUnitWidget(
                   count: _entryProvider.getDailyUsage(usage, entry.days),
-                  unit: meter.unit,
+                  unit: unit,
                   textStyle: TextStyle(
                     fontSize: 16,
                     color: _entryProvider.getColors(
@@ -238,7 +225,7 @@ class DetailsEntry {
   _information({
     required BuildContext context,
     required int usage,
-    required MeterData meter,
+    required String unit,
     required Entrie entry,
     required EntryCardProvider entryProvider,
     required CostProvider costProvider,
@@ -249,9 +236,21 @@ class DetailsEntry {
 
     return Column(
       children: [
-        if (!contract) _noContractWidget(context, usage, meter, entry),
+        if (!contract)
+          _noContractWidget(
+            context: context,
+            usage: usage,
+            entry: entry,
+            unit: unit,
+          ),
         if (contract)
-          _contractWidget(context, usage, meter, entry, costProvider),
+          _contractWidget(
+            context: context,
+            usage: usage,
+            entry: entry,
+            unit: unit,
+            costProvider: costProvider,
+          ),
       ],
     );
   }
@@ -279,7 +278,6 @@ class DetailsEntry {
   getDetailsAlert({
     required BuildContext context,
     required Entrie entry,
-    required MeterData meter,
     required int usage,
     required EntryCardProvider entryProvider,
     required CostProvider costProvider,
@@ -304,6 +302,8 @@ class DetailsEntry {
 
     _entryProvider = entryProvider;
 
+    String unit = _entryProvider.getMeterUnit;
+
     return showDialog(
       context: context,
       builder: (context) {
@@ -323,7 +323,7 @@ class DetailsEntry {
                       ),
                       convertMeterUnit.getUnitWidget(
                         count: ConvertCount.convertCount(entry.count),
-                        unit: meter.unit,
+                        unit: unit,
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                     ],
@@ -342,7 +342,7 @@ class DetailsEntry {
                     _information(
                       context: context,
                       usage: usage,
-                      meter: meter,
+                      unit: unit,
                       entry: entry,
                       entryProvider: entryProvider,
                       costProvider: costProvider,

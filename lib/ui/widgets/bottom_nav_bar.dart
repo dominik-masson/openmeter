@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -43,12 +45,14 @@ class _BottomNavBarState extends State<BottomNavBar>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     super.didChangeAppLifecycleState(state);
+
+    log(state.toString(), name: 'AppLifecycleState');
 
     if (databaseSettingsProvider.checkIfAutoBackupIsPossible() &&
         state == AppLifecycleState.paused) {
-      databaseSettingsHelper
+      await databaseSettingsHelper
           .autoBackupExport(db, databaseSettingsProvider);
     }
   }

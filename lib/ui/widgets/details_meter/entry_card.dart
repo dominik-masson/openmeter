@@ -15,36 +15,6 @@ class EntryCard extends StatelessWidget {
 
   EntryCard({Key? key, required this.meter}) : super(key: key);
 
-  _deleteEntry(BuildContext context, int entryId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Löschen?'),
-        content: const Text('Möchten Sie Ihren Zählerstand wirklich löschen?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Abbrechen'),
-          ),
-          TextButton(
-            onPressed: () {
-              Provider.of<LocalDatabase>(context, listen: false)
-                  .entryDao
-                  .deleteEntry(entryId)
-                  .then((value) {
-                Navigator.of(context).pop();
-              });
-            },
-            child: const Text(
-              'Löschen',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   _showDetails({
     required BuildContext context,
     required Entrie item,
@@ -55,7 +25,6 @@ class EntryCard extends StatelessWidget {
     var value = await _detailsEntry.getDetailsAlert(
       context: context,
       entry: item,
-      meter: meter,
       usage: usage,
       entryProvider: entryProvider,
       costProvider: costProvider,
@@ -123,12 +92,9 @@ class EntryCard extends StatelessWidget {
                       hasNote = true;
                     }
 
-                    Entrie reservedItem;
-                    final reserved = entry.reversed.toList();
-
                     int usage = entryProvider.getUsage(item);
 
-                    String unit = meter.unit;
+                    String unit = entryProvider.getMeterUnit;
 
                     return GestureDetector(
                       onTap: () async {
@@ -149,9 +115,8 @@ class EntryCard extends StatelessWidget {
                       child: SizedBox(
                         width: 240,
                         child: Card(
-                          color: isSelected
-                              ? Theme.of(context).hoverColor
-                              : null,
+                          color:
+                              isSelected ? Theme.of(context).hoverColor : null,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(

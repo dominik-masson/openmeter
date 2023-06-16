@@ -52,9 +52,6 @@ class TagChip extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Provider.of<DatabaseSettingsProvider>(context, listen: false)
-                    .setHasUpdate(true);
-
                 Navigator.of(context).pop();
               },
               child: const Text('Abbrechen'),
@@ -62,6 +59,8 @@ class TagChip extends StatelessWidget {
             TextButton(
               onPressed: () {
                 _deleteTag(db, meterList);
+                Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                    .setHasUpdate(true);
                 Navigator.of(context).pop();
               },
               child: const Text(

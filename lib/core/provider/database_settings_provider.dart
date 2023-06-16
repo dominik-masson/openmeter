@@ -9,6 +9,7 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   bool _hasUpdate = false;
   List<double> _itemStats = [];
   int _itemCount = 0;
+  bool _hasReset = false;
 
   late SharedPreferences _prefs;
   final keyAutoBackupDir = 'auto-backup-dir';
@@ -46,6 +47,8 @@ class DatabaseSettingsProvider extends ChangeNotifier {
 
   int get getItemStatsCount => _itemCount;
 
+  bool get getStateHasReset => _hasReset;
+
   void setAutoBackupState(bool value) {
     _autoBackupState = value;
 
@@ -76,19 +79,30 @@ class DatabaseSettingsProvider extends ChangeNotifier {
     return _autoBackupState && _autoBackupDirectory.isNotEmpty && _hasUpdate;
   }
 
+  void setStateHasReset(bool value) {
+    _hasReset = value;
+    notifyListeners();
+  }
+
   void setItemStatsValues(List<double> values) {
     _itemStats = values;
 
     final List<String> newList = _itemStats.map((e) => e.toString()).toList();
 
     _prefs.setStringList(keyStatsItems, newList);
-
-    // notifyListeners();
   }
 
   void setItemCount(int value) {
     _itemCount = value;
 
     _prefs.setInt(keyStatsItemCounts, _itemCount);
+  }
+
+  void resetStats(){
+
+    _itemStats = [0, 0, 0, 0, 0];
+    _itemCount = 0;
+
+    setStateHasReset(true);
   }
 }

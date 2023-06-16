@@ -54,4 +54,5 @@ class TorchController {
   _toggleTorch() {
     _torch = !_torch;
   }
+
 }

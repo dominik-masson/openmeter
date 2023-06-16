@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import '../../utils/log_levels.dart';
 import '../database/local_database.dart';
@@ -120,7 +121,7 @@ class DatabaseSettingsHelper {
     }
   }
 
-  deleteDB(LocalDatabase db) async {
+  deleteDB(BuildContext context, LocalDatabase db) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -135,6 +136,9 @@ class DatabaseSettingsHelper {
           TextButton(
             onPressed: () {
               db.deleteDB().then((value) {
+                Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                    .resetStats();
+
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text(
                     'Datenbank wurde erfolgreich zurückgesetzt!',

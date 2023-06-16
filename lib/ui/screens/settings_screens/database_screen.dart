@@ -90,7 +90,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
               subtitle: const Text(
                 'Lösche alle gespeicherten Daten.',
               ),
-              onTap: () => _databaseHelper.deleteDB(db),
+              onTap: () => _databaseHelper.deleteDB(context, db),
             ),
             const Divider(),
             _autoBackupWidget(provider),

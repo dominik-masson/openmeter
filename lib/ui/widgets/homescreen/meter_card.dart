@@ -103,17 +103,19 @@ class MeterCard {
         onTap: () {
           entryProvider.setCurrentCount(count);
           entryProvider.setOldDate(date ?? DateTime.now());
-          Navigator.of(context)
-              .push(
+          Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => DetailsSingleMeter(
-                meter: meter,
-                room: room,
-                tagsId: tags,
-              ),
+              builder: (context) {
+                entryProvider.setMeterUnit(meter.unit);
+
+                return DetailsSingleMeter(
+                  meter: meter,
+                  room: room,
+                  tagsId: tags,
+                );
+              },
             ),
-          )
-              .then((value) {
+          ).then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
             entryProvider.removeAllSelectedEntries();
             room = value as RoomData?;

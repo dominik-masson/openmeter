@@ -127,7 +127,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
               return Container();
             }
             return ListView.builder(
-              // physics:  const NeverScrollableScrollPhysics(),
+              physics:  const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: meter.length,
               itemBuilder: (context, index) {

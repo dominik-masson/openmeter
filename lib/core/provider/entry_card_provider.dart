@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
-import 'database_settings_provider.dart';
 
 class EntryCardProvider extends ChangeNotifier {
-  Map<Entrie, bool> _entries = {};
+  final Map<Entrie, bool> _entries = {};
   int _selectedEntriesLength = 0;
 
   bool _hasSelectedEntries = false;
@@ -14,6 +13,7 @@ class EntryCardProvider extends ChangeNotifier {
   DateTime _oldDate = DateTime.now();
   bool _contractData = false;
   bool _setStateNote = false;
+  String _unit = '';
 
   String get getCurrentCount => _count;
 
@@ -29,14 +29,18 @@ class EntryCardProvider extends ChangeNotifier {
 
   Map<Entrie, bool> get getAllEntries => _entries;
 
+  String get getMeterUnit => _unit;
+
+  void setMeterUnit(String value) {
+    _unit = value;
+  }
+
   void setAllEntries(List<Entrie> entry) {
     _entries.removeWhere((key, value) => value == false || value == true);
 
     for (Entrie item in entry) {
       _entries.addAll({item: false});
     }
-
-    // notifyListeners();
   }
 
   void setSelectedEntriesLength(int value) {
@@ -63,12 +67,10 @@ class EntryCardProvider extends ChangeNotifier {
   }
 
   void deleteAllSelectedEntries(BuildContext context) {
-
     Entrie newLastEntry = _entries.keys.elementAt(1);
 
     setCurrentCount(newLastEntry.count.toString());
     setOldDate(newLastEntry.date);
-
 
     _entries.forEach((key, value) {
       if (value == true) {

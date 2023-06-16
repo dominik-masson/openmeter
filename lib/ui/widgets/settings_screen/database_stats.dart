@@ -83,7 +83,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
       builder: (context, snapshot) {
         _databaseStatsDto = snapshot.data;
 
-        if (_databaseStatsDto != null) {
+        if (_databaseStatsDto != null && provider.getStateHasReset == false) {
           _calcItemCounts();
 
           _itemValues = databaseHelper.calcStatsPercent(
@@ -92,6 +92,11 @@ class _DatabaseStatsState extends State<DatabaseStats> {
           provider.setItemStatsValues(_itemValues);
           provider.setItemCount(_itemCounts);
         } else {
+          if (provider.getStateHasReset) {
+            _databaseStatsDto = null;
+            provider.setStateHasReset(false);
+          }
+
           _itemValues = provider.getItemStatsValues;
           _itemCounts = provider.getItemStatsCount;
         }
@@ -138,14 +143,24 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     List<PieChartSectionData> result = [];
 
     for (int i = 0; i < 5; i++) {
-      result.add(
-        PieChartSectionData(
-          color: _itemColors.elementAt(i),
-          value: _itemValues.elementAt(i),
-          showTitle: false,
-          // title: (_itemValues.elementAt(i) * _itemCounts).toStringAsFixed(0),
-        ),
-      );
+      if (_itemValues.elementAt(i).isNaN) {
+        result.add(
+          PieChartSectionData(
+            color: Colors.grey.withOpacity(0.3),
+            value: 100,
+            showTitle: false,
+          ),
+        );
+        break;
+      } else {
+        result.add(
+          PieChartSectionData(
+            color: _itemColors.elementAt(i),
+            value: _itemValues.elementAt(i),
+            showTitle: false,
+          ),
+        );
+      }
     }
 
     return result;
@@ -195,7 +210,8 @@ class _DatabaseStatsState extends State<DatabaseStats> {
             itemBuilder: (context, index) {
               int count = 0;
 
-              if (!_itemValues.elementAt(index).isInfinite) {
+              if (!_itemValues.elementAt(index).isInfinite &&
+                  !_itemValues.elementAt(index).isNaN) {
                 count = (_itemCounts * _itemValues.elementAt(index)).toInt();
               }
 

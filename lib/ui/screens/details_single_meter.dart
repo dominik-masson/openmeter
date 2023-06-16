@@ -222,6 +222,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
               _meter = value[0] as MeterData;
               _room = value[1] as RoomData?;
 
+              entryProvider.setMeterUnit(_meter.unit);
+
               setState(
                 () {
                   _meterName = _meter.number;
