@@ -129,61 +129,71 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       appBar: hasSelectedEntries
           ? _selectedAppBar(entryProvider)
           : _unselectedAppBar(entryProvider),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Zählernummer
-            _meterInformationWidget(),
-            const Divider(),
-            if (_meter.tag != null && _meter.tag!.isNotEmpty) _tags(),
-            EntryCard(meter: widget.meter),
-            const SizedBox(
-              height: 10,
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CarouselSlider(
-                    options: CarouselOptions(
-                      height: 340,
-                      enableInfiniteScroll: false,
-                      viewportFraction: 1,
-                      onPageChanged: (index, reason) {
-                        setState(() {
-                          _activeChartWidget = index;
-                        });
-                      },
-                    ),
-                    items: [
-                      if (!chartProvider.getLineChart)
-                        UsageBarChart(
+      body: WillPopScope(
+        onWillPop: () async {
+          if (hasSelectedEntries) {
+            entryProvider.removeAllSelectedEntries();
+
+            return false;
+          }
+          return true;
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Zählernummer
+              _meterInformationWidget(),
+              const Divider(),
+              if (_meter.tag != null && _meter.tag!.isNotEmpty) _tags(),
+              EntryCard(meter: widget.meter),
+              const SizedBox(
+                height: 10,
+              ),
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CarouselSlider(
+                      options: CarouselOptions(
+                        height: 340,
+                        enableInfiniteScroll: false,
+                        viewportFraction: 1,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            _activeChartWidget = index;
+                          });
+                        },
+                      ),
+                      items: [
+                        if (!chartProvider.getLineChart)
+                          UsageBarChart(
+                            meter: _meter,
+                          ),
+                        if (chartProvider.getLineChart)
+                          UsageLineChart(meter: _meter),
+                        CountLineChart(
                           meter: _meter,
                         ),
-                      if (chartProvider.getLineChart)
-                        UsageLineChart(meter: _meter),
-                      CountLineChart(
-                        meter: _meter,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                AnimatedSmoothIndicator(
-                  activeIndex: _activeChartWidget,
-                  count: 2,
-                  effect: WormEffect(
-                    activeDotColor: Theme.of(context).primaryColorLight,
-                    dotHeight: 10,
-                    dotWidth: 10,
+                  AnimatedSmoothIndicator(
+                    activeIndex: _activeChartWidget,
+                    count: 2,
+                    effect: WormEffect(
+                      activeDotColor: Theme.of(context).primaryColorLight,
+                      dotHeight: 10,
+                      dotWidth: 10,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
 
-            CostBar(meter: _meter),
-          ],
+              CostBar(meter: _meter),
+            ],
+          ),
         ),
       ),
     );
@@ -245,7 +255,6 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
         icon: const Icon(Icons.close),
         onPressed: () {
           entryProvider.removeAllSelectedEntries();
-
         },
       ),
       actions: [
