@@ -11,12 +11,7 @@ class ConvertCount {
   static String convertDouble(double count) {
     final locale = Platform.localeName;
 
-    final String converted = NumberFormat.decimalPattern(locale).format(count);
-    final List<String> convertedList = converted.split('');
-
-    convertedList.removeLast();
-
-    return convertedList.join();
+    return NumberFormat.decimalPatternDigits(locale: locale,decimalDigits: 2).format(count);
   }
 
   static int convertString(String count) {

@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/model/room_dto.dart';
 import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
@@ -14,7 +15,7 @@ import '../widgets/tags_screen/tag_chip.dart';
 
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
-  final RoomData? room;
+  final RoomDto? room;
   final List<String> tagsId;
 
   const AddScreen(
@@ -40,7 +41,7 @@ class _AddScreenState extends State<AddScreen> {
   int _roomId = -2; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeter = false;
-  RoomData? _room;
+  RoomDto? _room;
   List<String> _tagsId = [];
   final List<int> _tagChecked = [];
   int _firstLoad = 0;
@@ -199,10 +200,6 @@ class _AddScreenState extends State<AddScreen> {
         title: Text(_pageTitle),
         actions: [
           IconButton(
-            onPressed: _saveEntry,
-            icon: const Icon(Icons.save),
-          ),
-          IconButton(
             onPressed: () {
               setState(() {
                 isTorchOn = !isTorchOn;
@@ -220,6 +217,10 @@ class _AddScreenState extends State<AddScreen> {
                   ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _saveEntry,
+        label: const Text('Speichern'),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -292,20 +293,6 @@ class _AddScreenState extends State<AddScreen> {
                     height: 30,
                   ),
                   _tags(context),
-                  const SizedBox(
-                    height: 30,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _saveEntry,
-                        icon: const Icon(Icons.check),
-                        label: const Text('Speichern'),
-                      ),
-                    ),
-                  )
                 ],
               ),
             ),
@@ -547,7 +534,7 @@ class _AddScreenState extends State<AddScreen> {
                   if (value >= 0) {
                     for (RoomData rd in roomList) {
                       if (rd.id == value) {
-                        _room = rd;
+                        _room = RoomDto.fromData(rd);
                         break;
                       }
                     }

@@ -151,7 +151,6 @@ class TagChip extends StatelessWidget {
             );
           } else {
             return Container(
-              width: 50,
               decoration: BoxDecoration(
                 border: Border.all(
                   color: Color(tag.color),

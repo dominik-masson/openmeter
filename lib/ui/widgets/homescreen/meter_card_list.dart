@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 import '../../../core/database/local_database.dart';
-import '../../../core/database/models/meter_with_room.dart';
+import '../../../core/model/meter_with_room.dart';
 
+import '../../../core/model/room_dto.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../empty_data.dart';
@@ -124,7 +125,7 @@ class _MeterCardListState extends State<MeterCardList> {
                   return _meterCard.getCard(
                     context: context,
                     meter: meterItem,
-                    room: element.room,
+                    room: element.room == null ? null : RoomDto.fromData(element.room!),
                     date: date,
                     count: count,
                     tags: listTagsId,

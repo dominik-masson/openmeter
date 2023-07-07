@@ -5,6 +5,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../core/database/local_database.dart';
 
+import '../../core/model/room_dto.dart';
 import '../../core/provider/chart_provider.dart';
 import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/entry_card_provider.dart';
@@ -19,7 +20,7 @@ import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
-  final RoomData? room;
+  final RoomDto? room;
   final List<String> tagsId;
 
   const DetailsSingleMeter(
@@ -34,7 +35,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   String _meterName = '';
   String _roomName = '';
   late MeterData _meter;
-  late RoomData? _room;
+  late RoomDto? _room;
 
   int _activeChartWidget = 0;
 
@@ -230,7 +231,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
               }
 
               _meter = value[0] as MeterData;
-              _room = value[1] as RoomData?;
+              _room = value[1] as RoomDto?;
 
               entryProvider.setMeterUnit(_meter.unit);
 

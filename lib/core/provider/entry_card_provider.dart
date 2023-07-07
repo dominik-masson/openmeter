@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -66,7 +67,24 @@ class EntryCardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteAllSelectedEntries(BuildContext context) {
+  _updateFirstEntry(LocalDatabase db) async {
+  print(_entries);
+    final firstEntry = _entries.keys.last;
+
+    await db.entryDao.updateEntry(EntriesCompanion(
+      note: Value(firstEntry.note),
+      usage: const Value(-1),
+      count: Value(firstEntry.count),
+      date: Value(firstEntry.date),
+      days: Value(firstEntry.days),
+      id: Value(firstEntry.id),
+      meter: Value(firstEntry.meter),
+    ));
+  }
+
+  void deleteAllSelectedEntries(BuildContext context) async {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
     Entrie newLastEntry = _entries.keys.elementAt(1);
 
     setCurrentCount(newLastEntry.count.toString());
@@ -74,15 +92,15 @@ class EntryCardProvider extends ChangeNotifier {
 
     _entries.forEach((key, value) {
       if (value == true) {
-        Provider.of<LocalDatabase>(context, listen: false)
-            .entryDao
-            .deleteEntry(key.id);
+        db.entryDao.deleteEntry(key.id);
       }
     });
 
     _entries.removeWhere((key, value) => value == true);
 
     _hasSelectedEntries = false;
+
+    await _updateFirstEntry(db);
 
     notifyListeners();
   }

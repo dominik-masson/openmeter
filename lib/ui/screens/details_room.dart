@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/model/room_dto.dart';
 import '../../core/provider/database_settings_provider.dart';
-import '../../core/provider/refresh_provider.dart';
+import '../../core/provider/room_provider.dart';
 import '../../utils/room_typ.dart';
 import '../widgets/homescreen/meter_card.dart';
+import '../widgets/objects_screen/add_meter_to_room.dart';
 
 class DetailsRoom extends StatefulWidget {
-  final RoomData roomData;
+  final RoomDto roomData;
 
   const DetailsRoom({Key? key, required this.roomData}) : super(key: key);
 
@@ -22,34 +23,37 @@ class _DetailsRoomState extends State<DetailsRoom> {
   final TextEditingController _name = TextEditingController();
   bool _update = false;
   String _roomTyp = 'Sonstiges';
-  late RoomData _currentRoom;
+  late RoomDto _currentRoom;
   final MeterCard _meterCard = MeterCard();
 
   @override
   void initState() {
     _currentRoom = widget.roomData;
-    _name.text = _currentRoom.name;
-    _roomTyp = _currentRoom.typ;
+    _name.text = _currentRoom.name!;
+    _roomTyp = _currentRoom.typ!;
     super.initState();
-  }
-
-  void _refresh() {
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final refresh = Provider.of<RefreshProvider>(context);
+    final roomProvider = Provider.of<RoomProvider>(context);
 
-    if (refresh.refreshState) {
-      _refresh();
-      refresh.setRefresh(false);
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+    final autoBackUp =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
+
+    int meterCount = roomProvider.getMeterCount;
+
+    if (meterCount != 0) {
+      _currentRoom.sumMeter = _currentRoom.sumMeter! + meterCount;
+      roomProvider.setMeterCount(0);
     }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_name.text),
         actions: [
-          !_update
+          _update == false
               ? IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () {
@@ -59,11 +63,35 @@ class _DetailsRoomState extends State<DetailsRoom> {
                   },
                 )
               : IconButton(
-                  onPressed: () {
-                    _updateRoom(context);
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+
+                      if (_roomTyp == _currentRoom.typ &&
+                          _name.text == _currentRoom.name) {
+                        setState(() {
+                          _update = false;
+                        });
+                        return;
+                      }
+
+                      if (_name.text.isEmpty) {
+                        _name.text = _roomTyp;
+                      }
+
+                      final updateRoom = RoomData(
+                          id: widget.roomData.id!,
+                          typ: _roomTyp,
+                          name: _name.text);
+
+                      _currentRoom = await roomProvider.updateRoom(
+                          db: db,
+                          roomData: updateRoom,
+                          backupState: autoBackUp);
+                    }
+
                     setState(() {
                       _update = false;
-                      _name.text = _currentRoom.name;
+                      _name.text = _currentRoom.name!;
                     });
                   },
                   icon: const Icon(Icons.save),
@@ -100,11 +128,28 @@ class _DetailsRoomState extends State<DetailsRoom> {
                 const SizedBox(
                   height: 30,
                 ),
-                const Text(
-                  'Zähler',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                Text(
+                  '${_currentRoom.sumMeter ?? 0} Zähler',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18),
                 ),
-                _listMeters(_currentRoom.id),
+                ListTile(
+                  leading: const Icon(Icons.add),
+                  title: const Text('Neue Zähler zuordnen'),
+                  dense: true,
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(
+                      builder: (context) => AddMeterToRoom(room: _currentRoom),
+                    ))
+                        .then((value) {
+                      if (value == true) {
+                        setState(() {});
+                      }
+                    });
+                  },
+                ),
+                _listMeters(_currentRoom.id!, roomProvider),
               ],
             ),
           ),
@@ -113,65 +158,59 @@ class _DetailsRoomState extends State<DetailsRoom> {
     );
   }
 
-  Widget _listMeters(int roomId) {
+  Widget _listMeters(int roomId, RoomProvider provider) {
     final db = Provider.of<LocalDatabase>(context);
+
     return FutureBuilder(
       future: db.roomDao.getMeterInRooms(roomId),
       builder: (context, snapshot) {
-        final meterData = snapshot.data;
+        if (snapshot.data == null) {
+          return Container();
+        }
+
         return FutureBuilder(
-          future: meterData,
-          builder: (context, snapshot) {
-            final meter = snapshot.data ?? [];
-            if (meter.isEmpty) {
+          future: snapshot.data,
+          builder: (context, meter) {
+            if (meter.data == null) {
               return Container();
             }
+
             return ListView.builder(
-              physics:  const NeverScrollableScrollPhysics(),
+              itemCount: meter.data!.length,
               shrinkWrap: true,
-              itemCount: meter.length,
+              physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
-                final data = meter[index];
-                return FutureBuilder(
-                  future: data,
+                final data = meter.data![index];
+
+                String? tagsId = data.tag;
+                List<String> listTagsId = [];
+
+                if (tagsId != null) {
+                  listTagsId = tagsId.split(';');
+                }
+
+                return StreamBuilder(
+                  stream: db.entryDao.getNewestEntry(data.id),
                   builder: (context, snapshot) {
-                    final meter = snapshot.data;
+                    final entry = snapshot.data?[0];
+                    final DateTime? date;
+                    final String count;
 
-                    if (meter == null) {
-                      return Container();
+                    if (entry == null) {
+                      date = null;
+                      count = 'none';
+                    } else {
+                      date = entry.date;
+                      count = entry.count.toString();
                     }
 
-                    String? tagsId = meter.tag;
-                    List<String> listTagsId = [];
-
-                    if (tagsId != null) {
-                      listTagsId = tagsId.split(';');
-                    }
-
-                    return StreamBuilder(
-                      stream: db.entryDao.getNewestEntry(meter.id),
-                      builder: (context, snapshot) {
-                        final entry = snapshot.data?[0];
-                        final DateTime? date;
-                        final String count;
-
-                        if (entry == null) {
-                          date = null;
-                          count = 'none';
-                        } else {
-                          date = entry.date;
-                          count = entry.count.toString();
-                        }
-
-                        return _meterCard.getCard(
-                          context: context,
-                          meter: meter,
-                          room: _currentRoom,
-                          date: date,
-                          count: count,
-                          tags: listTagsId,
-                        );
-                      },
+                    return _meterCard.getCard(
+                      context: context,
+                      meter: data,
+                      room: _currentRoom,
+                      date: date,
+                      count: count,
+                      tags: listTagsId,
                     );
                   },
                 );
@@ -213,35 +252,5 @@ class _DetailsRoomState extends State<DetailsRoom> {
         ),
       ),
     );
-  }
-
-  _updateRoom(
-    BuildContext context,
-  ) async {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-    final autoBackUp = Provider.of<DatabaseSettingsProvider>(context,listen: false);
-
-    if (_formKey.currentState!.validate()) {
-      if (_roomTyp == _currentRoom.typ && _name.text == _currentRoom.name) {
-        return;
-      }
-
-      if (_name.text.isEmpty) {
-        _name.text = _roomTyp;
-      }
-
-      final updateRoom =
-          RoomData(id: widget.roomData.id, typ: _roomTyp, name: _name.text);
-      _currentRoom = updateRoom;
-      await db.roomDao.updateRoom(updateRoom).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Änderung wurde gespeichert!',
-          ),
-        ));
-      });
-
-      autoBackUp.setHasUpdate(true);
-    }
   }
 }

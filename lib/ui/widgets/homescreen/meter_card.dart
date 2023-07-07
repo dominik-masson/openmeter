@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/room_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
@@ -18,7 +18,7 @@ class MeterCard {
   MeterCard();
 
   Future<bool> _deleteMeter(
-      BuildContext context, int meterId, RoomData? room) async {
+      BuildContext context, int meterId, RoomDto? room) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final autoBackUp =
         Provider.of<DatabaseSettingsProvider>(context, listen: false);
@@ -58,7 +58,7 @@ class MeterCard {
   Widget getCard({
     required BuildContext context,
     required MeterData meter,
-    RoomData? room,
+    RoomDto? room,
     required DateTime? date,
     required String count,
     required List<String> tags,
@@ -67,7 +67,7 @@ class MeterCard {
     final sortProvider = Provider.of<SortProvider>(context);
     final smallProvider = Provider.of<SmallFeatureProvider>(context);
 
-    String roomName = room == null ? '' : room.name;
+    String roomName = room == null ? '' : room.name!;
 
     final entryProvider =
         Provider.of<EntryCardProvider>(context, listen: false);
@@ -118,7 +118,7 @@ class MeterCard {
           ).then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
             entryProvider.removeAllSelectedEntries();
-            room = value as RoomData?;
+            room = value as RoomDto?;
           });
         },
         child: Padding(

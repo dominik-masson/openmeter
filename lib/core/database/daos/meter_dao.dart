@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../local_database.dart';
-import '../models/meter_with_room.dart';
+import '../../model/meter_with_room.dart';
 import '../tables/entries.dart';
 import '../tables/meter.dart';
 import '../tables/room.dart';
@@ -77,6 +77,30 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         }).toList();
       },
     );
+  }
+
+  Future<List<MeterWithRoom>> getAllMeterWithRooms() {
+    final query = select(db.meter).join([
+      leftOuterJoin(
+        db.meterInRoom,
+        meter.id.equalsExp(meterInRoom.meterId),
+        // useColumns: false,
+      ),
+      leftOuterJoin(
+        db.room,
+        meterInRoom.roomId.equalsExp(room.id),
+        // useColumns: false,
+      ),
+    ]);
+
+    return query
+        .map(
+          (row) => MeterWithRoom(
+            meter: row.readTable(db.meter),
+            room: row.readTableOrNull(db.room),
+          ),
+        )
+        .get();
   }
 
   Future<List<String?>> getAllMeterTyps() async {

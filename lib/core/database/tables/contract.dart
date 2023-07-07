@@ -6,7 +6,7 @@ class Contract extends Table {
   TextColumn get meterTyp => text()();
 
   IntColumn get provider =>
-      integer().references(Provider, #uid, onDelete: KeyAction.cascade)();
+      integer().references(Provider, #uid, onDelete: KeyAction.setNull).nullable()();
 
   RealColumn get basicPrice => real()();
 

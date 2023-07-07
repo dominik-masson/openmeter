@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 import '../../core/provider/database_settings_provider.dart';
+import '../../core/provider/room_provider.dart';
 import '../../core/services/database_settings_helper.dart';
 import '../../utils/custom_icons.dart';
 import '../screens/homescreen.dart';
@@ -65,12 +66,22 @@ class _BottomNavBarState extends State<BottomNavBar>
 
     db = Provider.of<LocalDatabase>(context);
 
+    final roomProvider = Provider.of<RoomProvider>(context);
+
+    bool hasSelectedItems = roomProvider.getStateHasSelected;
+
     return Scaffold(
       body: _screen[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).bottomAppBarTheme.color,
         currentIndex: _currentIndex,
         onTap: (value) {
+
+          if(hasSelectedItems){
+            roomProvider.removeAllSelected();
+            // return;
+          }
+
           setState(() {
             _currentIndex = value;
           });

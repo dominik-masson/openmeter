@@ -41,6 +41,12 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return await db.into(db.meterInRoom).insert(entity);
   }
 
+  updateMeterInRoom(MeterInRoomCompanion entity) async {
+    return await (update(db.meterInRoom)
+          ..where((tbl) => tbl.meterId.equals(entity.meterId.value)))
+        .write(entity);
+  }
+
   Future<int?> getNumberCounts(int roomId) {
     final countExp = db.meterInRoom.roomId
         .count(filter: db.meterInRoom.roomId.equals(roomId));
@@ -61,23 +67,18 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
         .get();
   }
 
-  Future<Future<List<Future<MeterData>>>> getMeterInRooms(int roomId) async {
-    // final query = db.select(db.meterInRoom)
-    //   ..join([
-    //     innerJoin(db.meter, db.meterInRoom.meterId.equalsExp(db.meter.id),
-    //         useColumns: false),
-    //   ])..where((tbl) => tbl.roomId.equals(roomId));
+  Future<Future<List<MeterData>>> getMeterInRooms(int roomId) async {
+    final query = select(db.meter).join([
+      leftOuterJoin(
+        db.meterInRoom,
+        db.meterInRoom.meterId.equalsExp(db.meter.id),
+      ),
+    ])
+      ..where(db.meterInRoom.roomId.equals(roomId));
 
-    final selectMeterIds = db.select(db.meterInRoom)..join([
-      innerJoin(db.meter, db.meterInRoom.meterId.equalsExp(db.meter.id))
-    ])..where((tbl) => tbl.roomId.equals(roomId));
-
-    var meter = selectMeterIds.map((p0) => p0.meterId);
-
-    var meterList = meter.map((p0) => db.meterDao.getSingleMeter(p0));
-
-    return meterList.get();
+    return query.map((r) => r.readTable(db.meter)).get();
   }
+
   Future<int?> getTableLength() async {
     var count = db.room.id.count();
 
@@ -85,5 +86,4 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
         .map((row) => row.read(count))
         .getSingleOrNull();
   }
-
 }

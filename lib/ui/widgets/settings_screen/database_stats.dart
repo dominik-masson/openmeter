@@ -142,7 +142,14 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   List<PieChartSectionData> _sections() {
     List<PieChartSectionData> result = [];
 
+    print(_itemValues);
+
+    if(_itemValues.isEmpty){
+      return result;
+    }
+
     for (int i = 0; i < 5; i++) {
+      print('i; $i');
       if (_itemValues.elementAt(i).isNaN) {
         result.add(
           PieChartSectionData(
@@ -209,6 +216,10 @@ class _DatabaseStatsState extends State<DatabaseStats> {
             itemCount: _itemColors.length,
             itemBuilder: (context, index) {
               int count = 0;
+
+              if(_itemValues.isEmpty){
+                return Container();
+              }
 
               if (!_itemValues.elementAt(index).isInfinite &&
                   !_itemValues.elementAt(index).isNaN) {

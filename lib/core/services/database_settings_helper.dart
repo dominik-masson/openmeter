@@ -13,7 +13,9 @@ import 'package:provider/provider.dart';
 import '../../utils/log_levels.dart';
 import '../database/local_database.dart';
 import '../model/database_stats_dto.dart';
+import '../provider/contract_provider.dart';
 import '../provider/database_settings_provider.dart';
+import '../provider/room_provider.dart';
 
 class DatabaseSettingsHelper {
   String? _selectedPath;
@@ -138,6 +140,8 @@ class DatabaseSettingsHelper {
               db.deleteDB().then((value) {
                 Provider.of<DatabaseSettingsProvider>(context, listen: false)
                     .resetStats();
+                Provider.of<RoomProvider>(context, listen: false).deleteCache();
+                Provider.of<ContractProvider>(context, listen: false).deleteCache();
 
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text(

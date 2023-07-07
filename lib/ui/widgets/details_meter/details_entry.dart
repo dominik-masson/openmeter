@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +11,6 @@ import '../../../core/provider/entry_card_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
-// TODO: set note is not working
 
 class DetailsEntry {
   bool _stateNote = false; // if ture => write some note
@@ -73,6 +74,9 @@ class DetailsEntry {
   }) {
     double usageCost = costProvider.calcUsage(usage);
     double dailyCost = usageCost / entry.days;
+
+    final String local = Platform.localeName;
+    final costFormat = NumberFormat.simpleCurrency(locale: local);
 
     return Column(
       children: [
@@ -141,7 +145,7 @@ class DetailsEntry {
             Column(
               children: [
                 Text(
-                  '${dailyCost.toStringAsFixed(2)} €',
+                  costFormat.format(dailyCost),
                   style: const TextStyle(fontSize: 16),
                 ),
               ],

@@ -28,8 +28,17 @@ part 'local_database.g.dart';
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
+
+
   @override
   int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   Future<void> exportInto(String path, bool isBackup) async {
     String newPath = '';

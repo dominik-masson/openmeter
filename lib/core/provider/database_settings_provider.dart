@@ -81,7 +81,7 @@ class DatabaseSettingsProvider extends ChangeNotifier {
 
   void setStateHasReset(bool value) {
     _hasReset = value;
-    notifyListeners();
+    // notifyListeners();
   }
 
   void setItemStatsValues(List<double> values) {

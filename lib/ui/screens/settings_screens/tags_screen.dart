@@ -27,11 +27,11 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 
   Widget _noTags() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    return const Padding(
+      padding: EdgeInsets.all(8.0),
       child: Center(
         child: Column(
-          children: const [
+          children: [
             Text(
               'Es sind keine Tags vorhanden!',
               style: TextStyle(fontSize: 16),
@@ -143,16 +143,16 @@ class _TagsScreenState extends State<TagsScreen> {
             const SizedBox(
               height: 30,
             ),
-            const Text(
-              'Informationen:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Text(
-                'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
-                'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
+            // const Text(
+            //   'Informationen:',
+            //   style: TextStyle(
+            //     fontSize: 18,
+            //     fontWeight: FontWeight.bold,
+            //   ),
+            // ),
+            // const Text(
+            //     'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
+            //     'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
           ],
         ),
       ),

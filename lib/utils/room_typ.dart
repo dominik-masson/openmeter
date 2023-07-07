@@ -1,10 +1,10 @@
 List roomTyps = [
-  'Wohnzimmer',
-  'Küche',
-  'Esszimmer',
-  'Schlafzimmer',
-  'Kinderzimmer',
   'Arbeitszimmer',
   'Badezimmer',
+  'Esszimmer',
+  'Kinderzimmer',
+  'Küche',
+  'Schlafzimmer',
+  'Wohnzimmer',
   'Sonstiges'
 ];

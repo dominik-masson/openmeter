@@ -896,10 +896,7 @@ class $MeterInRoomTable extends MeterInRoom
   @override
   late final GeneratedColumn<int> roomId = GeneratedColumn<int>(
       'room_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES room (id) ON DELETE CASCADE'));
+      type: DriftSqlType.int, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [meterId, roomId];
   @override
@@ -1007,29 +1004,36 @@ class MeterInRoomData extends DataClass implements Insertable<MeterInRoomData> {
 class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
   final Value<int> meterId;
   final Value<int> roomId;
+  final Value<int> rowid;
   const MeterInRoomCompanion({
     this.meterId = const Value.absent(),
     this.roomId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   MeterInRoomCompanion.insert({
     required int meterId,
     required int roomId,
+    this.rowid = const Value.absent(),
   })  : meterId = Value(meterId),
         roomId = Value(roomId);
   static Insertable<MeterInRoomData> custom({
     Expression<int>? meterId,
     Expression<int>? roomId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (meterId != null) 'meter_id': meterId,
       if (roomId != null) 'room_id': roomId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  MeterInRoomCompanion copyWith({Value<int>? meterId, Value<int>? roomId}) {
+  MeterInRoomCompanion copyWith(
+      {Value<int>? meterId, Value<int>? roomId, Value<int>? rowid}) {
     return MeterInRoomCompanion(
       meterId: meterId ?? this.meterId,
       roomId: roomId ?? this.roomId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1042,6 +1046,9 @@ class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
     if (roomId.present) {
       map['room_id'] = Variable<int>(roomId.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1049,7 +1056,8 @@ class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
   String toString() {
     return (StringBuffer('MeterInRoomCompanion(')
           ..write('meterId: $meterId, ')
-          ..write('roomId: $roomId')
+          ..write('roomId: $roomId, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1408,11 +1416,11 @@ class $ContractTable extends Contract
       const VerificationMeta('provider');
   @override
   late final GeneratedColumn<int> provider = GeneratedColumn<int>(
-      'provider', aliasedName, false,
+      'provider', aliasedName, true,
       type: DriftSqlType.int,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES provider (uid) ON DELETE CASCADE'));
+          'REFERENCES provider (uid) ON DELETE SET NULL'));
   static const VerificationMeta _basicPriceMeta =
       const VerificationMeta('basicPrice');
   @override
@@ -1466,8 +1474,6 @@ class $ContractTable extends Contract
     if (data.containsKey('provider')) {
       context.handle(_providerMeta,
           provider.isAcceptableOrUnknown(data['provider']!, _providerMeta));
-    } else if (isInserting) {
-      context.missing(_providerMeta);
     }
     if (data.containsKey('basic_price')) {
       context.handle(
@@ -1517,7 +1523,7 @@ class $ContractTable extends Contract
       meterTyp: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}meter_typ'])!,
       provider: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}provider'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}provider']),
       basicPrice: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}basic_price'])!,
       energyPrice: attachedDatabase.typeMapping
@@ -1540,7 +1546,7 @@ class $ContractTable extends Contract
 class ContractData extends DataClass implements Insertable<ContractData> {
   final int uid;
   final String meterTyp;
-  final int provider;
+  final int? provider;
   final double basicPrice;
   final double energyPrice;
   final double discount;
@@ -1549,7 +1555,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
   const ContractData(
       {required this.uid,
       required this.meterTyp,
-      required this.provider,
+      this.provider,
       required this.basicPrice,
       required this.energyPrice,
       required this.discount,
@@ -1560,7 +1566,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
     final map = <String, Expression>{};
     map['uid'] = Variable<int>(uid);
     map['meter_typ'] = Variable<String>(meterTyp);
-    map['provider'] = Variable<int>(provider);
+    if (!nullToAbsent || provider != null) {
+      map['provider'] = Variable<int>(provider);
+    }
     map['basic_price'] = Variable<double>(basicPrice);
     map['energy_price'] = Variable<double>(energyPrice);
     map['discount'] = Variable<double>(discount);
@@ -1573,7 +1581,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
     return ContractCompanion(
       uid: Value(uid),
       meterTyp: Value(meterTyp),
-      provider: Value(provider),
+      provider: provider == null && nullToAbsent
+          ? const Value.absent()
+          : Value(provider),
       basicPrice: Value(basicPrice),
       energyPrice: Value(energyPrice),
       discount: Value(discount),
@@ -1588,7 +1598,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
     return ContractData(
       uid: serializer.fromJson<int>(json['uid']),
       meterTyp: serializer.fromJson<String>(json['meterTyp']),
-      provider: serializer.fromJson<int>(json['provider']),
+      provider: serializer.fromJson<int?>(json['provider']),
       basicPrice: serializer.fromJson<double>(json['basicPrice']),
       energyPrice: serializer.fromJson<double>(json['energyPrice']),
       discount: serializer.fromJson<double>(json['discount']),
@@ -1602,7 +1612,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
     return <String, dynamic>{
       'uid': serializer.toJson<int>(uid),
       'meterTyp': serializer.toJson<String>(meterTyp),
-      'provider': serializer.toJson<int>(provider),
+      'provider': serializer.toJson<int?>(provider),
       'basicPrice': serializer.toJson<double>(basicPrice),
       'energyPrice': serializer.toJson<double>(energyPrice),
       'discount': serializer.toJson<double>(discount),
@@ -1614,7 +1624,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
   ContractData copyWith(
           {int? uid,
           String? meterTyp,
-          int? provider,
+          Value<int?> provider = const Value.absent(),
           double? basicPrice,
           double? energyPrice,
           double? discount,
@@ -1623,7 +1633,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       ContractData(
         uid: uid ?? this.uid,
         meterTyp: meterTyp ?? this.meterTyp,
-        provider: provider ?? this.provider,
+        provider: provider.present ? provider.value : this.provider,
         basicPrice: basicPrice ?? this.basicPrice,
         energyPrice: energyPrice ?? this.energyPrice,
         discount: discount ?? this.discount,
@@ -1665,7 +1675,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
 class ContractCompanion extends UpdateCompanion<ContractData> {
   final Value<int> uid;
   final Value<String> meterTyp;
-  final Value<int> provider;
+  final Value<int?> provider;
   final Value<double> basicPrice;
   final Value<double> energyPrice;
   final Value<double> discount;
@@ -1684,14 +1694,13 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
   ContractCompanion.insert({
     this.uid = const Value.absent(),
     required String meterTyp,
-    required int provider,
+    this.provider = const Value.absent(),
     required double basicPrice,
     required double energyPrice,
     required double discount,
     required int bonus,
     required String note,
   })  : meterTyp = Value(meterTyp),
-        provider = Value(provider),
         basicPrice = Value(basicPrice),
         energyPrice = Value(energyPrice),
         discount = Value(discount),
@@ -1722,7 +1731,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
   ContractCompanion copyWith(
       {Value<int>? uid,
       Value<String>? meterTyp,
-      Value<int>? provider,
+      Value<int?>? provider,
       Value<double>? basicPrice,
       Value<double>? energyPrice,
       Value<double>? discount,
@@ -2027,17 +2036,10 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
             ],
           ),
           WritePropagation(
-            on: TableUpdateQuery.onTableName('room',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('meter_in_room', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
             on: TableUpdateQuery.onTableName('provider',
                 limitUpdateKind: UpdateKind.delete),
             result: [
-              TableUpdate('contract', kind: UpdateKind.delete),
+              TableUpdate('contract', kind: UpdateKind.update),
             ],
           ),
         ],

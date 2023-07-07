@@ -11,7 +11,7 @@ class Room extends Table{
 
 class MeterInRoom extends Table{
   IntColumn get meterId => integer().references(Meter, #id, onDelete: KeyAction.cascade)();
-  IntColumn get roomId => integer().references(Room, #id, onDelete: KeyAction.cascade)();
+  IntColumn get roomId => integer()();
 
   @override
   Set<Column> get primaryKey => {meterId, roomId};

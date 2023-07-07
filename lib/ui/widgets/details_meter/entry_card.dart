@@ -116,7 +116,7 @@ class EntryCard extends StatelessWidget {
                         width: 240,
                         child: Card(
                           color:
-                              isSelected ? Theme.of(context).hoverColor : null,
+                              isSelected ? Colors.grey.withOpacity(0.5) : null,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
