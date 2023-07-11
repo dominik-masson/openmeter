@@ -104,5 +104,7 @@ class DatabaseSettingsProvider extends ChangeNotifier {
     _itemCount = 0;
 
     setStateHasReset(true);
+
+    notifyListeners();
   }
 }

@@ -1,4 +1,3 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -154,20 +153,16 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
               ),
               Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: CarouselSlider(
-                      options: CarouselOptions(
-                        height: 340,
-                        enableInfiniteScroll: false,
-                        viewportFraction: 1,
-                        onPageChanged: (index, reason) {
-                          setState(() {
-                            _activeChartWidget = index;
-                          });
-                        },
-                      ),
-                      items: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    height: 340,
+                    child: PageView(
+                      onPageChanged: (value) {
+                        setState(() {
+                          _activeChartWidget = value;
+                        });
+                      },
+                      children: [
                         if (!chartProvider.getLineChart)
                           UsageBarChart(
                             meter: _meter,

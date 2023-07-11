@@ -506,6 +506,8 @@ class _AddScreenState extends State<AddScreen> {
         builder: (context, snapshot) {
           final roomList = snapshot.data ?? [];
 
+          roomList.sort((a, b) => a.name.compareTo(b.name),);
+
           if (_firstLoad != 2) {
             _createRoomDropDown(roomList);
             _firstLoad++;
@@ -554,6 +556,8 @@ class _AddScreenState extends State<AddScreen> {
       stream: data.roomDao.watchAllRooms(),
       builder: (context, snapshot) {
         final roomList = snapshot.data ?? [];
+
+        roomList.sort((a, b) => a.name.compareTo(b.name),);
 
         if (_firstLoad != 2) {
           _createRoomDropDown(roomList);

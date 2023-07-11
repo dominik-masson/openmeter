@@ -72,8 +72,10 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
       (rows) {
         return rows.map((row) {
           return MeterWithRoom(
-              meter: row.readTable(db.meter),
-              room: row.readTableOrNull(db.room));
+            meter: row.readTable(db.meter),
+            room: row.readTableOrNull(db.room),
+            isSelected: false,
+          );
         }).toList();
       },
     );
@@ -98,6 +100,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
           (row) => MeterWithRoom(
             meter: row.readTable(db.meter),
             room: row.readTableOrNull(db.room),
+            isSelected: false,
           ),
         )
         .get();

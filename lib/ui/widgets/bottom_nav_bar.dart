@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/provider/contract_provider.dart';
 import '../../core/provider/database_settings_provider.dart';
+import '../../core/provider/meter_provider.dart';
 import '../../core/provider/room_provider.dart';
 import '../../core/services/database_settings_helper.dart';
 import '../../utils/custom_icons.dart';
@@ -53,8 +55,8 @@ class _BottomNavBarState extends State<BottomNavBar>
 
     if (databaseSettingsProvider.checkIfAutoBackupIsPossible() &&
         state == AppLifecycleState.paused) {
-      await databaseSettingsHelper
-          .autoBackupExport(db, databaseSettingsProvider);
+      await databaseSettingsHelper.autoBackupExport(
+          db, databaseSettingsProvider);
     }
   }
 
@@ -67,8 +69,8 @@ class _BottomNavBarState extends State<BottomNavBar>
     db = Provider.of<LocalDatabase>(context);
 
     final roomProvider = Provider.of<RoomProvider>(context);
-
-    bool hasSelectedItems = roomProvider.getStateHasSelected;
+    final meterProvider = Provider.of<MeterProvider>(context);
+    final contractProvider = Provider.of<ContractProvider>(context);
 
     return Scaffold(
       body: _screen[_currentIndex],
@@ -76,10 +78,14 @@ class _BottomNavBarState extends State<BottomNavBar>
         backgroundColor: Theme.of(context).bottomAppBarTheme.color,
         currentIndex: _currentIndex,
         onTap: (value) {
-
-          if(hasSelectedItems){
+          if (roomProvider.getStateHasSelected) {
             roomProvider.removeAllSelected();
-            // return;
+          }
+          if (contractProvider.getHasSelectedItems) {
+            contractProvider.removeAllSelectedItems();
+          }
+          if (meterProvider.getStateHasSelectedMeters) {
+            meterProvider.removeAllSelectedMeters();
           }
 
           setState(() {

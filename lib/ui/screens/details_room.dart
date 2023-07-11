@@ -24,7 +24,6 @@ class _DetailsRoomState extends State<DetailsRoom> {
   bool _update = false;
   String _roomTyp = 'Sonstiges';
   late RoomDto _currentRoom;
-  final MeterCard _meterCard = MeterCard();
 
   @override
   void initState() {
@@ -65,7 +64,6 @@ class _DetailsRoomState extends State<DetailsRoom> {
               : IconButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-
                       if (_roomTyp == _currentRoom.typ &&
                           _name.text == _currentRoom.name) {
                         setState(() {
@@ -204,13 +202,13 @@ class _DetailsRoomState extends State<DetailsRoom> {
                       count = entry.count.toString();
                     }
 
-                    return _meterCard.getCard(
-                      context: context,
+                    return MeterCard(
                       meter: data,
                       room: _currentRoom,
                       date: date,
                       count: count,
                       tags: listTagsId,
+                      isSelected: false,
                     );
                   },
                 );

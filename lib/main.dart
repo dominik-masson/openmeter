@@ -8,6 +8,7 @@ import 'core/provider/contract_provider.dart';
 import 'core/provider/cost_provider.dart';
 import 'core/provider/database_settings_provider.dart';
 import 'core/provider/entry_card_provider.dart';
+import 'core/provider/meter_provider.dart';
 import 'core/provider/room_provider.dart';
 import 'core/provider/small_feature_provider.dart';
 import 'core/provider/refresh_provider.dart';
@@ -74,6 +75,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<DatabaseSettingsProvider>.value(value: DatabaseSettingsProvider()),
         ChangeNotifierProvider<RoomProvider>.value(value: RoomProvider()),
         ChangeNotifierProvider<ContractProvider>.value(value: ContractProvider()),
+        ChangeNotifierProvider<MeterProvider>.value(value: MeterProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {
