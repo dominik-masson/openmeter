@@ -8,6 +8,7 @@ class MeterProvider extends ChangeNotifier {
   List<MeterWithRoom> _meters = [];
   int _selectedLength = 0;
   bool _hasSelectedItems = false;
+  bool _hasUpdate = false;
 
   get getAllMeters => _meters;
 
@@ -17,11 +18,12 @@ class MeterProvider extends ChangeNotifier {
 
   int get getAllMetersLength => _meters.length;
 
+  bool get getStateHasUpdate => _hasUpdate;
+
   void setAllMeters(List<MeterWithRoom> meters) {
     _meters.clear();
 
     _meters = meters;
-
   }
 
   void setSelectedMetersLength(int value) {
@@ -93,8 +95,18 @@ class MeterProvider extends ChangeNotifier {
     // notifyListeners();
   }
 
-  resetMeterList(){
+  resetMeterList() {
     _meters.clear();
     notifyListeners();
   }
+
+  void setStateHasUpdate(bool value) {
+    _hasUpdate = value;
+
+    if (_hasUpdate == true) {
+      notifyListeners();
+    }
+  }
+
+  void updateMeter() {}
 }

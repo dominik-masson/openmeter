@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
@@ -63,14 +65,17 @@ class _MeterCardListState extends State<MeterCardList> {
     final meterProvider = Provider.of<MeterProvider>(context);
 
     bool hasSelectedItems = meterProvider.getStateHasSelectedMeters;
+    bool hasUpdate = meterProvider.getStateHasUpdate;
 
     return StreamBuilder(
         stream: db.meterDao.watchAllMeterWithRooms(),
         builder: (context, snapshot) {
           final data = snapshot.data ?? [];
 
-          if (data.length != meterProvider.getAllMetersLength) {
+          if (data.length != meterProvider.getAllMetersLength ||
+              hasUpdate == true) {
             meterProvider.setAllMeters(data);
+            meterProvider.setStateHasUpdate(false);
           }
 
           List<MeterWithRoom> meters = meterProvider.getAllMeters;

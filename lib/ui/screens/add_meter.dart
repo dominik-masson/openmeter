@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/database/local_database.dart';
 import '../../core/model/room_dto.dart';
 import '../../core/provider/database_settings_provider.dart';
+import '../../core/provider/meter_provider.dart';
 import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
@@ -40,7 +41,7 @@ class _AddScreenState extends State<AddScreen> {
   String _meterTyp = 'Stromzähler';
   int _roomId = -2; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
-  bool _updateMeter = false;
+  bool _updateMeterState = false;
   RoomDto? _room;
   List<String> _tagsId = [];
   final List<int> _tagChecked = [];
@@ -65,6 +66,7 @@ class _AddScreenState extends State<AddScreen> {
 
     if (widget.room != null) {
       _room = widget.room!;
+      _roomId = _room!.id!;
     } else {
       _roomId = -1;
     }
@@ -92,11 +94,92 @@ class _AddScreenState extends State<AddScreen> {
     _meternumber.text = widget.meter!.number;
     _meternote.text = widget.meter!.note;
     _meterTyp = widget.meter!.typ;
-    _updateMeter = true;
+    _updateMeterState = true;
     _unitController.text = widget.meter!.unit;
   }
 
-  Future<void> _saveEntry() async {
+  Future<void> _updateMeter(LocalDatabase db, String? tagsId) async {
+    Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
+
+    MeterData meterData = MeterData(
+      typ: _meterTyp,
+      note: _meternote.text,
+      number: _meternumber.text,
+      id: widget.meter!.id,
+      unit: _unitController.text,
+      tag: tagsId,
+    );
+
+    if (_roomId != -2) {
+      if (_roomId == -1) {
+        await db.roomDao.deleteMeter(widget.meter!.id);
+      } else {
+        await db.roomDao.deleteMeter(widget.meter!.id);
+        final roomWithMeter = MeterInRoomCompanion(
+          meterId: drift.Value(widget.meter!.id),
+          roomId: drift.Value(_roomId),
+        );
+
+        await db.roomDao.createMeterInRoom(roomWithMeter);
+      }
+    }
+
+    await db.meterDao.updateMeter(meterData).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Zähler wird aktualisiert!',
+        ),
+      ));
+      Provider.of<MeterProvider>(context, listen: false)
+          .setStateHasUpdate(true);
+      Navigator.of(context).pop([meterData, _room]);
+    });
+  }
+
+  Future<void> _createMeter(LocalDatabase db, String? tagsId) async {
+    final meter = MeterCompanion(
+      typ: drift.Value(_meterTyp),
+      number: drift.Value(_meternumber.text),
+      note: drift.Value(_meternote.text),
+      unit: drift.Value(_unitController.text),
+      tag: drift.Value(tagsId),
+    );
+
+    Provider.of<DatabaseSettingsProvider>(context, listen: false)
+        .setHasUpdate(true);
+
+    if (!_updateMeterState) {
+      int meterId = await db.meterDao.createMeter(meter);
+
+      if (_roomId != -2 || _roomId != -1) {
+        final room = MeterInRoomCompanion(
+          meterId: drift.Value(meterId),
+          roomId: drift.Value(_roomId),
+        );
+
+        await db.roomDao.createMeterInRoom(room);
+      }
+
+      final entry = EntriesCompanion(
+        count: drift.Value(int.parse(_metervalue.text)),
+        date: drift.Value(DateTime.now()),
+        meter: drift.Value(meterId),
+        usage: const drift.Value(-1),
+        days: const drift.Value(-1),
+      );
+
+      await db.entryDao.createEntry(entry).then((value) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Zähler wird erstellt!',
+          ),
+        ));
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
+  Future<void> _handleOnSave() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     String? tagsId;
 
@@ -115,78 +198,10 @@ class _AddScreenState extends State<AddScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      final meter = MeterCompanion(
-        typ: drift.Value(_meterTyp),
-        number: drift.Value(_meternumber.text),
-        note: drift.Value(_meternote.text),
-        unit: drift.Value(_unitController.text),
-        tag: drift.Value(tagsId),
-      );
-
-      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
-
-      if (!_updateMeter) {
-        int meterId = await db.meterDao.createMeter(meter);
-
-        if (_roomId != -2 || _roomId != -1) {
-          final room = MeterInRoomCompanion(
-            meterId: drift.Value(meterId),
-            roomId: drift.Value(_roomId),
-          );
-
-          await db.roomDao.createMeterInRoom(room);
-        }
-
-        final entry = EntriesCompanion(
-          count: drift.Value(int.parse(_metervalue.text)),
-          date: drift.Value(DateTime.now()),
-          meter: drift.Value(meterId),
-          usage: const drift.Value(-1),
-          days: const drift.Value(-1),
-        );
-
-        await db.entryDao.createEntry(entry).then((value) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Zähler wird erstellt!',
-            ),
-          ));
-          Navigator.of(context).pop();
-        });
+      if (_updateMeterState == false) {
+        await _createMeter(db, tagsId);
       } else {
-        Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
-
-        MeterData meterData = MeterData(
-          typ: _meterTyp,
-          note: _meternote.text,
-          number: _meternumber.text,
-          id: widget.meter!.id,
-          unit: _unitController.text,
-          tag: tagsId,
-        );
-
-        if (_roomId != -2) {
-          if (_roomId == -1) {
-            await db.roomDao.deleteMeter(widget.meter!.id);
-          } else {
-            await db.roomDao.deleteMeter(widget.meter!.id);
-            final roomWithMeter = MeterInRoomCompanion(
-              meterId: drift.Value(widget.meter!.id),
-              roomId: drift.Value(_roomId),
-            );
-
-            await db.roomDao.createMeterInRoom(roomWithMeter);
-          }
-        }
-
-        await db.meterDao.updateMeter(meterData).then((value) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Zähler wird aktualisiert!',
-            ),
-          ));
-          Navigator.of(context).pop([meterData, _room]);
-        });
+        await _updateMeter(db, tagsId);
       }
     }
   }
@@ -219,7 +234,7 @@ class _AddScreenState extends State<AddScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _saveEntry,
+        onPressed: _handleOnSave,
         label: const Text('Speichern'),
       ),
       body: SingleChildScrollView(
@@ -265,7 +280,7 @@ class _AddScreenState extends State<AddScreen> {
                   const SizedBox(
                     height: 15,
                   ),
-                  if (!_updateMeter)
+                  if (!_updateMeterState)
                     TextFormField(
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -500,91 +515,74 @@ class _AddScreenState extends State<AddScreen> {
 
   Widget _dropDownRoom(BuildContext context) {
     final data = Provider.of<LocalDatabase>(context);
-    if (_updateMeter) {
-      return StreamBuilder(
-        stream: data.roomDao.watchAllRooms(),
-        builder: (context, snapshot) {
-          final roomList = snapshot.data ?? [];
-
-          roomList.sort((a, b) => a.name.compareTo(b.name),);
-
-          if (_firstLoad != 2) {
-            _createRoomDropDown(roomList);
-            _firstLoad++;
-          }
-
-          if (_roomList.length != 1) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: DropdownButtonFormField(
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  label: Text(
-                    'Zimmer',
-                  ),
-                  // icon: Icon(Icons.bedroom_parent_outlined),
-                  icon: FaIcon(
-                    FontAwesomeIcons.bed,
-                    size: 16,
-                  ),
-                ),
-                items: _roomList,
-                value: _room?.id ?? -1,
-                onChanged: (value) {
-                  _roomId = int.parse(value.toString());
-
-                  if (value >= 0) {
-                    for (RoomData rd in roomList) {
-                      if (rd.id == value) {
-                        _room = RoomDto.fromData(rd);
-                        break;
-                      }
-                    }
-                  } else {
-                    _room = null;
-                  }
-                },
-              ),
-            );
-          }
-          return Container();
-        },
-      );
-    }
 
     return StreamBuilder(
       stream: data.roomDao.watchAllRooms(),
       builder: (context, snapshot) {
         final roomList = snapshot.data ?? [];
 
-        roomList.sort((a, b) => a.name.compareTo(b.name),);
+        roomList.sort(
+          (a, b) => a.name.compareTo(b.name),
+        );
 
         if (_firstLoad != 2) {
           _createRoomDropDown(roomList);
           _firstLoad++;
         }
 
-        return Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: DropdownButtonFormField(
-            isExpanded: true,
-            decoration: const InputDecoration(
-              label: Text(
-                'Zimmer',
+        if (_firstLoad == 2) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: DropdownButtonFormField(
+              isExpanded: true,
+              decoration: const InputDecoration(
+                label: Text(
+                  'Zimmer',
+                ),
+                icon: FaIcon(
+                  FontAwesomeIcons.bed,
+                  size: 16,
+                ),
               ),
-              // icon: Icon(Icons.bedroom_parent_outlined),
-              icon: FaIcon(
-                FontAwesomeIcons.bed,
-                size: 16,
-              ),
+              value: _roomId == -2 ? -1 : _roomId,
+              items: _roomList,
+              onChanged: (value) {
+                _roomId = int.parse(value.toString());
+
+                if (_roomId >= 0 && _updateMeterState == true) {
+                  for (RoomData room in roomList) {
+                    if (room.id == _roomId) {
+                      _room = RoomDto.fromData(room);
+                      break;
+                    }
+                  }
+                } else {
+                  _room = null;
+                }
+              },
             ),
-            value: _roomId == -2 ? -1 : _roomId,
-            items: _roomList,
-            onChanged: (value) {
-              _roomId = int.parse(value.toString());
-            },
-          ),
-        );
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: DropdownButtonFormField(
+              isExpanded: true,
+              decoration: const InputDecoration(
+                label: Text(
+                  'Zimmer',
+                ),
+                // icon: Icon(Icons.bedroom_parent_outlined),
+                icon: FaIcon(
+                  FontAwesomeIcons.bed,
+                  size: 16,
+                ),
+              ),
+              value: -1,
+              items: _roomList,
+              onChanged: null,
+            ),
+          );
+        }
       },
     );
   }

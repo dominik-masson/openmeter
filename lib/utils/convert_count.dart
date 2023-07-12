@@ -11,11 +11,14 @@ class ConvertCount {
   static String convertDouble(double count) {
     final locale = Platform.localeName;
 
-    return NumberFormat.decimalPatternDigits(locale: locale,decimalDigits: 2).format(count);
+    return NumberFormat.decimalPatternDigits(locale: locale, decimalDigits: 2)
+        .format(count);
   }
 
   static int convertString(String count) {
-    List<String> split = count.split('.');
+    var reg = RegExp(r'\D');
+
+    List<String> split = count.split(reg);
 
     return int.parse(split.join());
   }

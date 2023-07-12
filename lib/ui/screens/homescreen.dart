@@ -26,14 +26,16 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: hasSelectedItems == true
           ? _selectedAppBar(meterProvider, db)
           : _unselectedAppBar(),
-      body: WillPopScope(onWillPop: () async {
-        if(hasSelectedItems){
-          meterProvider.removeAllSelectedMeters();
-          return false;
-        }
+      body: WillPopScope(
+          onWillPop: () async {
+            if (hasSelectedItems) {
+              meterProvider.removeAllSelectedMeters();
+              return false;
+            }
 
-        return true;
-      }, child: const MeterCardList()),
+            return true;
+          },
+          child: const MeterCardList()),
     );
   }
 
