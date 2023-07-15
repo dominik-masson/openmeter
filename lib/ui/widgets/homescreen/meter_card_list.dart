@@ -109,12 +109,6 @@ class _MeterCardListState extends State<MeterCardList> {
                     ? null
                     : RoomDto.fromData(element.room!);
 
-                String? tagsId = meterItem.tag;
-                List<String> listTagsId = [];
-
-                if (tagsId != null) {
-                  listTagsId = tagsId.split(';');
-                }
 
                 return StreamBuilder(
                   stream: db.entryDao.getNewestEntry(meterItem.id),
@@ -147,7 +141,6 @@ class _MeterCardListState extends State<MeterCardList> {
                               room: room,
                               date: date,
                               count: count,
-                              listTagsId: listTagsId,
                               isSelected: element.isSelected)
                           : _cardWithSlide(
                               meterProvider: meterProvider,
@@ -156,7 +149,6 @@ class _MeterCardListState extends State<MeterCardList> {
                               room: room,
                               date: date,
                               count: count,
-                              listTagsId: listTagsId,
                               isSelected: element.isSelected),
                     );
                   },
@@ -173,7 +165,6 @@ class _MeterCardListState extends State<MeterCardList> {
     required RoomDto? room,
     required DateTime? date,
     required String count,
-    required List<String> listTagsId,
     required bool isSelected,
     required MeterProvider meterProvider,
   }) {
@@ -199,7 +190,6 @@ class _MeterCardListState extends State<MeterCardList> {
         room: room,
         date: date,
         count: count,
-        tags: listTagsId,
         isSelected: isSelected,
       ),
     );
@@ -211,7 +201,6 @@ class _MeterCardListState extends State<MeterCardList> {
     required RoomDto? room,
     required DateTime? date,
     required String count,
-    required List<String> listTagsId,
     required bool isSelected,
   }) {
     return MeterCard(
@@ -219,7 +208,6 @@ class _MeterCardListState extends State<MeterCardList> {
       room: room,
       date: date,
       count: count,
-      tags: listTagsId,
       isSelected: isSelected,
     );
   }

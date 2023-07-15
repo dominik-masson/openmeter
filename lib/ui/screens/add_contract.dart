@@ -168,7 +168,7 @@ class _AddContractState extends State<AddContract> {
             providerId = await db.contractDao.createProvider(provider);
           } else {
             final providerData = ProviderData(
-              uid: _contractDto!.provider!.id!,
+              id: _contractDto!.provider!.id!,
               name: _providerName.text,
               contractNumber: _contractNumber.text,
               notice: int.parse(_notice.text),
@@ -182,7 +182,7 @@ class _AddContractState extends State<AddContract> {
         }
 
         final contract = ContractData(
-          uid: _contractDto!.id!,
+          id: _contractDto!.id!,
           meterTyp: _meterTyp,
           provider: providerId,
           basicPrice: double.parse(_basicPrice.text.replaceAll(',', '.')),

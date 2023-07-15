@@ -9,7 +9,7 @@ class ProviderDto {
   DateTime? validUntil;
 
   ProviderDto.formData(ProviderData data)
-      : id = data.uid,
+      : id = data.id,
         name = data.name,
         contractNumber = data.contractNumber,
         notice = data.notice,

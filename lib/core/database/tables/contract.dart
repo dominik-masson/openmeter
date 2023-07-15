@@ -1,12 +1,12 @@
 import 'package:drift/drift.dart';
 
 class Contract extends Table {
-  IntColumn get uid => integer().autoIncrement()();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get meterTyp => text()();
 
   IntColumn get provider =>
-      integer().references(Provider, #uid, onDelete: KeyAction.setNull).nullable()();
+      integer().references(Provider, #id, onDelete: KeyAction.setNull).nullable()();
 
   RealColumn get basicPrice => real()();
 
@@ -20,7 +20,7 @@ class Contract extends Table {
 }
 
 class Provider extends Table {
-  IntColumn get uid => integer().autoIncrement()();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get name => text()();
 

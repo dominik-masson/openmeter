@@ -22,23 +22,34 @@ part 'local_database.g.dart';
 
 // create => flutter pub run build_runner build
 
-@DriftDatabase(
-    tables: [Meter, Entries, Room, MeterInRoom, Contract, Provider, Tags],
-    daos: [MeterDao, EntryDao, RoomDao, ContractDao, TagsDao])
+@DriftDatabase(tables: [
+  Meter,
+  Entries,
+  Room,
+  MeterInRoom,
+  Contract,
+  Provider,
+  Tags,
+  MeterWithTags
+], daos: [
+  MeterDao,
+  EntryDao,
+  RoomDao,
+  ContractDao,
+  TagsDao
+])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
-
-
 
   @override
   int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    beforeOpen: (details) async {
-      await customStatement('PRAGMA foreign_keys = ON');
-    },
-  );
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
+      );
 
   Future<void> exportInto(String path, bool isBackup) async {
     String newPath = '';

@@ -107,7 +107,7 @@ class _RoomCardState extends State<RoomCard> {
   Widget _numberCounter(
       BuildContext context, RoomDto room, LocalDatabase data) {
     return FutureBuilder(
-      future: data.roomDao.getNumberCounts(room.id!),
+      future: data.roomDao.getNumberCounts(room.uuid!),
       builder: (context, snapshot) {
         room.sumMeter = snapshot.data;
         return Text('${room.sumMeter} Zähler');
@@ -115,11 +115,12 @@ class _RoomCardState extends State<RoomCard> {
     );
   }
 
-  Widget _getMeterTyps(BuildContext context, int room, LocalDatabase data) {
+  Widget _getMeterTyps(BuildContext context, String room, LocalDatabase data) {
     return FutureBuilder(
       future: data.roomDao.getTypOfMeter(room),
       builder: (context, snapshot) {
         final meter = snapshot.data;
+
         return FutureBuilder(
           future: meter,
           builder: (context, snapshot) {
@@ -237,7 +238,7 @@ class _RoomCardState extends State<RoomCard> {
                   padding: const EdgeInsets.only(left: 15.0, bottom: 8),
                   child: Row(
                     children: [
-                      _getMeterTyps(context, room.id!, data),
+                      _getMeterTyps(context, room.uuid!, data),
                     ],
                   ),
                 )

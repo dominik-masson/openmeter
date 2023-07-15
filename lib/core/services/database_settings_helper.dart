@@ -17,111 +17,13 @@ import '../provider/contract_provider.dart';
 import '../provider/database_settings_provider.dart';
 import '../provider/meter_provider.dart';
 import '../provider/room_provider.dart';
+import 'database_export_import.dart';
 
 class DatabaseSettingsHelper {
-  String? _selectedPath;
-  FilePickerResult? _selectedDB;
-
-  final _filePicker = FilePicker.platform;
-
   late final BuildContext context;
 
   DatabaseSettingsHelper(BuildContext buildContext) {
     context = buildContext;
-  }
-
-  _resetState() {
-    _selectedPath = null;
-    _selectedDB = null;
-  }
-
-  Future<bool> _askPermission() async {
-    var status = await Permission.manageExternalStorage.status;
-    if (status.isGranted) {
-      return true;
-    } else if (status.isDenied) {
-      if (await Permission.manageExternalStorage.request().isGranted) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  exportDB(LocalDatabase db) async {
-    _resetState();
-    bool permissionGranted = await _askPermission();
-
-    if (!permissionGranted) {
-      return;
-    }
-
-    try {
-      String? path = await FilePicker.platform.getDirectoryPath();
-
-      if (path == null) {
-        return;
-      }
-
-      _selectedPath = path;
-
-      await db.exportInto(_selectedPath!, false).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Backup wurde erstellt!',
-          ),
-        ));
-      });
-    } on PlatformException catch (e) {
-      if (kDebugMode) {
-        print('Unsupported operation $e');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e.toString());
-      }
-    }
-  }
-
-  importDB(LocalDatabase db) async {
-    _resetState();
-    _selectedDB = await _filePicker.pickFiles();
-
-    if (_selectedDB == null) {
-      return;
-    }
-
-    await db.importDB(_selectedDB!.files.single.path!);
-
-    if (context.mounted) {
-      await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Datenbank Importieren'),
-            content: const Text(
-                'Damit die Datenbank vollständig importiert werden kann, muss die App neu gestartet werden! \nSoll die App jetzt neu gestartet werden?'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text(
-                  'Später',
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  SystemNavigator.pop();
-                },
-                child: const Text(
-                  'Jetzt',
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 
   deleteDB(BuildContext context, LocalDatabase db) async {
@@ -165,6 +67,18 @@ class DatabaseSettingsHelper {
     );
   }
 
+  Future<bool> _askPermission() async {
+    var status = await Permission.manageExternalStorage.status;
+    if (status.isGranted) {
+      return true;
+    } else if (status.isDenied) {
+      if (await Permission.manageExternalStorage.request().isGranted) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   selectAutoBackupPath(DatabaseSettingsProvider provider) async {
     bool permissionGranted = await _askPermission();
 
@@ -195,7 +109,8 @@ class DatabaseSettingsHelper {
       LocalDatabase db, DatabaseSettingsProvider provider) async {
     try {
       String path = provider.getAutoBackupDirectory;
-      await db.exportInto(path, true);
+      await DatabaseExportImportHelper()
+          .exportAsJSON(db: db, isBackup: true, path: path);
       log('auto backup file generated',
           name: 'database settings', level: LogLevels.infoLevel);
       return true;

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../model/room_dto.dart';
 import '../local_database.dart';
 import '../tables/meter.dart';
 import '../tables/room.dart';
@@ -16,10 +17,10 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return await db.into(db.room).insert(room);
   }
 
-  Future<int> deleteRoom(int roomId) async {
+  Future<int> deleteRoom(String roomId) async {
     await (db.delete(db.meterInRoom)..where((tbl) => tbl.roomId.equals(roomId)))
         .go();
-    return await (db.delete(db.room)..where((tbl) => tbl.id.equals(roomId)))
+    return await (db.delete(db.room)..where((tbl) => tbl.uuid.equals(roomId)))
         .go();
   }
 
@@ -37,6 +38,10 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return select(db.room).watch();
   }
 
+  Future<List<RoomDto>> getAllRooms() async {
+    return await select(db.room).map((r) => RoomDto.fromData(r)).get();
+  }
+
   Future<int> createMeterInRoom(MeterInRoomCompanion entity) async {
     return await db.into(db.meterInRoom).insert(entity);
   }
@@ -47,7 +52,7 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
         .write(entity);
   }
 
-  Future<int?> getNumberCounts(int roomId) {
+  Future<int?> getNumberCounts(String roomId) {
     final countExp = db.meterInRoom.roomId
         .count(filter: db.meterInRoom.roomId.equals(roomId));
 
@@ -56,18 +61,18 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return query.map((row) => row.read(countExp)).getSingle();
   }
 
-  Future<Future<List<String>>> getTypOfMeter(int roomId) async {
+  Future<Future<List<String>>> getTypOfMeter(String roomId) async {
     const query =
         'SELECT meter.typ as typ FROM meter INNER JOIN meter_in_room ON meter_id = meter.id WHERE room_id = ?';
 
     return customSelect(query,
-            variables: [Variable.withInt(roomId)],
+            variables: [Variable.withString(roomId)],
             readsFrom: {meter, meterInRoom})
         .map((r) => r.read<String>('typ'))
         .get();
   }
 
-  Future<Future<List<MeterData>>> getMeterInRooms(int roomId) async {
+  Future<List<MeterData>> getMeterInRooms(String roomId) async {
     final query = select(db.meter).join([
       leftOuterJoin(
         db.meterInRoom,
@@ -76,7 +81,7 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     ])
       ..where(db.meterInRoom.roomId.equals(roomId));
 
-    return query.map((r) => r.readTable(db.meter)).get();
+    return await query.map((r) => r.readTable(db.meter)).get();
   }
 
   Future<int?> getTableLength() async {

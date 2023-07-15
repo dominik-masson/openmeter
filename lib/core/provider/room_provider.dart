@@ -171,7 +171,7 @@ class RoomProvider extends ChangeNotifier {
       if (element.isSelected == true) {
         Provider.of<LocalDatabase>(context, listen: false)
             .roomDao
-            .deleteRoom(element.id!);
+            .deleteRoom(element.uuid!);
       }
     }
 
@@ -209,7 +209,7 @@ class RoomProvider extends ChangeNotifier {
   Future<void> saveSelectedMeters({
     required List<int> withRooms,
     required List<int> withOutRooms,
-    required int roomId,
+    required String roomId,
     required LocalDatabase db,
   }) async {
     for (int meterId in withOutRooms) {
@@ -222,7 +222,7 @@ class RoomProvider extends ChangeNotifier {
         log('try to insert meter with id $meterId to room with id $roomId',
             name: 'Room Provider');
 
-        int id = await db.roomDao.updateMeterInRoom(data);
+        int id = await db.roomDao.createMeterInRoom(data);
 
         log('successful create meter in room with new id $id',
             name: 'Room Provider');
@@ -238,7 +238,7 @@ class RoomProvider extends ChangeNotifier {
           meterId: Value(meterId),
         );
 
-        log('try to insert meter with id $meterId to room with id $roomId',
+        log('try to insert meter with id $meterId to room with uuid $roomId',
             name: 'Room Provider');
 
         int id = await db.roomDao.updateMeterInRoom(data);

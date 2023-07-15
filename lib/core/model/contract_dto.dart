@@ -13,7 +13,7 @@ class ContractDto {
   bool? isSelected;
 
   ContractDto.fromData(ContractData data, ProviderData? provider)
-      : id = data.uid,
+      : id = data.id,
         meterTyp = data.meterTyp,
         basicPrice = data.basicPrice,
         energyPrice = data.energyPrice,

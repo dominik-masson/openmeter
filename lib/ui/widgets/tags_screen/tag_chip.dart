@@ -16,33 +16,8 @@ class TagChip extends StatelessWidget {
     required this.checked,
   }) : super(key: key);
 
-  void _deleteTag(LocalDatabase db, List<MeterData> meterList) {
-    for (MeterData meter in meterList) {
-      String oldIds = meter.tag!;
-      List<String> oldIdsList = oldIds.split(';');
-      oldIdsList.removeWhere((element) => element.contains(tag.id.toString()));
-      String? newIds = oldIdsList.join(';');
 
-      if (newIds.isEmpty) {
-        newIds = null;
-      }
-
-      MeterData newMeter = MeterData(
-          id: meter.id,
-          typ: meter.typ,
-          note: meter.note,
-          number: meter.number,
-          unit: meter.unit,
-          tag: newIds);
-      db.meterDao.updateMeter(newMeter);
-    }
-
-    db.tagsDao.deleteTag(tag.id);
-  }
-
-  Future _deleteDialog(BuildContext context, List<MeterData> meterList) {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-
+  Future _deleteDialog(BuildContext context, LocalDatabase db) {
     return showDialog(
       context: context,
       builder: (context) {
@@ -58,7 +33,7 @@ class TagChip extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                _deleteTag(db, meterList);
+                db.tagsDao.deleteTag(tag.uuid);
                 Provider.of<DatabaseSettingsProvider>(context, listen: false)
                     .setHasUpdate(true);
                 Navigator.of(context).pop();
@@ -78,104 +53,97 @@ class TagChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
-    return FutureBuilder(
-      future: db.meterDao.getMeterByTag(tag.id.toString()),
-      builder: (context, snapshot) {
-        final List<MeterData> meterList = snapshot.data ?? [];
-
-        if (delete) {
-          return Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(tag.color),
-                width: 3,
-              ),
-              borderRadius: const BorderRadius.all(
-                Radius.circular(8),
+    if (delete) {
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Color(tag.color),
+            width: 3,
+          ),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(8),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              tag.name,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  tag.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                IconButton(
-                  onPressed: () => _deleteDialog(context, meterList),
-                  icon: Icon(
-                    Icons.cancel,
-                    color: Theme.of(context).hintColor,
-                  ),
-                ),
-              ],
+            const SizedBox(
+              width: 8,
             ),
-          );
-        } else {
-          if (checked) {
-            return Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Color(tag.color),
-                  width: 3,
-                ),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(8),
-                ),
+            IconButton(
+              onPressed: () => _deleteDialog(context, db),
+              icon: Icon(
+                Icons.cancel,
+                color: Theme.of(context).hintColor,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.check,
-                    color: Theme.of(context).hintColor,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    tag.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      if (checked) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Color(tag.color),
+              width: 3,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(8),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check,
+                color: Theme.of(context).hintColor,
               ),
-            );
-          } else {
-            return Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Color(tag.color),
-                  width: 2.5,
-                ),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(8),
+              const SizedBox(
+                width: 8,
+              ),
+              Text(
+                tag.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    tag.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            ],
+          ),
+        );
+      } else {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Color(tag.color),
+              width: 2.5,
+            ),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(8),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                tag.name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            );
-          }
-        }
-      },
-    );
+            ],
+          ),
+        );
+      }
+    }
   }
 }

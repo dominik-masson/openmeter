@@ -69,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (context) => const AddScreen(
                     meter: null,
                     room: null,
-                    tagsId: [],
                   ),
                 ));
           },

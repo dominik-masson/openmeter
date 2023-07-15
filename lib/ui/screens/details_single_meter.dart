@@ -14,16 +14,19 @@ import '../widgets/details_meter/charts/usage_line_chart.dart';
 import '../widgets/details_meter/cost_card.dart';
 import '../widgets/details_meter/entry_card.dart';
 import '../widgets/details_meter/charts/usage_bar_chart.dart';
-import '../widgets/tags_screen/tag_chip.dart';
+import '../widgets/tags_screen/horizontal_tags_list.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
   final MeterData meter;
   final RoomDto? room;
-  final List<String> tagsId;
+  final bool hasTags;
 
   const DetailsSingleMeter(
-      {Key? key, required this.meter, required this.room, required this.tagsId})
+      {Key? key,
+      required this.meter,
+      required this.room,
+      required this.hasTags})
       : super(key: key);
 
   @override
@@ -40,6 +43,9 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   late final AddEntry _addEntry;
 
+  List<Tag> _tags = [];
+  bool _updateTags = false;
+
   @override
   void initState() {
     _meterName = widget.meter.number;
@@ -54,6 +60,10 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   void dispose() {
     _addEntry.dispose();
     super.dispose();
+  }
+
+  getTags(List<Tag> tags) {
+    _tags = tags;
   }
 
   Widget _meterInformationWidget() {
@@ -79,51 +89,24 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     );
   }
 
-  Widget _tags() {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-    final List<String> tags = _meter.tag!.split(';');
-
-    return Column(
-      children: [
-        Container(
-          height: 30,
-          padding: const EdgeInsets.only(left: 8),
-          child: ListView.builder(
-            itemCount: tags.length,
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (context, index) => FutureBuilder(
-              future: db.tagsDao.getSingleTag(int.parse(tags[index])),
-              builder: (context, tag) {
-                if (tag.data != null) {
-                  return Container(
-                    width: 100,
-                    padding: const EdgeInsets.only(left: 8),
-                    child: TagChip(
-                      checked: false,
-                      delete: false,
-                      tag: tag.data!,
-                    ),
-                  );
-                } else {
-                  return Container();
-                }
-              },
-            ),
-          ),
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-      ],
-    );
+  Future _getTagsById(LocalDatabase db) async {
+    _tags = await db.tagsDao.getTagsForMeter(_meter.id);
+    setState(() {
+      _updateTags = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final entryProvider = Provider.of<EntryCardProvider>(context);
     final chartProvider = Provider.of<ChartProvider>(context);
+    final db = Provider.of<LocalDatabase>(context);
 
     bool hasSelectedEntries = entryProvider.getHasSelectedEntries;
+
+    if (_updateTags == true) {
+      _getTagsById(db);
+    }
 
     return Scaffold(
       appBar: hasSelectedEntries
@@ -146,7 +129,12 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
               // Zählernummer
               _meterInformationWidget(),
               const Divider(),
-              if (_meter.tag != null && _meter.tag!.isNotEmpty) _tags(),
+              if (widget.hasTags)
+                HorizontalTagsList(
+                  meterId: _meter.id,
+                  setTags: (tags) => getTags(tags),
+                  setHasTags: null,
+                ),
               EntryCard(meter: widget.meter),
               const SizedBox(
                 height: 10,
@@ -218,7 +206,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                   builder: (context) => AddScreen(
                     meter: _meter,
                     room: _room,
-                    tagsId: widget.tagsId,
+                    tags: _tags,
                   ),
                 )).then((value) {
               if (value == null) {
@@ -227,6 +215,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
               _meter = value[0] as MeterData;
               _room = value[1] as RoomDto?;
+              _updateTags = value[2] as bool;
 
               entryProvider.setMeterUnit(_meter.unit);
 

@@ -42,6 +42,13 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
         .watch();
   }
 
+  Future<List<Entrie>> getAllEntries(int meterId) async {
+    return (select(db.entries)
+          ..where((tbl) => tbl.meter.equals(meterId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.date)]))
+        .get();
+  }
+
   Stream<List<Entrie>> getNewestEntry(int meterId) {
     return (select(db.entries)
           ..where((tbl) => tbl.meter.equals(meterId))

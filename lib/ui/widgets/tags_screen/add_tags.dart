@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:uuid/uuid.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
@@ -51,6 +52,7 @@ class AddTags {
       final tag = TagsCompanion(
         name: drift.Value(_nameController.text),
         color: drift.Value(pickedColor),
+        uuid: drift.Value(const Uuid().v1())
       );
 
       await db.tagsDao.createTag(tag).then((value) {

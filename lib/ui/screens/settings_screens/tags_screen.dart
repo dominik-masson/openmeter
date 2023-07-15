@@ -54,6 +54,7 @@ class _TagsScreenState extends State<TagsScreen> {
     _showTags = smallProvider.getShowTags;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Tags'),
         actions: [

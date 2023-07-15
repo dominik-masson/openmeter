@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:uuid/uuid.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
@@ -10,6 +11,7 @@ class AddRoom {
   final _formKey = GlobalKey<FormState>();
   String _roomTyp = 'Sonstiges';
   final TextEditingController _nameController = TextEditingController();
+  final uuid = const Uuid();
 
   AddRoom();
 
@@ -60,6 +62,7 @@ class AddRoom {
       final room = RoomCompanion(
         typ: drift.Value(_roomTyp),
         name: drift.Value(_nameController.text),
+        uuid: drift.Value(uuid.v1()),
       );
 
       await db.roomDao.createRoom(room).then((value) {

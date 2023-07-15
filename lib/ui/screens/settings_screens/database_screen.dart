@@ -1,8 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/services/database_export_import.dart';
 import '../../../core/services/database_settings_helper.dart';
 import '../../widgets/settings_screen/database_stats.dart';
 
@@ -15,6 +17,8 @@ class DatabaseExportImport extends StatefulWidget {
 
 class _DatabaseExportImportState extends State<DatabaseExportImport> {
   late DatabaseSettingsHelper _databaseHelper;
+  bool _loadData = false;
+  final _exportImportHelper = DatabaseExportImportHelper();
 
   bool autoBackupState = false;
   String autoBackupDirectory = '';
@@ -23,6 +27,51 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
   void initState() {
     _databaseHelper = DatabaseSettingsHelper(context);
     super.initState();
+  }
+
+  void _handleExport(LocalDatabase db) async {
+    bool permissionGranted = await _exportImportHelper.askPermission();
+
+    if (!permissionGranted) {
+      return;
+    }
+
+    String? path = await FilePicker.platform.getDirectoryPath();
+
+    if (path == null) {
+      return;
+    }
+
+    await _exportImportHelper.exportAsJSON(db: db, isBackup: false, path: path);
+  }
+
+  void _handleImport(
+      LocalDatabase db, DatabaseSettingsProvider provider) async {
+    bool permissionGranted = await _exportImportHelper.askPermission();
+
+    if (!permissionGranted) {
+      return;
+    }
+
+    await FilePicker.platform.clearTemporaryFiles();
+
+    FilePickerResult? path = await FilePicker.platform.pickFiles();
+
+    if (path == null) {
+      return;
+    }
+
+    setState(() {
+      _loadData = true;
+    });
+
+    await _exportImportHelper.importFromJson(db, path.files.single.path!);
+
+    setState(() {
+      _loadData = false;
+    });
+
+    provider.resetStats();
   }
 
   @override
@@ -38,62 +87,66 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
         title: const Text('Daten und Speicher'),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            // Center(
-            //   child: Image.asset(
-            //     'assets/icons/database_icon.png',
-            //     width: 150,
-            //   ),
-            // ),
-            // const SizedBox(
-            //   height: 50,
-            // ),
-            // _databaseInformationWidget(),
-            DatabaseStats(databaseSettingsHelper: _databaseHelper),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.cloud_upload),
-              title: const Text(
-                'Daten exportieren',
-                style: TextStyle(fontSize: 18),
-              ),
-              subtitle: const Text(
-                'Erstelle und speichere ein Backup deiner Daten.',
-              ),
-              onTap: () => _databaseHelper.exportDB(db),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DatabaseStats(databaseSettingsHelper: _databaseHelper),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.cloud_upload),
+                  title: const Text(
+                    'Daten exportieren',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  subtitle: const Text(
+                    'Erstelle und speichere ein Backup deiner Daten.',
+                  ),
+                  onTap: () => _handleExport(db),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud_download),
+                  title: const Text(
+                    'Daten importieren',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  subtitle: const Text(
+                    'Importiere deine gespeicherten Daten.',
+                  ),
+                  onTap: () => _handleImport(db, provider),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.replay),
+                  title: const Text(
+                    'Daten zurücksetzen',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  subtitle: const Text(
+                    'Lösche alle gespeicherten Daten.',
+                  ),
+                  onTap: () => _databaseHelper.deleteDB(context, db),
+                ),
+                const Divider(),
+                _autoBackupWidget(provider),
+              ],
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            ListTile(
-              leading: const Icon(Icons.cloud_download),
-              title: const Text(
-                'Daten importieren',
-                style: TextStyle(fontSize: 18),
+            if (_loadData == true)
+              Container(
+                height: MediaQuery.of(context).size.height,
+                alignment: Alignment.center,
+                child: const SizedBox(
+                  height: 80,
+                  width: 80,
+                  child: CircularProgressIndicator(strokeWidth: 8),
+                ),
               ),
-              subtitle: const Text(
-                'Importiere deine gespeicherten Daten.',
-              ),
-              onTap: () => _databaseHelper.importDB(db),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            ListTile(
-              leading: const Icon(Icons.replay),
-              title: const Text(
-                'Daten zurücksetzen',
-                style: TextStyle(fontSize: 18),
-              ),
-              subtitle: const Text(
-                'Lösche alle gespeicherten Daten.',
-              ),
-              onTap: () => _databaseHelper.deleteDB(context, db),
-            ),
-            const Divider(),
-            _autoBackupWidget(provider),
           ],
         ),
       ),

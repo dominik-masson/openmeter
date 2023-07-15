@@ -17,10 +17,10 @@ import '../widgets/tags_screen/tag_chip.dart';
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
   final RoomDto? room;
-  final List<String> tagsId;
+  final List<Tag>? tags;
 
   const AddScreen(
-      {Key? key, required this.meter, required this.room, required this.tagsId})
+      {Key? key, required this.meter, required this.room, this.tags})
       : super(key: key);
 
   @override
@@ -39,17 +39,20 @@ class _AddScreenState extends State<AddScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String _meterTyp = 'Stromzähler';
-  int _roomId = -2; // -2: not selected, -1: no part of room
+  String _roomId = "-2"; // -2: not selected, -1: no part of room
   String _pageTitle = 'Neuer Zähler';
   bool _updateMeterState = false;
   RoomDto? _room;
-  List<String> _tagsId = [];
+
+  final List<String> _tagsId = [];
   final List<int> _tagChecked = [];
+  List<String> _alreadyTag = [];
+
   int _firstLoad = 0;
 
   final List<DropdownMenuItem> _roomList = [
     const DropdownMenuItem(
-      value: -1,
+      value: "-1",
       child: Text('Keinem Zimmer zugeordnet'),
     ),
   ];
@@ -66,13 +69,14 @@ class _AddScreenState extends State<AddScreen> {
 
     if (widget.room != null) {
       _room = widget.room!;
-      _roomId = _room!.id!;
+      _roomId = _room!.uuid!;
     } else {
-      _roomId = -1;
+      _roomId = "-1";
     }
 
-    if (widget.tagsId.isNotEmpty) {
-      _tagsId = widget.tagsId;
+    if (widget.tags != null && widget.tags!.isNotEmpty) {
+      _alreadyTag = widget.tags!.map((e) => e.uuid).toList();
+      _tagsId.addAll(_alreadyTag);
     }
 
     super.initState();
@@ -98,6 +102,25 @@ class _AddScreenState extends State<AddScreen> {
     _unitController.text = widget.meter!.unit;
   }
 
+  Future<void> _createMeterWithTag(LocalDatabase db, int meterId) async {
+    for (String tag in _tagsId) {
+      if (_alreadyTag.contains(tag) == false) {
+        final data = MeterWithTagsCompanion(
+          meterId: drift.Value(meterId),
+          tagId: drift.Value(tag),
+        );
+
+        await db.tagsDao.createMeterWithTag(data);
+      }
+    }
+
+    for (String tag in _alreadyTag) {
+      if (_tagsId.contains(tag) == false) {
+        await db.tagsDao.removeAssoziation(tag, meterId);
+      }
+    }
+  }
+
   Future<void> _updateMeter(LocalDatabase db, String? tagsId) async {
     Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
 
@@ -107,11 +130,10 @@ class _AddScreenState extends State<AddScreen> {
       number: _meternumber.text,
       id: widget.meter!.id,
       unit: _unitController.text,
-      tag: tagsId,
     );
 
-    if (_roomId != -2) {
-      if (_roomId == -1) {
+    if (_roomId != "-2") {
+      if (_roomId == "-1") {
         await db.roomDao.deleteMeter(widget.meter!.id);
       } else {
         await db.roomDao.deleteMeter(widget.meter!.id);
@@ -124,6 +146,10 @@ class _AddScreenState extends State<AddScreen> {
       }
     }
 
+    if (_tagsId.isNotEmpty || _alreadyTag.isNotEmpty) {
+      _createMeterWithTag(db, widget.meter!.id);
+    }
+
     await db.meterDao.updateMeter(meterData).then((value) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text(
@@ -132,51 +158,52 @@ class _AddScreenState extends State<AddScreen> {
       ));
       Provider.of<MeterProvider>(context, listen: false)
           .setStateHasUpdate(true);
-      Navigator.of(context).pop([meterData, _room]);
+      Navigator.of(context).pop([meterData, _room, true]);
     });
   }
 
-  Future<void> _createMeter(LocalDatabase db, String? tagsId) async {
+  Future<void> _createMeter(LocalDatabase db) async {
     final meter = MeterCompanion(
       typ: drift.Value(_meterTyp),
       number: drift.Value(_meternumber.text),
       note: drift.Value(_meternote.text),
       unit: drift.Value(_unitController.text),
-      tag: drift.Value(tagsId),
     );
 
     Provider.of<DatabaseSettingsProvider>(context, listen: false)
         .setHasUpdate(true);
 
-    if (!_updateMeterState) {
-      int meterId = await db.meterDao.createMeter(meter);
+    int meterId = await db.meterDao.createMeter(meter);
 
-      if (_roomId != -2 || _roomId != -1) {
-        final room = MeterInRoomCompanion(
-          meterId: drift.Value(meterId),
-          roomId: drift.Value(_roomId),
-        );
-
-        await db.roomDao.createMeterInRoom(room);
-      }
-
-      final entry = EntriesCompanion(
-        count: drift.Value(int.parse(_metervalue.text)),
-        date: drift.Value(DateTime.now()),
-        meter: drift.Value(meterId),
-        usage: const drift.Value(-1),
-        days: const drift.Value(-1),
+    if (_roomId != "-2" || _roomId != "-1") {
+      final room = MeterInRoomCompanion(
+        meterId: drift.Value(meterId),
+        roomId: drift.Value(_roomId),
       );
 
-      await db.entryDao.createEntry(entry).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Zähler wird erstellt!',
-          ),
-        ));
-        Navigator.of(context).pop();
-      });
+      await db.roomDao.createMeterInRoom(room);
     }
+
+    if (_tagsId.isNotEmpty) {
+      _createMeterWithTag(db, meterId);
+    }
+
+    final entry = EntriesCompanion(
+      count: drift.Value(int.parse(_metervalue.text)),
+      date: drift.Value(DateTime.now()),
+      meter: drift.Value(meterId),
+      usage: const drift.Value(-1),
+      days: const drift.Value(-1),
+    );
+
+    await db.entryDao.createEntry(entry).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Zähler wird erstellt!',
+        ),
+      ));
+      Navigator.of(context).pop();
+    });
   }
 
   Future<void> _handleOnSave() async {
@@ -191,15 +218,9 @@ class _AddScreenState extends State<AddScreen> {
       _unitController.text = '';
     }
 
-    // handle selected tags
-    if (_tagsId.isNotEmpty) {
-      _tagsId.sort();
-      tagsId = _tagsId.join(';');
-    }
-
     if (_formKey.currentState!.validate()) {
       if (_updateMeterState == false) {
-        await _createMeter(db, tagsId);
+        await _createMeter(db);
       } else {
         await _updateMeter(db, tagsId);
       }
@@ -360,7 +381,7 @@ class _AddScreenState extends State<AddScreen> {
                       Widget child = Container();
 
                       if (_tagChecked.contains(index) ||
-                          _tagsId.contains(tags[index].id.toString())) {
+                          _tagsId.contains(tags[index].uuid)) {
                         child = Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TagChip(
@@ -383,13 +404,13 @@ class _AddScreenState extends State<AddScreen> {
                       return GestureDetector(
                         onTap: () {
                           if (_tagChecked.contains(index) ||
-                              _tagsId.contains(tags[index].id.toString())) {
-                            _tagsId.remove(tags[index].id.toString());
+                              _tagsId.contains(tags[index].uuid)) {
+                            _tagsId.remove(tags[index].uuid);
                             setState(() {
                               _tagChecked.remove(index);
                             });
                           } else {
-                            _tagsId.add(tags[index].id.toString());
+                            _tagsId.add(tags[index].uuid);
 
                             setState(() {
                               _tagChecked.add(index);
@@ -507,7 +528,7 @@ class _AddScreenState extends State<AddScreen> {
   void _createRoomDropDown(List<RoomData> rooms) {
     _roomList.addAll(rooms.map((e) {
       return DropdownMenuItem(
-        value: e.id,
+        value: e.uuid,
         child: Text('${e.typ}: ${e.name}'),
       );
     }));
@@ -544,14 +565,15 @@ class _AddScreenState extends State<AddScreen> {
                   size: 16,
                 ),
               ),
-              value: _roomId == -2 ? -1 : _roomId,
+              value: _roomId == "-2" ? "-1" : _roomId,
               items: _roomList,
               onChanged: (value) {
-                _roomId = int.parse(value.toString());
+                _roomId = value.toString();
 
-                if (_roomId >= 0 && _updateMeterState == true) {
+                if (_roomId.startsWith('-') == false &&
+                    _updateMeterState == true) {
                   for (RoomData room in roomList) {
-                    if (room.id == _roomId) {
+                    if (room.uuid == _roomId) {
                       _room = RoomDto.fromData(room);
                       break;
                     }
@@ -577,7 +599,7 @@ class _AddScreenState extends State<AddScreen> {
                   size: 16,
                 ),
               ),
-              value: -1,
+              value: '-1',
               items: _roomList,
               onChanged: null,
             ),

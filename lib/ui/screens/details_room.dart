@@ -78,6 +78,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
 
                       final updateRoom = RoomData(
                           id: widget.roomData.id!,
+                          uuid: widget.roomData.uuid!,
                           typ: _roomTyp,
                           name: _name.text);
 
@@ -147,7 +148,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
                     });
                   },
                 ),
-                _listMeters(_currentRoom.id!, roomProvider),
+                _listMeters(_currentRoom.uuid!, roomProvider),
               ],
             ),
           ),
@@ -156,61 +157,44 @@ class _DetailsRoomState extends State<DetailsRoom> {
     );
   }
 
-  Widget _listMeters(int roomId, RoomProvider provider) {
+  Widget _listMeters(String roomId, RoomProvider provider) {
     final db = Provider.of<LocalDatabase>(context);
 
     return FutureBuilder(
       future: db.roomDao.getMeterInRooms(roomId),
-      builder: (context, snapshot) {
-        if (snapshot.data == null) {
+      builder: (context, meter) {
+        if (meter.data == null) {
           return Container();
         }
 
-        return FutureBuilder(
-          future: snapshot.data,
-          builder: (context, meter) {
-            if (meter.data == null) {
-              return Container();
-            }
+        return ListView.builder(
+          itemCount: meter.data!.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final data = meter.data![index];
 
-            return ListView.builder(
-              itemCount: meter.data!.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final data = meter.data![index];
+            return StreamBuilder(
+              stream: db.entryDao.getNewestEntry(data.id),
+              builder: (context, snapshot) {
+                final entry = snapshot.data?[0];
+                final DateTime? date;
+                final String count;
 
-                String? tagsId = data.tag;
-                List<String> listTagsId = [];
-
-                if (tagsId != null) {
-                  listTagsId = tagsId.split(';');
+                if (entry == null) {
+                  date = null;
+                  count = 'none';
+                } else {
+                  date = entry.date;
+                  count = entry.count.toString();
                 }
 
-                return StreamBuilder(
-                  stream: db.entryDao.getNewestEntry(data.id),
-                  builder: (context, snapshot) {
-                    final entry = snapshot.data?[0];
-                    final DateTime? date;
-                    final String count;
-
-                    if (entry == null) {
-                      date = null;
-                      count = 'none';
-                    } else {
-                      date = entry.date;
-                      count = entry.count.toString();
-                    }
-
-                    return MeterCard(
-                      meter: data,
-                      room: _currentRoom,
-                      date: date,
-                      count: count,
-                      tags: listTagsId,
-                      isSelected: false,
-                    );
-                  },
+                return MeterCard(
+                  meter: data,
+                  room: _currentRoom,
+                  date: date,
+                  count: count,
+                  isSelected: false,
                 );
               },
             );

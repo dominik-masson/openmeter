@@ -12,14 +12,13 @@ import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_meter_unit.dart';
 import '../../../utils/meter_typ.dart';
 import '../../screens/details_single_meter.dart';
-import '../tags_screen/tag_chip.dart';
+import '../tags_screen/horizontal_tags_list.dart';
 
 class MeterCard extends StatefulWidget {
   final MeterData meter;
   final RoomDto? room;
   final DateTime? date;
   final String count;
-  final List<String> tags;
   final bool isSelected;
 
   const MeterCard({
@@ -28,7 +27,6 @@ class MeterCard extends StatefulWidget {
     required this.room,
     required this.date,
     required this.count,
-    required this.tags,
     required this.isSelected,
   });
 
@@ -38,6 +36,7 @@ class MeterCard extends StatefulWidget {
 
 class _MeterCardState extends State<MeterCard> {
   RoomDto? room;
+  bool hasTags = false;
 
   @override
   void initState() {
@@ -45,9 +44,12 @@ class _MeterCardState extends State<MeterCard> {
     super.initState();
   }
 
+  setHasTags(bool value) {
+    hasTags = value;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
     final sortProvider = Provider.of<SortProvider>(context);
     final smallProvider = Provider.of<SmallFeatureProvider>(context);
     final meterProvider = Provider.of<MeterProvider>(context);
@@ -80,7 +82,7 @@ class _MeterCardState extends State<MeterCard> {
                 return DetailsSingleMeter(
                   meter: widget.meter,
                   room: widget.room,
-                  tagsId: widget.tags,
+                  hasTags: hasTags,
                 );
               },
             ),
@@ -169,35 +171,10 @@ class _MeterCardState extends State<MeterCard> {
                 const SizedBox(
                   height: 10,
                 ),
-                if (widget.tags.isNotEmpty && smallProvider.getShowTags)
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    height: 30,
-                    child: ListView.builder(
-                      itemCount: widget.tags.length,
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) => FutureBuilder(
-                          future: db.tagsDao
-                              .getSingleTag(int.parse(widget.tags[index])),
-                          builder: (context, snapshot) {
-                            if (snapshot.data != null) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: SizedBox(
-                                  width: 70,
-                                  child: TagChip(
-                                    tag: snapshot.data!,
-                                    checked: false,
-                                    delete: false,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              return Container();
-                            }
-                          }),
-                    ),
+                if (smallProvider.getShowTags)
+                  HorizontalTagsList(
+                    meterId: widget.meter.id,
+                    setHasTags: (p0) => setHasTags(p0),
                   ),
                 const SizedBox(
                   height: 10,

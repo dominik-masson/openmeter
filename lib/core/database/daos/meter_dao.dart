@@ -32,10 +32,10 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .go();
   }
 
-  Future<List<MeterData>> getMeterByTag(String tagId) async {
-    return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId)))
-        .get();
-  }
+  // Future<List<MeterData>> getMeterByTag(String tagId) async {
+  //   return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId)))
+  //       .get();
+  // }
 
   Future updateMeter(MeterData meter) async {
     return update(db.meter).replace(meter);
@@ -63,7 +63,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
       ),
       leftOuterJoin(
         db.room,
-        meterInRoom.roomId.equalsExp(room.id),
+        meterInRoom.roomId.equalsExp(room.uuid),
         // useColumns: false,
       ),
     ]);
@@ -90,7 +90,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
       ),
       leftOuterJoin(
         db.room,
-        meterInRoom.roomId.equalsExp(room.id),
+        meterInRoom.roomId.equalsExp(room.uuid),
         // useColumns: false,
       ),
     ]);

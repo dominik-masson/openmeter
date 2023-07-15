@@ -9,6 +9,4 @@ class Meter extends Table{
   TextColumn get note => text()();
   TextColumn get number => text()();
   TextColumn get unit => text()();
-  TextColumn get tag => text().nullable()();
-
 }

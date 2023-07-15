@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openmeter/ui/widgets/tags_screen/horizontal_tags_list.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
@@ -6,7 +7,6 @@ import '../../../core/model/meter_with_room.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../../utils/meter_typ.dart';
-import '../tags_screen/tag_chip.dart';
 
 class AddMeterToRoom extends StatefulWidget {
   final RoomDto room;
@@ -94,7 +94,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
                       .saveSelectedMeters(
                           withRooms: _selectedItemsWithExists,
                           withOutRooms: _selectedItemsWithoutExists,
-                          roomId: room.id!,
+                          roomId: room.uuid!,
                           db: db)
                       .then((value) => Navigator.of(context).pop(true));
                 }
@@ -110,35 +110,6 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
           ),
           _searchText.isNotEmpty ? _searchList(db) : _meterList(db),
         ],
-      ),
-    );
-  }
-
-  Widget _tagsList(LocalDatabase db, List<String> tagsId) {
-    return SizedBox(
-      height: 30,
-      child: ListView.builder(
-        shrinkWrap: true,
-        scrollDirection: Axis.horizontal,
-        itemCount: tagsId.length,
-        itemBuilder: (context, index) {
-          return FutureBuilder(
-            future: db.tagsDao.getSingleTag(int.parse(tagsId.elementAt(index))),
-            builder: (context, snapshot) {
-              if (snapshot.data == null) {
-                return Container();
-              }
-
-              Tag tag = snapshot.data!;
-
-              return TagChip(
-                checked: false,
-                delete: false,
-                tag: tag,
-              );
-            },
-          );
-        },
       ),
     );
   }
@@ -177,13 +148,6 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
 
     if (roomData != null && roomData.id != room.id) {
       isInARoom = true;
-    }
-
-    final String? tags = data.meter.tag;
-    List<String> listTags = [];
-
-    if (tags != null) {
-      listTags = tags.split(';');
     }
 
     return Padding(
@@ -244,11 +208,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
                   ),
               ],
             ),
-            if (listTags.isNotEmpty)
-              const SizedBox(
-                height: 2,
-              ),
-            if (listTags.isNotEmpty) _tagsList(db, listTags),
+            HorizontalTagsList(meterId: data.meter.id),
             if (isInARoom)
               Text(
                 'Bereits im ${roomData?.name}',

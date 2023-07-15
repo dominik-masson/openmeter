@@ -205,7 +205,7 @@ class ContractProvider extends ChangeNotifier {
       provider = await _getProviderData(providerId, db);
     }
 
-    int index = _contracts.indexWhere((element) => element.id == data.uid);
+    int index = _contracts.indexWhere((element) => element.id == data.id);
 
     _contracts[index] = ContractDto.fromData(data, provider);
 

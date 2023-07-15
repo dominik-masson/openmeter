@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../model/contract_dto.dart';
 import '../local_database.dart';
 import '../tables/contract.dart';
 
@@ -24,18 +25,35 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
     return db.select(db.contract).watch();
   }
 
+  Future<List<ContractDto>> getAllContractsWithProvider() async {
+    List<ContractDto> result = [];
+    List<ContractData> contracts = await select(db.contract).get();
+
+    for (ContractData contract in contracts) {
+      if (contract.provider != null) {
+        ProviderData provider = await selectProvider(contract.provider!);
+
+        result.add(ContractDto.fromData(contract, provider));
+      } else {
+        result.add(ContractDto.fromData(contract, null));
+      }
+    }
+
+    return result;
+  }
+
   Future<ProviderData> selectProvider(int id) async {
-    return await (db.select(db.provider)..where((tbl) => tbl.uid.equals(id)))
+    return await (db.select(db.provider)..where((tbl) => tbl.id.equals(id)))
         .getSingle();
   }
 
   Future<int> deleteContract(int id) async {
-    return await (db.delete(db.contract)..where((tbl) => tbl.uid.equals(id)))
+    return await (db.delete(db.contract)..where((tbl) => tbl.id.equals(id)))
         .go();
   }
 
   Future<int> deleteProvider(int id) async {
-    return await (db.delete(db.provider)..where((tbl) => tbl.uid.equals(id)))
+    return await (db.delete(db.provider)..where((tbl) => tbl.id.equals(id)))
         .go();
   }
 
@@ -54,7 +72,7 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
   }
 
   Future<int?> getTableLength() async {
-    var count = db.contract.uid.count();
+    var count = db.contract.id.count();
 
     return await (db.selectOnly(db.contract)..addColumns([count]))
         .map((row) => row.read(count))
