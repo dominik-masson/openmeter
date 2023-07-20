@@ -32,11 +32,6 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .go();
   }
 
-  // Future<List<MeterData>> getMeterByTag(String tagId) async {
-  //   return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId)))
-  //       .get();
-  // }
-
   Future updateMeter(MeterData meter) async {
     return update(db.meter).replace(meter);
   }
@@ -66,7 +61,8 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         meterInRoom.roomId.equalsExp(room.uuid),
         // useColumns: false,
       ),
-    ]);
+    ])
+      ..where(meter.isArchived.equals(false));
 
     return query.watch().map(
       (rows) {
@@ -79,6 +75,39 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         }).toList();
       },
     );
+  }
+
+  Stream<List<MeterWithRoom>> watchAllMeterWithRoomsAndArchived() {
+    final query = select(db.meter).join([
+      leftOuterJoin(
+        db.meterInRoom,
+        meter.id.equalsExp(meterInRoom.meterId),
+        // useColumns: false,
+      ),
+      leftOuterJoin(
+        db.room,
+        meterInRoom.roomId.equalsExp(room.uuid),
+        // useColumns: false,
+      ),
+    ])
+      ..where(meter.isArchived.equals(true));
+
+    return query.watch().map(
+      (rows) {
+        return rows.map((row) {
+          return MeterWithRoom(
+            meter: row.readTable(db.meter),
+            room: row.readTableOrNull(db.room),
+            isSelected: false,
+          );
+        }).toList();
+      },
+    );
+  }
+
+  Future updateArchived(int meterId, bool isArchived) async {
+    return (update(meter)..where((tbl) => tbl.id.equals(meterId)))
+        .write(MeterCompanion(isArchived: Value(isArchived)));
   }
 
   Future<List<MeterWithRoom>> getAllMeterWithRooms() {

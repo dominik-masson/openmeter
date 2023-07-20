@@ -44,16 +44,12 @@ class AddTags {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
-
-      Provider.of<DatabaseSettingsProvider>(context, listen: false).setHasUpdate(true);
-
       final int pickedColor = _listColors[_pickedIndex].value;
 
       final tag = TagsCompanion(
-        name: drift.Value(_nameController.text),
-        color: drift.Value(pickedColor),
-        uuid: drift.Value(const Uuid().v1())
-      );
+          name: drift.Value(_nameController.text),
+          color: drift.Value(pickedColor),
+          uuid: drift.Value(const Uuid().v1()));
 
       await db.tagsDao.createTag(tag).then((value) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -61,6 +57,9 @@ class AddTags {
             content: Text('Tag wird erstellt!'),
           ),
         );
+
+        Provider.of<DatabaseSettingsProvider>(context, listen: false)
+            .setHasUpdate(true);
 
         _nameController.clear();
         _pickedIndex = 0;
@@ -166,7 +165,6 @@ class AddTags {
                               onPressed: () => _saveTag(context),
                               icon: const Icon(Icons.check),
                               label: const Text('Speichern'),
-
                             ),
                           ),
                         )

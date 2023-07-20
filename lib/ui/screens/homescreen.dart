@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:openmeter/core/database/local_database.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/database/local_database.dart';
+import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/meter_provider.dart';
-import '../widgets/homescreen/sort_meter_cards.dart';
-import '../widgets/homescreen/meter_card_list.dart';
+
+import '../widgets/meter/meter_card_list.dart';
+import '../widgets/meter/sort_meter_cards.dart';
 import 'add_meter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,27 +21,32 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final meterProvider = Provider.of<MeterProvider>(context);
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final autoBackup =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
 
     bool hasSelectedItems = meterProvider.getStateHasSelectedMeters;
 
     return Scaffold(
       appBar: hasSelectedItems == true
-          ? _selectedAppBar(meterProvider, db)
-          : _unselectedAppBar(),
+          ? _selectedAppBar(meterProvider, db, autoBackup)
+          : _unselectedAppBar(meterProvider),
       body: WillPopScope(
-          onWillPop: () async {
-            if (hasSelectedItems) {
-              meterProvider.removeAllSelectedMeters();
-              return false;
-            }
+        onWillPop: () async {
+          if (hasSelectedItems) {
+            meterProvider.removeAllSelectedMeters();
+            return false;
+          }
 
-            return true;
-          },
-          child: const MeterCardList()),
+          return true;
+        },
+        child: MeterCardList(
+            stream: db.meterDao.watchAllMeterWithRooms(), isHomescreen: true),
+      ),
     );
   }
 
-  AppBar _selectedAppBar(MeterProvider meterProvider, LocalDatabase db) {
+  AppBar _selectedAppBar(MeterProvider meterProvider, LocalDatabase db,
+      DatabaseSettingsProvider backup) {
     return AppBar(
       title: Text('${meterProvider.getCountSelectedMeters} ausgewählt'),
       leading: IconButton(
@@ -47,6 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => meterProvider.removeAllSelectedMeters(),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.archive),
+          onPressed: () {
+            backup.setHasUpdate(true);
+            meterProvider.updateStateArchived(db, true);
+          },
+        ),
         IconButton(
           icon: const Icon(Icons.delete),
           onPressed: () {
@@ -57,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  AppBar _unselectedAppBar() {
+  AppBar _unselectedAppBar(MeterProvider provider) {
     return AppBar(
       title: const Text('OpenMeter'),
       actions: [
@@ -82,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         IconButton(
           onPressed: () {
-            Navigator.of(context).pushNamed('settings');
+            Navigator.of(context).pushNamed('settings').then((value) => provider.setStateHasUpdate(true));
           },
           icon: const Icon(Icons.settings),
         ),

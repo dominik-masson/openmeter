@@ -4,6 +4,7 @@ class MeterDto {
   String unit;
   String note;
   String? room;
+  bool isArchived;
   List<dynamic>? tags;
 
   MeterDto.fromJson(Map<String, dynamic> json)
@@ -12,5 +13,6 @@ class MeterDto {
         unit = json['unit'],
         note = json['note'],
         room = json['room'],
-        tags = json['tags'];
+        tags = json['tags'],
+        isArchived = json['isArchived'];
 }

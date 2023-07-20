@@ -37,8 +37,22 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
       'unit', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isArchivedMeta =
+      const VerificationMeta('isArchived');
   @override
-  List<GeneratedColumn> get $columns => [id, typ, note, number, unit];
+  late final GeneratedColumn<bool> isArchived =
+      GeneratedColumn<bool>('is_archived', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+            SqlDialect.sqlite: 'CHECK ("is_archived" IN (0, 1))',
+            SqlDialect.mysql: '',
+            SqlDialect.postgres: '',
+          }),
+          defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, typ, note, number, unit, isArchived];
   @override
   String get aliasedName => _alias ?? 'meter';
   @override
@@ -75,6 +89,12 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+          _isArchivedMeta,
+          isArchived.isAcceptableOrUnknown(
+              data['is_archived']!, _isArchivedMeta));
+    }
     return context;
   }
 
@@ -94,6 +114,8 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
           .read(DriftSqlType.string, data['${effectivePrefix}number'])!,
       unit: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      isArchived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
     );
   }
 
@@ -109,12 +131,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
   final String note;
   final String number;
   final String unit;
+  final bool isArchived;
   const MeterData(
       {required this.id,
       required this.typ,
       required this.note,
       required this.number,
-      required this.unit});
+      required this.unit,
+      required this.isArchived});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -123,6 +147,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
     map['note'] = Variable<String>(note);
     map['number'] = Variable<String>(number);
     map['unit'] = Variable<String>(unit);
+    map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
 
@@ -133,6 +158,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: Value(note),
       number: Value(number),
       unit: Value(unit),
+      isArchived: Value(isArchived),
     );
   }
 
@@ -145,6 +171,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: serializer.fromJson<String>(json['note']),
       number: serializer.fromJson<String>(json['number']),
       unit: serializer.fromJson<String>(json['unit']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
   @override
@@ -156,17 +183,24 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       'note': serializer.toJson<String>(note),
       'number': serializer.toJson<String>(number),
       'unit': serializer.toJson<String>(unit),
+      'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
 
   MeterData copyWith(
-          {int? id, String? typ, String? note, String? number, String? unit}) =>
+          {int? id,
+          String? typ,
+          String? note,
+          String? number,
+          String? unit,
+          bool? isArchived}) =>
       MeterData(
         id: id ?? this.id,
         typ: typ ?? this.typ,
         note: note ?? this.note,
         number: number ?? this.number,
         unit: unit ?? this.unit,
+        isArchived: isArchived ?? this.isArchived,
       );
   @override
   String toString() {
@@ -175,13 +209,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           ..write('typ: $typ, ')
           ..write('note: $note, ')
           ..write('number: $number, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, typ, note, number, unit);
+  int get hashCode => Object.hash(id, typ, note, number, unit, isArchived);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -190,7 +225,8 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           other.typ == this.typ &&
           other.note == this.note &&
           other.number == this.number &&
-          other.unit == this.unit);
+          other.unit == this.unit &&
+          other.isArchived == this.isArchived);
 }
 
 class MeterCompanion extends UpdateCompanion<MeterData> {
@@ -199,12 +235,14 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
   final Value<String> note;
   final Value<String> number;
   final Value<String> unit;
+  final Value<bool> isArchived;
   const MeterCompanion({
     this.id = const Value.absent(),
     this.typ = const Value.absent(),
     this.note = const Value.absent(),
     this.number = const Value.absent(),
     this.unit = const Value.absent(),
+    this.isArchived = const Value.absent(),
   });
   MeterCompanion.insert({
     this.id = const Value.absent(),
@@ -212,6 +250,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     required String note,
     required String number,
     required String unit,
+    this.isArchived = const Value.absent(),
   })  : typ = Value(typ),
         note = Value(note),
         number = Value(number),
@@ -222,6 +261,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     Expression<String>? note,
     Expression<String>? number,
     Expression<String>? unit,
+    Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -229,6 +269,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       if (note != null) 'note': note,
       if (number != null) 'number': number,
       if (unit != null) 'unit': unit,
+      if (isArchived != null) 'is_archived': isArchived,
     });
   }
 
@@ -237,13 +278,15 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       Value<String>? typ,
       Value<String>? note,
       Value<String>? number,
-      Value<String>? unit}) {
+      Value<String>? unit,
+      Value<bool>? isArchived}) {
     return MeterCompanion(
       id: id ?? this.id,
       typ: typ ?? this.typ,
       note: note ?? this.note,
       number: number ?? this.number,
       unit: unit ?? this.unit,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
@@ -265,6 +308,9 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
     return map;
   }
 
@@ -275,7 +321,8 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
           ..write('typ: $typ, ')
           ..write('note: $note, ')
           ..write('number: $number, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }

@@ -29,27 +29,40 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     super.initState();
   }
 
-  void _handleExport(LocalDatabase db) async {
+  void _handleExport(
+      LocalDatabase db, DatabaseSettingsProvider provider) async {
+    provider.setHasUpdate(false);
+
     bool permissionGranted = await _exportImportHelper.askPermission();
 
     if (!permissionGranted) {
+      provider.setHasUpdate(true);
       return;
     }
 
     String? path = await FilePicker.platform.getDirectoryPath();
 
     if (path == null) {
+      provider.setHasUpdate(true);
       return;
     }
 
-    await _exportImportHelper.exportAsJSON(db: db, isBackup: false, path: path);
+    bool success = await _exportImportHelper.exportAsJSON(
+        db: db, isBackup: false, path: path);
+
+    if (success == false) {
+      provider.setHasUpdate(true);
+    }
   }
 
   void _handleImport(
       LocalDatabase db, DatabaseSettingsProvider provider) async {
+    provider.setHasUpdate(false);
+
     bool permissionGranted = await _exportImportHelper.askPermission();
 
     if (!permissionGranted) {
+      provider.setHasUpdate(true);
       return;
     }
 
@@ -58,6 +71,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     FilePickerResult? path = await FilePicker.platform.pickFiles();
 
     if (path == null) {
+      provider.setHasUpdate(true);
       return;
     }
 
@@ -65,7 +79,12 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       _loadData = true;
     });
 
-    await _exportImportHelper.importFromJson(db, path.files.single.path!);
+    bool success =
+        await _exportImportHelper.importFromJson(db, path.files.single.path!);
+
+    if (success == false) {
+      provider.setHasUpdate(true);
+    }
 
     setState(() {
       _loadData = false;
@@ -103,7 +122,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                   subtitle: const Text(
                     'Erstelle und speichere ein Backup deiner Daten.',
                   ),
-                  onTap: () => _handleExport(db),
+                  onTap: () => _handleExport(db, provider),
                 ),
                 const SizedBox(
                   height: 10,

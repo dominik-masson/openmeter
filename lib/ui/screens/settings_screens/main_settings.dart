@@ -24,7 +24,9 @@ class MainSettings extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const DatabaseSettings(),
-              const SizedBox(height: 5,),
+              const SizedBox(
+                height: 5,
+              ),
               const TagsTile(),
               const Divider(thickness: 0.5),
               Text(
@@ -36,13 +38,16 @@ class MainSettings extends StatelessWidget {
                 height: 10,
               ),
               const ReadingReminder(),
-              const SizedBox(height: 5,),
+              const SizedBox(
+                height: 5,
+              ),
               const DisplayAwake(),
-              const SizedBox(height: 5,),
+              const SizedBox(
+                height: 5,
+              ),
               const ActiveTorch(),
               const Divider(thickness: 0.5),
               const ThemeTitle(),
-
             ],
           ),
         ),

@@ -25,6 +25,8 @@ class RoomProvider extends ChangeNotifier {
   bool _firstInit = true;
   int _meterCount = 0;
 
+  bool _hasUpdate = false;
+
   RoomProvider() {
     _loadFromCache();
   }
@@ -42,6 +44,16 @@ class RoomProvider extends ChangeNotifier {
   List<MeterWithRoom> get getMetersWithRoom => _meters;
 
   int get getMeterCount => _meterCount;
+
+  bool get getHasUpdate => _hasUpdate;
+
+  setHasUpdate(bool value) {
+    _hasUpdate = value;
+
+    if (_hasUpdate == true) {
+      notifyListeners();
+    }
+  }
 
   Future<void> _getDir() async {
     Directory dir = await getTemporaryDirectory();
@@ -94,7 +106,7 @@ class RoomProvider extends ChangeNotifier {
 
         _rooms = json.map((e) => RoomDto.fromJson(e)).toList();
 
-        _rooms.sort((a, b) => a.name!.compareTo(b.name!));
+        _rooms.sort((a, b) => a.name.compareTo(b.name));
 
         splitRooms();
       } catch (err) {
@@ -171,7 +183,7 @@ class RoomProvider extends ChangeNotifier {
       if (element.isSelected == true) {
         Provider.of<LocalDatabase>(context, listen: false)
             .roomDao
-            .deleteRoom(element.uuid!);
+            .deleteRoom(element.uuid);
       }
     }
 
@@ -204,6 +216,10 @@ class RoomProvider extends ChangeNotifier {
 
   void setMeterCount(int value) {
     _meterCount = value;
+  }
+
+  void calcMeterCount(LocalDatabase db, String roomId) async {
+    _meterCount = await db.roomDao.getNumberCounts(roomId) ?? 0;
   }
 
   Future<void> saveSelectedMeters({

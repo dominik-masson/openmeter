@@ -69,7 +69,7 @@ class _AddScreenState extends State<AddScreen> {
 
     if (widget.room != null) {
       _room = widget.room!;
-      _roomId = _room!.uuid!;
+      _roomId = _room!.uuid;
     } else {
       _roomId = "-1";
     }
@@ -130,6 +130,7 @@ class _AddScreenState extends State<AddScreen> {
       number: _meternumber.text,
       id: widget.meter!.id,
       unit: _unitController.text,
+      isArchived: false,
     );
 
     if (_roomId != "-2") {

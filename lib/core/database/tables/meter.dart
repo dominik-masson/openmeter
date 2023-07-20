@@ -9,4 +9,5 @@ class Meter extends Table{
   TextColumn get note => text()();
   TextColumn get number => text()();
   TextColumn get unit => text()();
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))(); // schema v2
 }

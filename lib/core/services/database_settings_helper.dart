@@ -113,6 +113,9 @@ class DatabaseSettingsHelper {
           .exportAsJSON(db: db, isBackup: true, path: path);
       log('auto backup file generated',
           name: 'database settings', level: LogLevels.infoLevel);
+      
+      provider.setHasUpdate(false);
+      
       return true;
     } catch (err) {
       log(err.toString(),

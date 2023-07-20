@@ -6,7 +6,7 @@ import '../../core/model/room_dto.dart';
 import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/room_provider.dart';
 import '../../utils/room_typ.dart';
-import '../widgets/homescreen/meter_card.dart';
+import '../widgets/meter/meter_card.dart';
 import '../widgets/objects_screen/add_meter_to_room.dart';
 
 class DetailsRoom extends StatefulWidget {
@@ -28,8 +28,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
   @override
   void initState() {
     _currentRoom = widget.roomData;
-    _name.text = _currentRoom.name!;
-    _roomTyp = _currentRoom.typ!;
+    _name.text = _currentRoom.name;
+    _roomTyp = _currentRoom.typ;
     super.initState();
   }
 
@@ -43,7 +43,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
 
     int meterCount = roomProvider.getMeterCount;
 
-    if (meterCount != 0) {
+    if (meterCount != _currentRoom.sumMeter) {
       _currentRoom.sumMeter = _currentRoom.sumMeter! + meterCount;
       roomProvider.setMeterCount(0);
     }
@@ -78,7 +78,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
 
                       final updateRoom = RoomData(
                           id: widget.roomData.id!,
-                          uuid: widget.roomData.uuid!,
+                          uuid: widget.roomData.uuid,
                           typ: _roomTyp,
                           name: _name.text);
 
@@ -90,7 +90,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
 
                     setState(() {
                       _update = false;
-                      _name.text = _currentRoom.name!;
+                      _name.text = _currentRoom.name;
                     });
                   },
                   icon: const Icon(Icons.save),
@@ -113,12 +113,6 @@ class _DetailsRoomState extends State<DetailsRoom> {
                 TextFormField(
                   readOnly: !_update,
                   controller: _name,
-                  // validator: (value) {
-                  //   if (value == null || value.isEmpty) {
-                  //     return 'Bitte geben Sie einen Zimmernamen an';
-                  //   }
-                  //   return null;
-                  // },
                   decoration: const InputDecoration(
                     label: Text('Zimmername'),
                     icon: Icon(Icons.abc),
@@ -148,7 +142,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
                     });
                   },
                 ),
-                _listMeters(_currentRoom.uuid!, roomProvider),
+                _listMeters(_currentRoom.uuid, roomProvider),
               ],
             ),
           ),
@@ -190,12 +184,11 @@ class _DetailsRoomState extends State<DetailsRoom> {
                 }
 
                 return MeterCard(
-                  meter: data,
-                  room: _currentRoom,
-                  date: date,
-                  count: count,
-                  isSelected: false,
-                );
+                    meter: data,
+                    room: _currentRoom,
+                    date: date,
+                    count: count,
+                    isSelected: false);
               },
             );
           },

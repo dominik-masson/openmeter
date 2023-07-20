@@ -91,6 +91,7 @@ class DatabaseExportImportHelper {
       'number': meter.number,
       'unit': meter.unit,
       'note': meter.note,
+      'isArchived': meter.isArchived,
       'room': room?.uuid,
       'entries': entries.map((e) => _entriesToJson(e)).toList(),
       'tags': tags,
@@ -125,7 +126,7 @@ class DatabaseExportImportHelper {
     return jsonEncode(result);
   }
 
-  exportAsJSON(
+  Future<bool> exportAsJSON(
       {required LocalDatabase db,
       required bool isBackup,
       required String path}) async {
@@ -138,21 +139,26 @@ class DatabaseExportImportHelper {
 
       if (isBackup) {
         DateTime date = DateTime.now();
-        String formattedDate = DateFormat('yyyy_mm_dd_hh_mm_ss').format(date);
+        String formattedDate = DateFormat('yyyy_mm_dd_HH_mm_ss').format(date);
 
         newPath = p.join(path, 'meter_$formattedDate.json');
-      }else{
+      } else {
         newPath = p.join(path, 'meter.json');
       }
 
       File file = File(newPath);
 
       file.writeAsStringSync(jsonResult, flush: true, mode: FileMode.write);
+
+      return true;
     } on PlatformException catch (e) {
       log('Error Unsupported operation: ${e.toString()}',
           name: 'Export as JSON');
+
+      return false;
     } catch (e) {
       log('Error: ${e.toString()}', name: 'Export as JSON');
+      return false;
     }
   }
 
@@ -225,7 +231,8 @@ class DatabaseExportImportHelper {
           typ: drift.Value(meterDto.typ),
           note: drift.Value(meterDto.note),
           number: drift.Value(meterDto.number),
-          unit: drift.Value(meterDto.unit));
+          unit: drift.Value(meterDto.unit),
+          isArchived: drift.Value(meterDto.isArchived));
 
       int meterId = await db.meterDao.createMeter(meterCompanion);
 
@@ -263,54 +270,55 @@ class DatabaseExportImportHelper {
     }
   }
 
-  importFromJson(LocalDatabase db, String path) async {
+  Future<bool> importFromJson(LocalDatabase db, String path) async {
     _clearAllLists();
 
-    try {
-      File file = File(path);
+    File file = File(path);
 
-      if (file.existsSync()) {
-        try {
-          Map<String, dynamic> json = jsonDecode(file.readAsStringSync());
+    if (file.existsSync()) {
+      try {
+        Map<String, dynamic> json = jsonDecode(file.readAsStringSync());
 
-          List roomJson = json['rooms'];
-          _rooms = roomJson.map((e) => RoomDto.fromJson(e)).toList();
+        List roomJson = json['rooms'];
+        _rooms = roomJson.map((e) => RoomDto.fromJson(e)).toList();
 
-          List tagsJson = json['tags'];
-          List<TagsCompanion> finalTags =
-              tagsJson.map((e) => _tagsToData(e)).toList();
+        List tagsJson = json['tags'];
+        List<TagsCompanion> finalTags =
+            tagsJson.map((e) => _tagsToData(e)).toList();
 
-          List contractsJson = json['contracts'];
-          _contracts =
-              contractsJson.map((e) => ContractDto.fromJson(e)).toList();
+        List contractsJson = json['contracts'];
+        _contracts = contractsJson.map((e) => ContractDto.fromJson(e)).toList();
 
-          List meterJson = json['meters'];
+        List meterJson = json['meters'];
 
-          Map<MeterDto, List<EntryDto>> meters = {};
+        Map<MeterDto, List<EntryDto>> meters = {};
 
-          for (dynamic meter in meterJson) {
-            final meterDto = MeterDto.fromJson(meter);
-            final List entries = meter['entries'];
+        for (dynamic meter in meterJson) {
+          final meterDto = MeterDto.fromJson(meter);
+          final List entries = meter['entries'];
 
-            final List<EntryDto> entriesDto =
-                entries.map((e) => EntryDto.fromJson(e)).toList();
+          final List<EntryDto> entriesDto =
+              entries.map((e) => EntryDto.fromJson(e)).toList();
 
-            meters.addAll({meterDto: entriesDto});
-          }
-
-          await _insertContractIntoDatabase(db);
-          await _insertTagsIntoDatabase(db, finalTags);
-          await _insertRoomIntoDatabase(db);
-          await _insertMeterIntoDatabase(db, meters);
-        } catch (e) {
-          log(e.toString(), name: 'Import from JSON');
+          meters.addAll({meterDto: entriesDto});
         }
+
+        await _insertContractIntoDatabase(db);
+        await _insertTagsIntoDatabase(db, finalTags);
+        await _insertRoomIntoDatabase(db);
+        await _insertMeterIntoDatabase(db, meters);
+
+        return true;
+      } on PlatformException catch (e) {
+        log('Error Unsupported operation: ${e.toString()}',
+            name: 'Import from JSON');
+
+        return false;
+      } catch (e) {
+        log('Error: ${e.toString()}', name: 'Import from JSON');
+        return false;
       }
-    } on PlatformException catch (e) {
-      log('Error Unsupported operation: ${e.toString()}',
-          name: 'Export as JSON');
-    } catch (e) {
-      log('Error: ${e.toString()}', name: 'Export as JSON');
     }
+    return false;
   }
 }

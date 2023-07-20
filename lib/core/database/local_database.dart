@@ -42,12 +42,17 @@ class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
+        },
+        onUpgrade: (m, from, to) async {
+          if(from < 2){
+            await m.addColumn(meter, meter.isArchived);
+          }
         },
       );
 

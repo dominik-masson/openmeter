@@ -17,6 +17,7 @@ import 'core/provider/sort_provider.dart';
 import 'core/provider/stats_provider.dart';
 import 'core/provider/theme_changer.dart';
 
+import 'ui/screens/archived_meters.dart';
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/screens/settings_screens/reminder_screen.dart';
 import 'ui/screens/settings_screens/tags_screen.dart';
@@ -104,6 +105,7 @@ class MyApp extends StatelessWidget {
               'reminder': (_) => const ReminderScreen(),
               'database_export_import': (_) => const DatabaseExportImport(),
               'tags_screen': (_) => const TagsScreen(),
+              'archive':(_) => const ArchivedMeters(),
             },
           );
         },

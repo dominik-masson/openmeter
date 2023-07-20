@@ -7,6 +7,7 @@ import '../../../core/model/room_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/meter_provider.dart';
+import '../../../core/provider/room_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_meter_unit.dart';
@@ -20,6 +21,7 @@ class MeterCard extends StatefulWidget {
   final DateTime? date;
   final String count;
   final bool isSelected;
+  final Function? refreshState;
 
   const MeterCard({
     super.key,
@@ -28,6 +30,7 @@ class MeterCard extends StatefulWidget {
     required this.date,
     required this.count,
     required this.isSelected,
+    this.refreshState,
   });
 
   @override
@@ -56,7 +59,7 @@ class _MeterCardState extends State<MeterCard> {
 
     bool hasSelectedItems = meterProvider.getStateHasSelectedMeters;
 
-    String roomName = widget.room == null ? '' : widget.room!.name!;
+    String roomName = widget.room == null ? '' : widget.room!.name;
 
     final entryProvider =
         Provider.of<EntryCardProvider>(context, listen: false);
@@ -88,6 +91,7 @@ class _MeterCardState extends State<MeterCard> {
             ),
           ).then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
+            Provider.of<RoomProvider>(context,listen: false).setHasUpdate(true);
             entryProvider.removeAllSelectedEntries();
             room = value as RoomDto?;
           });

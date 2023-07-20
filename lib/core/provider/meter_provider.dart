@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/local_database.dart';
 import '../model/meter_with_room.dart';
@@ -9,6 +10,26 @@ class MeterProvider extends ChangeNotifier {
   int _selectedLength = 0;
   bool _hasSelectedItems = false;
   bool _hasUpdate = false;
+  int _archivMetersLength = 0;
+
+  late SharedPreferences _prefs;
+  final String keyArchivLength = 'archiv-length';
+
+  MeterProvider() {
+    _loadFromPrefs();
+  }
+
+  _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  _loadFromPrefs() async {
+    await _initPrefs();
+
+    _archivMetersLength = _prefs.getInt(keyArchivLength) ?? 0;
+
+    notifyListeners();
+  }
 
   get getAllMeters => _meters;
 
@@ -19,6 +40,8 @@ class MeterProvider extends ChangeNotifier {
   int get getAllMetersLength => _meters.length;
 
   bool get getStateHasUpdate => _hasUpdate;
+
+  int get getArchivMetersLength => _archivMetersLength;
 
   void setAllMeters(List<MeterWithRoom> meters) {
     _meters.clear();
@@ -57,7 +80,7 @@ class MeterProvider extends ChangeNotifier {
     }
   }
 
-  void removeAllSelectedMeters() {
+  void removeAllSelectedMeters({bool notify = true}) {
     for (MeterWithRoom meter in _meters) {
       if (meter.isSelected == true) {
         meter.isSelected = false;
@@ -67,7 +90,9 @@ class MeterProvider extends ChangeNotifier {
     setSelectedMetersLength(0);
     _hasSelectedItems = false;
 
-    notifyListeners();
+    if (notify == true) {
+      notifyListeners();
+    }
   }
 
   void deleteSelectedMeters(LocalDatabase db) {
@@ -108,5 +133,25 @@ class MeterProvider extends ChangeNotifier {
     }
   }
 
-  void updateMeter() {}
+  void updateStateArchived(LocalDatabase db, bool value) {
+    int count = 0;
+
+    for (MeterWithRoom meter in _meters) {
+      if (meter.isSelected) {
+        db.meterDao.updateArchived(meter.meter.id, value);
+        count++;
+      }
+    }
+
+    setArchivMetersLength(_archivMetersLength + count);
+
+    _hasSelectedItems = false;
+    notifyListeners();
+  }
+
+  void setArchivMetersLength(int value) {
+    _archivMetersLength = value;
+
+    _prefs.setInt(keyArchivLength, value);
+  }
 }
