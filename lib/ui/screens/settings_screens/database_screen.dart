@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/meter_provider.dart';
 import '../../../core/services/database_export_import.dart';
 import '../../../core/services/database_settings_helper.dart';
 import '../../widgets/settings_screen/database_stats.dart';
@@ -55,8 +56,8 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     }
   }
 
-  void _handleImport(
-      LocalDatabase db, DatabaseSettingsProvider provider) async {
+  void _handleImport(LocalDatabase db, DatabaseSettingsProvider provider,
+      MeterProvider meterProvider) async {
     provider.setHasUpdate(false);
 
     bool permissionGranted = await _exportImportHelper.askPermission();
@@ -79,8 +80,11 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       _loadData = true;
     });
 
-    bool success =
-        await _exportImportHelper.importFromJson(db, path.files.single.path!);
+    bool success = await _exportImportHelper.importFromJson(
+      db: db,
+      path: path.files.single.path!,
+      meterProvider: meterProvider,
+    );
 
     if (success == false) {
       provider.setHasUpdate(true);
@@ -97,6 +101,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
     final provider = Provider.of<DatabaseSettingsProvider>(context);
+    final meterProvider = Provider.of<MeterProvider>(context);
 
     autoBackupState = provider.getAutoBackupState;
     autoBackupDirectory = provider.getAutoBackupDirectory;
@@ -136,7 +141,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                   subtitle: const Text(
                     'Importiere deine gespeicherten Daten.',
                   ),
-                  onTap: () => _handleImport(db, provider),
+                  onTap: () => _handleImport(db, provider, meterProvider),
                 ),
                 const SizedBox(
                   height: 10,

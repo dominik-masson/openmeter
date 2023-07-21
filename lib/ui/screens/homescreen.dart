@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
+          tooltip: 'Zähler archivieren',
           icon: const Icon(Icons.archive),
           onPressed: () {
             backup.setHasUpdate(true);
@@ -62,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         IconButton(
+          tooltip: 'Zähler löschen',
           icon: const Icon(Icons.delete),
           onPressed: () {
             meterProvider.deleteSelectedMeters(db);
@@ -87,18 +89,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 ));
           },
           icon: const Icon(Icons.add),
+          tooltip: 'Zähler erstellen',
         ),
         IconButton(
           onPressed: () {
             SortMeterCards().getFilter(context: context);
           },
           icon: const Icon(Icons.filter_list),
+          tooltip: 'Sortieren',
         ),
         IconButton(
           onPressed: () {
-            Navigator.of(context).pushNamed('settings').then((value) => provider.setStateHasUpdate(true));
+            Navigator.of(context).pushNamed('settings');
+                // .then((value) => provider.setStateHasUpdate(true));
           },
           icon: const Icon(Icons.settings),
+          tooltip: 'Einstellungen',
         ),
       ],
     );

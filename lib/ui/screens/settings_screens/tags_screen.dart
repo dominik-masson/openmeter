@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/tag_chip_state.dart';
 import '../../../core/provider/small_feature_provider.dart';
 import '../../widgets/tags_screen/add_tags.dart';
 import '../../widgets/tags_screen/tag_chip.dart';
@@ -63,6 +64,7 @@ class _TagsScreenState extends State<TagsScreen> {
               _addTags.getAddTags(context);
             },
             icon: const Icon(Icons.add),
+            tooltip: 'Tag erstellen',
           ),
         ],
       ),
@@ -109,8 +111,7 @@ class _TagsScreenState extends State<TagsScreen> {
                       padding: const EdgeInsets.all(8),
                       child: TagChip(
                         tag: tags[index],
-                        delete: true,
-                        checked: false,
+                        state: TagChipState.delete,
                       ),
                     );
                   },

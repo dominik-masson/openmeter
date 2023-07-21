@@ -41,13 +41,17 @@ class DatabaseSettingsHelper {
           TextButton(
             onPressed: () {
               db.deleteDB().then((value) {
+                final meterProvider =
+                    Provider.of<MeterProvider>(context, listen: false);
+
                 Provider.of<DatabaseSettingsProvider>(context, listen: false)
                     .resetStats();
                 Provider.of<RoomProvider>(context, listen: false).deleteCache();
                 Provider.of<ContractProvider>(context, listen: false)
                     .deleteCache();
-                Provider.of<MeterProvider>(context, listen: false)
-                    .resetMeterList();
+
+                meterProvider.resetMeterList();
+                meterProvider.setArchivMetersLength(0);
 
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text(
@@ -113,9 +117,9 @@ class DatabaseSettingsHelper {
           .exportAsJSON(db: db, isBackup: true, path: path);
       log('auto backup file generated',
           name: 'database settings', level: LogLevels.infoLevel);
-      
+
       provider.setHasUpdate(false);
-      
+
       return true;
     } catch (err) {
       log(err.toString(),

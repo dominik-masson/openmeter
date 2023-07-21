@@ -364,6 +364,7 @@ class DetailsEntry {
                       );
                     },
                     icon: const Icon(Icons.note_add),
+                    tooltip: 'Notiz erstellen',
                   ),
                 TextButton(
                   onPressed: () {

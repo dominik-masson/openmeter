@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/tag_chip_state.dart';
 import '../../../core/provider/stats_provider.dart';
 import '../tags_screen/add_tags.dart';
 import '../tags_screen/tag_chip.dart';
@@ -93,14 +94,12 @@ class _TagWidgetState extends State<TagWidget> {
                     if (_tagsChecked.contains(listTags[index].id.toString())) {
                       child = TagChip(
                         tag: listTags[index],
-                        delete: false,
-                        checked: true,
+                        state: TagChipState.checked,
                       );
                     } else {
                       child = TagChip(
                         tag: listTags[index],
-                        delete: false,
-                        checked: false,
+                        state: TagChipState.simple,
                       );
                     }
 

@@ -56,24 +56,31 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                ListTile(
-                  title: const Text(
-                    'Meine Zimmer',
-                    style: TextStyle(fontSize: 18),
+                Tooltip(
+                  message: 'Raum erstellen',
+                  child: ListTile(
+                    title: const Text(
+                      'Meine Zimmer',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    trailing: const Icon(Icons.add),
+
+                    onTap: () => _addRoom.getAddRoom(context),
                   ),
-                  trailing: const Icon(Icons.add),
-                  onTap: () => _addRoom.getAddRoom(context),
                 ),
                 const RoomCard(),
-                ListTile(
-                  title: const Text(
-                    'Meine Verträge',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  trailing: const Icon(Icons.add),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AddContract(contract: null),
+                Tooltip(
+                  message: 'Vertrag erstellen',
+                  child: ListTile(
+                    title: const Text(
+                      'Meine Verträge',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    trailing: const Icon(Icons.add),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AddContract(contract: null),
+                      ),
                     ),
                   ),
                 ),
@@ -94,7 +101,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             onPressed: () {
               Navigator.of(context).pushNamed('settings');
             },
-            icon: const Icon(Icons.settings)),
+            icon: const Icon(Icons.settings),tooltip: 'Einstellungen',),
       ],
     );
   }
@@ -132,6 +139,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             }
           },
           icon: const Icon(Icons.delete),
+          tooltip: 'Löschen',
         ),
       ],
     );

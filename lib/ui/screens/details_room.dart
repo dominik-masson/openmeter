@@ -54,6 +54,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
         actions: [
           _update == false
               ? IconButton(
+                  tooltip: 'Raum bearbeiten',
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     setState(() {
@@ -94,6 +95,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
                     });
                   },
                   icon: const Icon(Icons.save),
+                  tooltip: 'Änderung speichern',
                 )
         ],
       ),

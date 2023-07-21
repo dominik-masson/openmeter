@@ -15,6 +15,7 @@ import '../model/entry_dto.dart';
 import '../model/meter_with_room.dart';
 import '../model/provider_dto.dart';
 import '../model/room_dto.dart';
+import '../provider/meter_provider.dart';
 
 class DatabaseExportImportHelper {
   List<MeterWithRoom> _metersWithRoom = [];
@@ -220,12 +221,19 @@ class DatabaseExportImportHelper {
     then the entries
     after that it is checked if the meter has tags, if so they are added to the MeterWithTag
     at the end it will be checked if a meter is assigned to a room, if yes a MeterInRoom will be inserted
+    return sum of archived meters
    */
-  _insertMeterIntoDatabase(
+  Future<int> _insertMeterIntoDatabase(
       LocalDatabase db, Map<MeterDto, List<EntryDto>> meters) async {
+    int countArchiv = 0;
+
     for (var meter in meters.entries) {
       var meterDto = meter.key;
       List<EntryDto> entries = meter.value;
+
+      if (meterDto.isArchived) {
+        countArchiv++;
+      }
 
       final MeterCompanion meterCompanion = MeterCompanion(
           typ: drift.Value(meterDto.typ),
@@ -268,9 +276,14 @@ class DatabaseExportImportHelper {
         await db.roomDao.createMeterInRoom(meterInRoom);
       }
     }
+
+    return countArchiv;
   }
 
-  Future<bool> importFromJson(LocalDatabase db, String path) async {
+  Future<bool> importFromJson(
+      {required LocalDatabase db,
+      required String path,
+      required MeterProvider meterProvider}) async {
     _clearAllLists();
 
     File file = File(path);
@@ -306,7 +319,10 @@ class DatabaseExportImportHelper {
         await _insertContractIntoDatabase(db);
         await _insertTagsIntoDatabase(db, finalTags);
         await _insertRoomIntoDatabase(db);
-        await _insertMeterIntoDatabase(db, meters);
+        int countArchiv = await _insertMeterIntoDatabase(db, meters);
+
+        meterProvider.setArchivMetersLength(countArchiv);
+        meterProvider.setStateHasUpdate(true);
 
         return true;
       } on PlatformException catch (e) {

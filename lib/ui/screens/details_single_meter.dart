@@ -197,6 +197,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             _addEntry.showBottomModel(context, entryProvider);
           },
           icon: const Icon(Icons.add),
+          tooltip: 'Eintrag erstellen',
         ),
         IconButton(
           onPressed: () {
@@ -228,6 +229,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             });
           },
           icon: const Icon(Icons.edit),
+          tooltip: 'Zähler bearbeiten',
         ),
       ],
     );
@@ -250,6 +252,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                 .setHasUpdate(true);
           },
           icon: const Icon(Icons.delete),
+          tooltip: 'Einträge löschen',
         ),
       ],
     );

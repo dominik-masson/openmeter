@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
+import '../../core/enums/tag_chip_state.dart';
 import '../../core/model/room_dto.dart';
 import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/meter_provider.dart';
@@ -386,8 +387,7 @@ class _AddScreenState extends State<AddScreen> {
                         child = Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TagChip(
-                            delete: false,
-                            checked: true,
+                            state: TagChipState.checked,
                             tag: tags[index],
                           ),
                         );
@@ -395,8 +395,7 @@ class _AddScreenState extends State<AddScreen> {
                         child = Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TagChip(
-                            delete: false,
-                            checked: false,
+                            state: TagChipState.simple,
                             tag: tags[index],
                           ),
                         );
