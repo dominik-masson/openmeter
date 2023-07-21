@@ -51,6 +51,55 @@ class _MeterCardState extends State<MeterCard> {
     hasTags = value;
   }
 
+  _meterInformation() {
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(),
+        1: FlexColumnWidth(),
+        2: FixedColumnWidth(100),
+      },
+      children: [
+        TableRow(
+          children: [
+            Column(
+              children: [
+                Text(
+                  widget.meter.number,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const Text(
+                  "Zählernummer",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                ConvertMeterUnit().getUnitWidget(
+                  count: widget.count,
+                  unit: widget.meter.unit,
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                const Text(
+                  "Zählerstand",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            Column(
+              children: [
+                Text(
+                  widget.meter.note.toString(),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortProvider = Provider.of<SortProvider>(context);
@@ -91,7 +140,8 @@ class _MeterCardState extends State<MeterCard> {
             ),
           ).then((value) {
             Provider.of<CostProvider>(context, listen: false).resetValues();
-            Provider.of<RoomProvider>(context,listen: false).setHasUpdate(true);
+            Provider.of<RoomProvider>(context, listen: false)
+                .setHasUpdate(true);
             entryProvider.removeAllSelectedEntries();
             room = value as RoomDto?;
           });
@@ -129,49 +179,10 @@ class _MeterCardState extends State<MeterCard> {
                       ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          widget.meter.number,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const Text(
-                          "Zählernummer",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Column(
-                      children: [
-                        ConvertMeterUnit().getUnitWidget(
-                          count: widget.count,
-                          unit: widget.meter.unit,
-                          textStyle: const TextStyle(fontSize: 16),
-                        ),
-                        const Text(
-                          "Zählerstand",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Flexible(
-                      child: Text(
-                        widget.meter.note.toString(),
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ),
-                  ],
+                const SizedBox(
+                  height: 5,
                 ),
+                _meterInformation(),
                 const SizedBox(
                   height: 10,
                 ),
