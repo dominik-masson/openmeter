@@ -140,7 +140,7 @@ class DatabaseExportImportHelper {
 
       if (isBackup) {
         DateTime date = DateTime.now();
-        String formattedDate = DateFormat('yyyy_mm_dd_HH_mm_ss').format(date);
+        String formattedDate = DateFormat('yyyy_MM_dd_HH_mm_ss').format(date);
 
         newPath = p.join(path, 'meter_$formattedDate.json');
       } else {

@@ -23,7 +23,7 @@ class _ArchivedMetersState extends State<ArchivedMeters> {
         Provider.of<DatabaseSettingsProvider>(context, listen: false);
 
     Stream<List<MeterWithRoom>> stream =
-        db.meterDao.watchAllMeterWithRoomsAndArchived();
+        db.meterDao.watchAllMeterWithRooms(true);
 
     bool hasSelectedItems = meterProvider.getStateHasSelectedMeters;
 

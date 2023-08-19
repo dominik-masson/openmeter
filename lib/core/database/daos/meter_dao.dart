@@ -49,7 +49,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .getSingle();
   }
 
-  Stream<List<MeterWithRoom>> watchAllMeterWithRooms() {
+  Stream<List<MeterWithRoom>> watchAllMeterWithRooms(bool isArchived) {
     final query = select(db.meter).join([
       leftOuterJoin(
         db.meterInRoom,
@@ -62,35 +62,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         // useColumns: false,
       ),
     ])
-      ..where(meter.isArchived.equals(false));
-
-    return query.watch().map(
-      (rows) {
-        return rows.map((row) {
-          return MeterWithRoom(
-            meter: row.readTable(db.meter),
-            room: row.readTableOrNull(db.room),
-            isSelected: false,
-          );
-        }).toList();
-      },
-    );
-  }
-
-  Stream<List<MeterWithRoom>> watchAllMeterWithRoomsAndArchived() {
-    final query = select(db.meter).join([
-      leftOuterJoin(
-        db.meterInRoom,
-        meter.id.equalsExp(meterInRoom.meterId),
-        // useColumns: false,
-      ),
-      leftOuterJoin(
-        db.room,
-        meterInRoom.roomId.equalsExp(room.uuid),
-        // useColumns: false,
-      ),
-    ])
-      ..where(meter.isArchived.equals(true));
+      ..where(meter.isArchived.equals(isArchived));
 
     return query.watch().map(
       (rows) {

@@ -7,6 +7,13 @@ class EntryDto {
   String? note;
   DateTime date;
 
+  EntryDto.fromData(Entrie entry)
+      : count = entry.count,
+        usage = entry.usage,
+        days = entry.days,
+        note = entry.note,
+        date = entry.date;
+
   EntryDto.fromJson(Map<String, dynamic> json)
       : count = json['count'],
         usage = json['usage'],

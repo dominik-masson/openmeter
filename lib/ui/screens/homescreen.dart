@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return true;
         },
         child: MeterCardList(
-            stream: db.meterDao.watchAllMeterWithRooms(), isHomescreen: true),
+            stream: db.meterDao.watchAllMeterWithRooms(false), isHomescreen: true),
       ),
     );
   }

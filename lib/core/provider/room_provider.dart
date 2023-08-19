@@ -201,7 +201,7 @@ class RoomProvider extends ChangeNotifier {
   void loadAllMeterWithRoom(LocalDatabase db) {
     log('get all meters', name: 'Add meter to room');
 
-    db.meterDao.watchAllMeterWithRooms().listen((event) {
+    db.meterDao.watchAllMeterWithRooms(false).listen((event) {
       _meters = event;
     }).onData((data) {
       _meters = data;
