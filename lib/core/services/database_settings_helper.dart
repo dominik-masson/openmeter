@@ -10,7 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import '../../utils/log_levels.dart';
+import '../../utils/log.dart';
 import '../database/local_database.dart';
 import '../model/database_stats_dto.dart';
 import '../provider/contract_provider.dart';

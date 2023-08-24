@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../utils/log.dart';
 import '../database/local_database.dart';
 import '../model/meter_with_room.dart';
 import '../model/room_dto.dart';
@@ -69,7 +70,8 @@ class RoomProvider extends ChangeNotifier {
 
   createCacheFile(List<RoomDto> items) {
     File file = File('$_cacheDir/$_fileName');
-    log('create file to path: $_cacheDir/$_fileName ', name: 'Room Provider');
+    log('create file to path: $_cacheDir/$_fileName ',
+        name: LogNames.roomProvider);
 
     List<Map<String, dynamic>> jsonList =
         items.map((room) => room.toJson()).toList();
@@ -98,7 +100,7 @@ class RoomProvider extends ChangeNotifier {
 
     if (file.existsSync()) {
       try {
-        log('load room data from json', name: 'Room Provider');
+        log('load room data from json', name: LogNames.roomProvider);
 
         List<dynamic> json = jsonDecode(file.readAsStringSync());
 
@@ -110,10 +112,10 @@ class RoomProvider extends ChangeNotifier {
 
         splitRooms();
       } catch (err) {
-        log('ERROR: $err', name: 'Room Provider');
+        log('ERROR: $err', name: LogNames.roomProvider);
       }
     } else {
-      log('there is no file', name: 'Room Provider');
+      log('there is no file', name: LogNames.roomProvider);
     }
   }
 
@@ -121,7 +123,7 @@ class RoomProvider extends ChangeNotifier {
     File file = File('$_cacheDir/$_fileName');
 
     if (file.existsSync()) {
-      log('delete room cache', name: 'Room Provider');
+      log('delete room cache', name: LogNames.roomProvider);
       file.deleteSync();
     }
   }
@@ -150,11 +152,11 @@ class RoomProvider extends ChangeNotifier {
 
       splitRooms();
 
-      log('change state for room ${room.name}', name: 'Room Provider');
+      log('change state for room ${room.name}', name: LogNames.roomProvider);
 
       notifyListeners();
     } else {
-      log('no room found', name: 'Room Provider');
+      log('no room found', name: LogNames.roomProvider);
     }
   }
 
@@ -170,7 +172,7 @@ class RoomProvider extends ChangeNotifier {
 
     splitRooms();
 
-    log('remove all selected rooms from list', name: 'Room Provider');
+    log('remove all selected rooms from list', name: LogNames.roomProvider);
 
     notifyListeners();
   }
@@ -193,13 +195,13 @@ class RoomProvider extends ChangeNotifier {
     createCacheFile(_rooms);
     splitRooms();
 
-    log('delete all selected rooms', name: 'Room Provider');
+    log('delete all selected rooms', name: LogNames.roomProvider);
 
     notifyListeners();
   }
 
   void loadAllMeterWithRoom(LocalDatabase db) {
-    log('get all meters', name: 'Add meter to room');
+    log('get all meters', name: LogNames.addMeterToRoom);
 
     db.meterDao.watchAllMeterWithRooms(false).listen((event) {
       _meters = event;
@@ -211,7 +213,7 @@ class RoomProvider extends ChangeNotifier {
       }
     });
 
-    log('got all meters', name: 'Add meter to room');
+    log('got all meters', name: LogNames.addMeterToRoom);
   }
 
   void setMeterCount(int value) {
@@ -236,14 +238,15 @@ class RoomProvider extends ChangeNotifier {
 
       try {
         log('try to insert meter with id $meterId to room with id $roomId',
-            name: 'Room Provider');
+            name: LogNames.roomProvider);
 
         int id = await db.roomDao.createMeterInRoom(data);
 
         log('successful create meter in room with new id $id',
             name: 'Room Provider');
       } catch (err) {
-        log('error while insert meter in room: $err', name: 'Room Provider');
+        log('error while insert meter in room: $err',
+            name: LogNames.roomProvider);
       }
     }
 
@@ -255,15 +258,15 @@ class RoomProvider extends ChangeNotifier {
         );
 
         log('try to insert meter with id $meterId to room with uuid $roomId',
-            name: 'Room Provider');
+            name: LogNames.roomProvider);
 
         int id = await db.roomDao.updateMeterInRoom(data);
 
         log('successful create meter in room with new id $id',
-            name: 'Room Provider');
+            name: LogNames.roomProvider);
       } catch (err) {
         log('error while delete current meterId $meterId from MeterWithRoom: $err ',
-            name: 'Room Provider');
+            name: LogNames.roomProvider);
       }
     }
 

@@ -12,7 +12,8 @@ import '../../../core/provider/meter_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/custom_colors.dart';
-import '../empty_data.dart';
+import '../utils/empty_archiv.dart';
+import '../utils/empty_data.dart';
 import 'meter_card.dart';
 
 class MeterCardList extends StatefulWidget {
@@ -103,12 +104,7 @@ class _MeterCardListState extends State<MeterCardList> {
             if (isHomescreen) {
               return const EmptyData();
             } else {
-              return const Center(
-                child: Text(
-                  'Es wurden noch keine Zähler archiviert.',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              );
+              return const EmptyArchiv();
             }
           }
 

@@ -38,7 +38,7 @@ Widget _calcWithSelectedTags(LocalDatabase db) {
 
 Widget _calcWithoutSelectedTags(LocalDatabase db) {
   return StreamBuilder(
-    stream: db.meterDao.watchAllMeterWithRooms(),
+    stream: db.meterDao.watchAllMeterWithRooms(false),
     builder: (context, snapshot) {
       final List<MeterData> meters = [];
 

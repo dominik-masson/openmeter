@@ -3,16 +3,17 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../../core/provider/contract_provider.dart';
-import '../../core/provider/database_settings_provider.dart';
-import '../../core/provider/meter_provider.dart';
-import '../../core/provider/room_provider.dart';
-import '../../core/services/database_settings_helper.dart';
-import '../../utils/custom_icons.dart';
-import '../screens/homescreen.dart';
-import '../screens/objects.dart';
-import '../screens/stats_screen.dart';
+import '../../../core/database/local_database.dart';
+import '../../../core/provider/contract_provider.dart';
+import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/meter_provider.dart';
+import '../../../core/provider/room_provider.dart';
+import '../../../core/services/database_settings_helper.dart';
+import '../../../utils/custom_icons.dart';
+import '../../../utils/log.dart';
+import '../../screens/homescreen.dart';
+import '../../screens/objects.dart';
+import '../../screens/stats_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({Key? key}) : super(key: key);
@@ -51,7 +52,7 @@ class _BottomNavBarState extends State<BottomNavBar>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     super.didChangeAppLifecycleState(state);
 
-    log(state.toString(), name: 'AppLifecycleState');
+    log(state.toString(), name: LogNames.appLifecycle);
 
     if (databaseSettingsProvider.checkIfAutoBackupIsPossible() &&
         state == AppLifecycleState.paused) {

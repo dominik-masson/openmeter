@@ -4,17 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/provider/reminder_provider.dart';
 import '../../widgets/reminder_screen/active_reminder.dart';
 
-enum RepeatValues { daily, weekly, monthly }
 
-final weekDays = [
-  'Montag',
-  'Dienstag',
-  'Mittwoch',
-  'Donnerstag',
-  'Freitag',
-  'Samstag',
-  'Sonntag'
-];
 
 class ReminderScreen extends StatefulWidget {
   const ReminderScreen({Key? key}) : super(key: key);
@@ -25,32 +15,21 @@ class ReminderScreen extends StatefulWidget {
 
 class _ReminderScreenState extends State<ReminderScreen> {
   bool _active = false;
-  final DateTime _dateTimeNow = DateTime.now();
-  late final ActiveReminder _activeReminder;
-
-  RepeatValues _selectedRepeat = RepeatValues.daily;
-  String _selectedWeek = 'Montag';
-  DateTime _selectedTime = DateTime.now();
-  int _selectedDay = 1;
-
-  @override
-  initState() {
-    _activeReminder = ActiveReminder();
-    super.initState();
-  }
+  final DateTime _selectedTime = DateTime.now();
 
   _loadFromPrefs(BuildContext context, ReminderProvider reminderProvider) {
     _active = reminderProvider.isActive;
-    _selectedRepeat = reminderProvider.repeatInterval;
-    _selectedWeek = weekDays.elementAt(reminderProvider.weekDay);
-    _selectedTime = DateTime(
-      _dateTimeNow.year,
-      _dateTimeNow.month,
-      _dateTimeNow.day,
-      reminderProvider.timeHour,
-      reminderProvider.timeMinute,
-    );
-    _selectedDay = reminderProvider.monthDay;
+  }
+
+  _handleSwitchState(bool value, ReminderProvider reminderProvider) async {
+    setState(() {
+      _active = value;
+      reminderProvider.setActive(value);
+
+      if (_selectedTime.hour == 0 && _selectedTime.minute == 0) {
+        reminderProvider.setTime(TimeOfDay.now().hour, TimeOfDay.now().minute);
+      }
+    });
   }
 
   @override
@@ -58,13 +37,6 @@ class _ReminderScreenState extends State<ReminderScreen> {
     final reminderProvider = Provider.of<ReminderProvider>(context);
 
     _loadFromPrefs(context, reminderProvider);
-
-    _activeReminder.setValues(
-      selectedRepeat: _selectedRepeat,
-      selectedWeek: _selectedWeek,
-      selectedTime: _selectedTime,
-      selectedDay: _selectedDay,
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -100,22 +72,11 @@ class _ReminderScreenState extends State<ReminderScreen> {
                       'Richte eine Ableseerinnerung ein, um Benachrichtigungen zu erhalten.'),
               contentPadding: const EdgeInsets.all(0),
               value: _active,
-              onChanged: (value) {
-                setState(
-                  () {
-                    _active = value;
-                    reminderProvider.setActive(value);
-
-                    if (_selectedTime.hour == 0 && _selectedTime.minute == 0) {
-                      reminderProvider.setTime(
-                          TimeOfDay.now().hour, TimeOfDay.now().minute);
-                    }
-                  },
-                );
+              onChanged: (value) async {
+               await _handleSwitchState(value, reminderProvider);
               },
             ),
-            if (_active)
-              _activeReminder.activeWidget(context, reminderProvider),
+            if (_active) const ActiveReminder(),
           ],
         ),
       ),

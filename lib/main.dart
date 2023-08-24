@@ -21,7 +21,7 @@ import 'ui/screens/archived_meters.dart';
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/screens/settings_screens/reminder_screen.dart';
 import 'ui/screens/settings_screens/tags_screen.dart';
-import 'ui/widgets/bottom_nav_bar.dart';
+import 'ui/widgets/utils/bottom_nav_bar.dart';
 import 'ui/screens/settings_screens/database_screen.dart';
 
 void main() {

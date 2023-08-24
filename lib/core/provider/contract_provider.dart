@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../utils/log.dart';
 import '../database/local_database.dart';
 import '../model/contract_dto.dart';
 import 'database_settings_provider.dart';
@@ -60,7 +61,7 @@ class ContractProvider extends ChangeNotifier {
 
     if (file.existsSync()) {
       try {
-        log('load contract data from json', name: 'Contract Provider');
+        log('load contract data from json', name: LogNames.contractProvider);
 
         List<dynamic> json = jsonDecode(file.readAsStringSync());
 
@@ -72,10 +73,10 @@ class ContractProvider extends ChangeNotifier {
 
         splitContracts();
       } catch (err) {
-        log('ERROR: $err', name: 'Contract Provider');
+        log('ERROR: $err', name: LogNames.contractProvider);
       }
     } else {
-      log('there is no file', name: 'Contract Provider');
+      log('there is no file', name: LogNames.contractProvider);
     }
   }
 
@@ -104,7 +105,7 @@ class ContractProvider extends ChangeNotifier {
   createCache(List<ContractDto> items) {
     File file = File('$_cacheDir/$_fileName');
     log('create file to path: $_cacheDir/$_fileName ',
-        name: 'Contract Provider');
+        name: LogNames.contractProvider);
 
     List<Map<String, dynamic>> jsonList =
         items.map((contract) => contract.toJson()).toList();
@@ -121,7 +122,7 @@ class ContractProvider extends ChangeNotifier {
     _secondContracts.clear();
 
     if (file.existsSync()) {
-      log('delete contract cache', name: 'Contract Provider');
+      log('delete contract cache', name: LogNames.contractProvider);
       file.deleteSync();
     }
   }
