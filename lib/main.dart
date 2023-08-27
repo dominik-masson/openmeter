@@ -17,6 +17,7 @@ import 'core/provider/sort_provider.dart';
 import 'core/provider/stats_provider.dart';
 import 'core/provider/theme_changer.dart';
 
+import 'core/provider/torch_provider.dart';
 import 'ui/screens/archived_meters.dart';
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/screens/settings_screens/reminder_screen.dart';
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<RoomProvider>.value(value: RoomProvider()),
         ChangeNotifierProvider<ContractProvider>.value(value: ContractProvider()),
         ChangeNotifierProvider<MeterProvider>.value(value: MeterProvider()),
+        ChangeNotifierProvider<TorchProvider>.value(value: TorchProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) {

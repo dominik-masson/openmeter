@@ -8,6 +8,7 @@ import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../screens/details_room.dart';
 import '../../../utils/meter_typ.dart';
+import '../meter/meter_circle_avatar.dart';
 
 class RoomCard extends StatefulWidget {
   const RoomCard({Key? key}) : super(key: key);
@@ -104,8 +105,7 @@ class _RoomCardState extends State<RoomCard> {
     );
   }
 
-  Widget _numberCounter(
-      BuildContext context, RoomDto room, LocalDatabase db) {
+  Widget _numberCounter(BuildContext context, RoomDto room, LocalDatabase db) {
     return FutureBuilder(
       future: db.roomDao.getNumberCounts(room.uuid),
       builder: (context, snapshot) {
@@ -133,9 +133,14 @@ class _RoomCardState extends State<RoomCard> {
             List<Widget> widget = [];
 
             for (var items in item) {
+              final avatarData = meterTyps[items]['avatar'];
+
               widget.add(Row(
                 children: [
-                  meterTyps[items]['avatar'],
+                  MeterCircleAvatar(
+                    color: avatarData['color'],
+                    icon: avatarData['icon'],
+                  ),
                   const SizedBox(
                     width: 2.5,
                   ),

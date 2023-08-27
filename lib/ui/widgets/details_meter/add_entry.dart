@@ -7,7 +7,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
-import '../../../core/provider/small_feature_provider.dart';
+import '../../../core/provider/torch_provider.dart';
 import '../../../core/services/torch_controller.dart';
 
 class AddEntry {
@@ -45,7 +45,7 @@ class AddEntry {
     });
   }
 
-  _saveEntry(BuildContext context, SmallFeatureProvider torchProvider,
+  _saveEntry(BuildContext context, TorchProvider torchProvider,
       EntryCardProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
@@ -107,15 +107,17 @@ class AddEntry {
     BuildContext context,
     EntryCardProvider entryProvider,
   ) {
-    final torchProvider =
-        Provider.of<SmallFeatureProvider>(context, listen: false);
+    final torchProvider = Provider.of<TorchProvider>(context, listen: false);
+
+    _torchController.setStateTorch(torchProvider.getStateIsTorchOn);
+
+    bool isTorchOn = _torchController.stateTorch;
 
     if (torchProvider.stateTorch && !_torchController.stateTorch) {
       _torchController.getTorch();
       _stateTorch = true;
+      isTorchOn = true;
     }
-
-    bool isTorchOn = _torchController.stateTorch;
 
     return showModalBottomSheet(
       backgroundColor: Theme.of(context).bottomAppBarTheme.color,
@@ -140,7 +142,6 @@ class AddEntry {
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        // crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,11 +154,13 @@ class AddEntry {
                                 ),
                               ),
                               IconButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  await _torchController.getTorch();
                                   setState(() {
                                     isTorchOn = !isTorchOn;
+                                    print("switch state: $isTorchOn");
+                                    torchProvider.setIsTorchOn(isTorchOn);
                                   });
-                                  _torchController.getTorch();
                                 },
                                 icon: isTorchOn
                                     ? const Icon(

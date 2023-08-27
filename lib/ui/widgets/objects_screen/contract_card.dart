@@ -12,6 +12,7 @@ import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../screens/add_contract.dart';
 import '../../../utils/meter_typ.dart';
+import '../meter/meter_circle_avatar.dart';
 
 class ContractCard extends StatefulWidget {
   const ContractCard({Key? key}) : super(key: key);
@@ -153,7 +154,12 @@ class _ContractCardState extends State<ContractCard> {
     bool hasSelected = provider.getHasSelectedItems;
 
     final String local = Platform.localeName;
-    final format = NumberFormat.simpleCurrency(locale: local);
+    final formatSimpleCurrency = NumberFormat.simpleCurrency(locale: local);
+
+    final formatDecimal =
+        NumberFormat.decimalPatternDigits(locale: local, decimalDigits: 2);
+
+    final avatarData = meterTyps[contract.meterTyp]['avatar'];
 
     return GestureDetector(
       onLongPress: () {
@@ -182,7 +188,10 @@ class _ContractCardState extends State<ContractCard> {
               children: [
                 Row(
                   children: [
-                    meterTyps[contract.meterTyp]['avatar'],
+                    MeterCircleAvatar(
+                      color: avatarData['color'],
+                      icon: avatarData['icon'],
+                    ),
                     const SizedBox(
                       width: 20,
                     ),
@@ -201,7 +210,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          format.format(contract.basicPrice),
+                          formatSimpleCurrency.format(contract.basicPrice),
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(
@@ -213,7 +222,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          '${contract.energyPrice!.toStringAsFixed(2)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.energyPrice!)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(
@@ -225,7 +234,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          format.format(contract.discount),
+                          formatSimpleCurrency.format(contract.discount),
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(

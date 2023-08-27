@@ -9,10 +9,7 @@ class SmallFeatureProvider extends ChangeNotifier {
   final String _keyShowTags = 'state_show_tags';
 
   bool _displayAwake = false;
-  bool _aktiveTorch = false;
   bool _showTags = true;
-
-
 
   SmallFeatureProvider() {
     _loadFromPrefs();
@@ -28,29 +25,18 @@ class SmallFeatureProvider extends ChangeNotifier {
     _displayAwake = _prefs.getBool(_keyAwake) ?? false;
     Wakelock.toggle(enable: _displayAwake);
 
-    _aktiveTorch = _prefs.getBool(_keyTorch) ?? false;
-
     _showTags = _prefs.getBool(_keyShowTags) ?? true;
 
     notifyListeners();
   }
 
   bool get stateAwake => _displayAwake;
-  bool get stateTorch => _aktiveTorch;
 
   void setAwake(bool state) {
     _displayAwake = state;
     _prefs.setBool(_keyAwake, state);
 
     Wakelock.toggle(enable: _displayAwake);
-
-    notifyListeners();
-  }
-
-  void setTorch(bool state){
-    _aktiveTorch = state;
-
-    _prefs.setBool(_keyTorch, _aktiveTorch);
 
     notifyListeners();
   }

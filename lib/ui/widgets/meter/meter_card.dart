@@ -14,6 +14,7 @@ import '../../../utils/convert_meter_unit.dart';
 import '../../../utils/meter_typ.dart';
 import '../../screens/details_single_meter.dart';
 import '../tags_screen/horizontal_tags_list.dart';
+import 'meter_circle_avatar.dart';
 
 class MeterCard extends StatefulWidget {
   final MeterData meter;
@@ -119,6 +120,8 @@ class _MeterCardState extends State<MeterCard> {
       dateText = DateFormat('dd.MM.yyyy').format(widget.date!);
     }
 
+    final Map avatarData = meterTyps[widget.meter.typ]['avatar'];
+
     return GestureDetector(
       onTap: () {
         if (hasSelectedItems == true) {
@@ -162,7 +165,10 @@ class _MeterCardState extends State<MeterCard> {
                   children: [
                     Row(
                       children: [
-                        meterTyps[widget.meter.typ]['avatar'] as Widget,
+                        MeterCircleAvatar(
+                          color: avatarData['color'],
+                          icon: avatarData['icon'],
+                        ),
                         const SizedBox(
                           width: 10,
                         ),

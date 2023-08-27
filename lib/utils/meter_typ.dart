@@ -6,78 +6,57 @@ Map<String, dynamic> meterTyps = {
   'Stromzähler': {
     'einheit': 'kWh',
     'anbieter': 'Stromanbieter',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.green,
-      child: Icon(
-        CustomIcons.power_plug,
-        color: Colors.white,
-      ),
-    )
+    'avatar': {
+      'icon': CustomIcons.power_plug,
+      'color': Colors.green,
+    },
   },
   'Photovoltaikanlage': {
     'einheit': 'kWh',
     'anbieter': '',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.orange,
-      child: Icon(
-        CustomIcons.power_plug,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.power_plug,
+      'color': Colors.orange,
+    },
   },
   'Solarthermieanlage': {
     'einheit': 'kWh',
     'anbieter': '',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.yellow,
-      child: Icon(
-        CustomIcons.sun,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.sun,
+      'color': Colors.yellow,
+    },
   },
   'Kaltwasserzähler': {
     'einheit': 'l',
     'anbieter': 'Wassergebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.blue,
-      child: Icon(
-        CustomIcons.water,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.water,
+      'color': Colors.blue,
+    },
   },
   'Warmwasserzähler': {
     'einheit': 'l',
     'anbieter': 'Wassergebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.red,
-      child: Icon(
-        CustomIcons.water,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.water,
+      'color': Colors.red,
+    },
   },
   'Heizung': {
     'einheit': 'kWh',
     'anbieter': 'Heizungsgebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.orange,
-      child: Icon(
-        CustomIcons.heater,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.heater,
+      'color': Colors.orange,
+    },
   },
   'Gaszähler': {
     'einheit': 'kWh',
     'anbieter': 'Heizungsgebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.blueGrey,
-      child: Icon(
-        CustomIcons.flamme,
-        color: Colors.white,
-      ),
-    ),
+    'avatar': {
+      'icon': CustomIcons.flamme,
+      'color': Colors.blueGrey,
+    },
   },
 };

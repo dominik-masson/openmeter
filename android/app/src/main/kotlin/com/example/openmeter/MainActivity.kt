@@ -19,6 +19,7 @@ class MainActivity : FlutterActivity() {
     private val disableTorch = "disableTorch"
     private val torchAvailable = "torchAvailable"
     private val getStateTorch = "getStateTorch"
+    private val isTorchOn = "isTorchOn"
 
     private var cameraManager: CameraManager? = null
     private var cameraID: String? = null

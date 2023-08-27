@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/provider/small_feature_provider.dart';
+import '../../../core/provider/torch_provider.dart';
 
 class ActiveTorch extends StatefulWidget {
   const ActiveTorch({Key? key}) : super(key: key);
@@ -15,7 +15,7 @@ class _ActiveTorchState extends State<ActiveTorch> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SmallFeatureProvider>(context);
+    final provider = Provider.of<TorchProvider>(context);
 
     _activeTorch = provider.stateTorch;
 

@@ -12,6 +12,7 @@ import '../../core/provider/refresh_provider.dart';
 import '../../core/services/torch_controller.dart';
 import '../../../utils/meter_typ.dart';
 import '../../utils/convert_meter_unit.dart';
+import '../widgets/meter/meter_circle_avatar.dart';
 import '../widgets/tags_screen/add_tags.dart';
 import '../widgets/tags_screen/tag_chip.dart';
 
@@ -238,11 +239,11 @@ class _AddScreenState extends State<AddScreen> {
         title: Text(_pageTitle),
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
+             await  _torchController.getTorch();
               setState(() {
                 isTorchOn = !isTorchOn;
               });
-              _torchController.getTorch();
             },
             icon: isTorchOn
                 ? const Icon(
@@ -494,21 +495,27 @@ class _AddScreenState extends State<AddScreen> {
           }
           return null;
         },
-        // value: _meterTyp,
         isExpanded: true,
         decoration: const InputDecoration(
           label: Text('Zählertyp'),
-          icon: Icon(Icons.gas_meter_outlined),
-          // contentPadding: EdgeInsets.all(0.0),
+          icon: Icon(
+            Icons.gas_meter_outlined,
+          ),
           isDense: true,
         ),
+        isDense: false,
         value: _meterTyp,
         items: meterTyps.entries.map((e) {
+          final Map avatarData = e.value['avatar'];
           return DropdownMenuItem(
             value: e.key,
             child: Row(
               children: [
-                e.value['avatar'],
+                MeterCircleAvatar(
+                  color: avatarData['color'],
+                  icon: avatarData['icon'],
+                  size: MediaQuery.of(context).size.width * 0.045,
+                ),
                 const SizedBox(
                   width: 20,
                 ),

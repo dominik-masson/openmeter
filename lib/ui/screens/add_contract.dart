@@ -11,6 +11,8 @@ import '../../core/model/contract_dto.dart';
 import '../../core/model/provider_dto.dart';
 import '../../core/provider/contract_provider.dart';
 import '../../core/provider/database_settings_provider.dart';
+import '../../core/provider/refresh_provider.dart';
+import '../widgets/meter/meter_circle_avatar.dart';
 
 class AddContract extends StatefulWidget {
   final ContractDto? contract;
@@ -90,121 +92,127 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  Future<void> _saveEntry() async {
+  int _convertBonus() {
+    if (_bonus.text.isEmpty) {
+      return 0;
+    } else {
+      return int.parse(_bonus.text);
+    }
+  }
+
+  int _convertNotice() {
+    if (_notice.text.isEmpty) {
+      return 0;
+    } else {
+      return int.parse(_notice.text);
+    }
+  }
+
+  Future<int?> _createOrUpdateProvider(LocalDatabase db) async {
+    int notice = _convertNotice();
+
+    if ((_providerExpand || _providerName.text.isNotEmpty) &&
+        _contractDto?.provider == null) {
+      final provider = ProviderCompanion(
+          name: drift.Value(_providerName.text),
+          contractNumber: drift.Value(_contractNumber.text),
+          notice: drift.Value(notice),
+          validFrom: drift.Value(_dateBegin!),
+          validUntil: drift.Value(_dateEnd!));
+
+      return await db.contractDao.createProvider(provider);
+    } else if ((_providerExpand || _providerName.text.isNotEmpty) &&
+        _isUpdate) {
+      final providerData = ProviderData(
+        id: _contractDto!.provider!.id!,
+        name: _providerName.text,
+        contractNumber: _contractNumber.text,
+        notice: int.parse(_notice.text),
+        validFrom: _dateBegin!,
+        validUntil: _dateBegin!,
+      );
+
+      await db.contractDao.updateProvider(providerData);
+
+      return _contractDto!.provider!.id!;
+    }
+
+    return null;
+  }
+
+  _convertDouble(String text) {
+    String newText = text.replaceAll('.', '');
+
+    return double.parse(newText.replaceAll(',', '.'));
+  }
+
+  Future<void> _createEntry(LocalDatabase db) async {
+    int bonus = _convertBonus();
+
+    int? providerId = await _createOrUpdateProvider(db);
+
+    final contract = ContractCompanion(
+      meterTyp: drift.Value(_meterTyp),
+      provider: drift.Value(providerId),
+      basicPrice: drift.Value(_convertDouble(_basicPrice.text)),
+      energyPrice: drift.Value(_convertDouble(_energyPrice.text)),
+      discount: drift.Value(_convertDouble(_discount.text)),
+      bonus: drift.Value(bonus),
+      note: drift.Value(_note.text),
+    );
+
+    await db.contractDao.createContract(contract).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Vertrag wird erstellt!',
+        ),
+      ));
+      Navigator.of(context).pop();
+    });
+  }
+
+  Future<void> _updateEntry(LocalDatabase db) async {
+    int bonus = _convertBonus();
+    int? providerId = await _createOrUpdateProvider(db);
+
+    final contract = ContractData(
+      id: _contractDto!.id!,
+      meterTyp: _meterTyp,
+      provider: providerId,
+      basicPrice: _convertDouble(_basicPrice.text),
+      energyPrice: _convertDouble(_energyPrice.text),
+      discount: _convertDouble(_discount.text),
+      bonus: bonus,
+      note: _note.text,
+    );
+
+    await db.contractDao.updateContract(contract).then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+          'Vertrag wird aktualisiert!',
+        ),
+      ));
+      Navigator.of(context).pop();
+    });
+
+    if (mounted) {
+      Provider.of<ContractProvider>(context, listen: false)
+          .updateContract(db: db, data: contract, providerId: providerId);
+    }
+  }
+
+  Future<void> _handleOnSave() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
-    int? providerId;
-    int bonus;
-    int notice;
 
     if (_formKey.currentState!.validate()) {
-      Provider.of<DatabaseSettingsProvider>(context, listen: false)
-          .setHasUpdate(true);
-
-      // no update and provider is set
-      if (!_isUpdate && (_providerExpand || _providerName.text.isNotEmpty)) {
-        if (_notice.text.isEmpty) {
-          notice = 0;
-        } else {
-          notice = int.parse(_notice.text);
-        }
-
-        final provider = ProviderCompanion(
-            name: drift.Value(_providerName.text),
-            contractNumber: drift.Value(_contractNumber.text),
-            notice: drift.Value(notice),
-            validFrom: drift.Value(_dateBegin!),
-            validUntil: drift.Value(_dateEnd!));
-
-        providerId = await db.contractDao.createProvider(provider);
+      if (_isUpdate) {
+        await _updateEntry(db);
+      } else {
+        await _createEntry(db);
       }
 
-      if (_bonus.text.isEmpty) {
-        bonus = 0;
-      } else {
-        bonus = int.parse(_bonus.text);
-      }
-
-      // create contract
-      if (!_isUpdate) {
-        final contract = ContractCompanion(
-          meterTyp: drift.Value(_meterTyp),
-          provider: drift.Value(providerId),
-          basicPrice:
-              drift.Value(double.parse(_basicPrice.text.replaceAll(',', '.'))),
-          energyPrice:
-              drift.Value(double.parse(_energyPrice.text.replaceAll(',', '.'))),
-          discount:
-              drift.Value(double.parse(_discount.text.replaceAll(',', '.'))),
-          bonus: drift.Value(bonus),
-          note: drift.Value(_note.text),
-        );
-
-        await db.contractDao.createContract(contract).then((value) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Vertrag wird erstellt!',
-            ),
-          ));
-          Navigator.of(context).pop();
-        });
-      } else {
-        // Update contract
-
-        if (_providerExpand || _providerName.text.isNotEmpty) {
-          if (_notice.text.isEmpty) {
-            notice = 0;
-          } else {
-            notice = int.parse(_notice.text);
-          }
-
-          if (_contractDto!.provider == null) {
-            final provider = ProviderCompanion(
-                name: drift.Value(_providerName.text),
-                contractNumber: drift.Value(_contractNumber.text),
-                notice: drift.Value(notice),
-                validFrom: drift.Value(_dateBegin!),
-                validUntil: drift.Value(_dateEnd!));
-
-            providerId = await db.contractDao.createProvider(provider);
-          } else {
-            final providerData = ProviderData(
-              id: _contractDto!.provider!.id!,
-              name: _providerName.text,
-              contractNumber: _contractNumber.text,
-              notice: int.parse(_notice.text),
-              validFrom: _dateBegin!,
-              validUntil: _dateBegin!,
-            );
-
-            await db.contractDao.updateProvider(providerData);
-            providerId = _contractDto!.provider!.id!;
-          }
-        }
-
-        final contract = ContractData(
-          id: _contractDto!.id!,
-          meterTyp: _meterTyp,
-          provider: providerId,
-          basicPrice: double.parse(_basicPrice.text.replaceAll(',', '.')),
-          energyPrice: double.parse(_energyPrice.text.replaceAll(',', '.')),
-          discount: double.parse(_discount.text.replaceAll(',', '.')),
-          bonus: int.parse(_bonus.text),
-          note: _note.text,
-        );
-
-        await db.contractDao.updateContract(contract).then((value) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Vertrag wird aktualisiert!',
-            ),
-          ));
-          Navigator.of(context).pop();
-        });
-
-        if (mounted) {
-          Provider.of<ContractProvider>(context, listen: false)
-              .updateContract(db: db, data: contract, providerId: providerId);
-        }
+      if (context.mounted) {
+        Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
       }
     }
   }
@@ -258,7 +266,8 @@ class _AddContractState extends State<AddContract> {
     });
   }
 
-  Widget _dropdownMeterTyp(BuildContext context) {
+  Widget _dropdownMeterTyp(
+      BuildContext context, Map<String, dynamic> newMeterTyps) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: DropdownButtonFormField(
@@ -273,15 +282,19 @@ class _AddContractState extends State<AddContract> {
         decoration: const InputDecoration(
           label: Text('Zählertyp'),
           icon: Icon(Icons.gas_meter_outlined),
-          // contentPadding: EdgeInsets.all(0.0),
-          isDense: true,
         ),
-        items: meterTyps.entries.map((e) {
+        isDense: false,
+        items: newMeterTyps.entries.map((e) {
+          final avatarData = e.value['avatar'];
           return DropdownMenuItem(
             value: e.key,
             child: Row(
               children: [
-                e.value['avatar'],
+                MeterCircleAvatar(
+                  color: avatarData['color'],
+                  icon: avatarData['icon'],
+                  size: MediaQuery.of(context).size.width * 0.045,
+                ),
                 const SizedBox(
                   width: 20,
                 ),
@@ -439,14 +452,32 @@ class _AddContractState extends State<AddContract> {
     );
   }
 
+  Map<String, dynamic> _filterMeterTyps() {
+    Map<String, dynamic> result = {};
+
+    for (String key in meterTyps.keys) {
+      dynamic value = meterTyps[key];
+
+      if (value['anbieter'] != '') {
+        result.addAll({
+          key: value,
+        });
+      }
+    }
+
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic> newMeterTyps = _filterMeterTyps();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_pageName),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _saveEntry,
+        onPressed: _handleOnSave,
         label: const Text('Speichern'),
       ),
       body: SingleChildScrollView(
@@ -456,7 +487,7 @@ class _AddContractState extends State<AddContract> {
             key: _formKey,
             child: Column(
               children: [
-                _dropdownMeterTyp(context),
+                _dropdownMeterTyp(context, newMeterTyps),
                 const SizedBox(
                   height: 15,
                 ),

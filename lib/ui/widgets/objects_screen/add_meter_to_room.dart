@@ -7,6 +7,7 @@ import '../../../core/model/meter_with_room.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../../utils/meter_typ.dart';
+import '../meter/meter_circle_avatar.dart';
 
 class AddMeterToRoom extends StatefulWidget {
   final RoomDto room;
@@ -135,7 +136,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
   }
 
   Widget _meterCardCompact(LocalDatabase db, MeterWithRoom data) {
-    final meterTyp = meterTyps[data.meter.typ];
+    final avatarData = meterTyps[data.meter.typ]['avatar'];
 
     bool isInCurrentRoom = false;
     bool isInARoom = false;
@@ -156,7 +157,10 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
         onTap: isInCurrentRoom == true
             ? null
             : () => _handleSelected(data.meter.id, isInARoom),
-        leading: meterTyp['avatar'],
+        leading:   MeterCircleAvatar(
+          color: avatarData['color'],
+          icon: avatarData['icon'],
+        ),
         trailing: _getSelectedIcon(
             isInCurrentRoom: isInCurrentRoom, meterId: data.meter.id),
         title: Column(
