@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../model/meter_dto.dart';
 import '../../model/room_dto.dart';
 import '../local_database.dart';
 import '../tables/meter.dart';
@@ -72,16 +73,19 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
         .get();
   }
 
-  Future<List<MeterData>> getMeterInRooms(String roomId) async {
+  Future<List<MeterDto>> getMeterInRooms(String roomId) async {
     final query = select(db.meter).join([
       leftOuterJoin(
         db.meterInRoom,
         db.meterInRoom.meterId.equalsExp(db.meter.id),
       ),
     ])
-      ..where(db.meterInRoom.roomId.equals(roomId));
+      ..where(db.meterInRoom.roomId.equals(roomId))
+      ..orderBy([OrderingTerm.asc(meter.number)]);
 
-    return await query.map((r) => r.readTable(db.meter)).get();
+    return await query
+        .map((r) => MeterDto.fromData(r.readTable(db.meter)))
+        .get();
   }
 
   Future<int?> getTableLength() async {

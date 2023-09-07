@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:openmeter/core/enums/current_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/meter_dto.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
@@ -23,6 +25,7 @@ class MeterCard extends StatefulWidget {
   final String count;
   final bool isSelected;
   final Function? refreshState;
+  final CurrentScreen currentScreen;
 
   const MeterCard({
     super.key,
@@ -32,6 +35,7 @@ class MeterCard extends StatefulWidget {
     required this.count,
     required this.isSelected,
     this.refreshState,
+    required this.currentScreen,
   });
 
   @override
@@ -101,11 +105,83 @@ class _MeterCardState extends State<MeterCard> {
     );
   }
 
+  _handleOnTapFromMeterCardList({
+    required bool hasSelectedItems,
+    required MeterProvider meterProvider,
+    required EntryCardProvider entryProvider,
+  }) {
+    if (hasSelectedItems == true) {
+      meterProvider.toggleSelectedMeter(widget.meter);
+    } else {
+      entryProvider.setCurrentCount(widget.count);
+      entryProvider.setOldDate(widget.date ?? DateTime.now());
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            entryProvider.setMeterUnit(widget.meter.unit);
+
+            return DetailsSingleMeter(
+              meter: widget.meter,
+              room: widget.room,
+              hasTags: hasTags,
+            );
+          },
+        ),
+      ).then((value) {
+        Provider.of<CostProvider>(context, listen: false).resetValues();
+        Provider.of<RoomProvider>(context, listen: false).setHasUpdate(true);
+        entryProvider.removeAllSelectedEntries();
+        room = value as RoomDto?;
+      });
+    }
+  }
+
+  _handleOnTapFromDetailsRoom({
+    required RoomProvider roomProvider,
+    required EntryCardProvider entryProvider,
+  }) {
+    if (roomProvider.getHasSelectedMeters) {
+      roomProvider.toggleSelectedMeters(MeterDto.fromData(widget.meter));
+    } else {
+      entryProvider.setCurrentCount(widget.count);
+      entryProvider.setOldDate(widget.date ?? DateTime.now());
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            entryProvider.setMeterUnit(widget.meter.unit);
+
+            return DetailsSingleMeter(
+              meter: widget.meter,
+              room: widget.room,
+              hasTags: hasTags,
+            );
+          },
+        ),
+      ).then((value) {
+        Provider.of<CostProvider>(context, listen: false).resetValues();
+
+        entryProvider.removeAllSelectedEntries();
+
+        final newRoom = value as RoomDto?;
+
+        if (newRoom == null || (room != null && room?.id != newRoom.id)) {
+          final roomProvider =
+              Provider.of<RoomProvider>(context, listen: false);
+          roomProvider.setHasUpdate(true);
+          roomProvider.setMeterCount(-1);
+        }
+
+        room = newRoom;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortProvider = Provider.of<SortProvider>(context);
     final smallProvider = Provider.of<SmallFeatureProvider>(context);
     final meterProvider = Provider.of<MeterProvider>(context);
+    final roomProvider = Provider.of<RoomProvider>(context);
 
     bool hasSelectedItems = meterProvider.getStateHasSelectedMeters;
 
@@ -124,30 +200,22 @@ class _MeterCardState extends State<MeterCard> {
 
     return GestureDetector(
       onTap: () {
-        if (hasSelectedItems == true) {
-          meterProvider.toggleSelectedMeter(widget.meter);
-        } else {
-          entryProvider.setCurrentCount(widget.count);
-          entryProvider.setOldDate(widget.date ?? DateTime.now());
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) {
-                entryProvider.setMeterUnit(widget.meter.unit);
-
-                return DetailsSingleMeter(
-                  meter: widget.meter,
-                  room: widget.room,
-                  hasTags: hasTags,
-                );
-              },
-            ),
-          ).then((value) {
-            Provider.of<CostProvider>(context, listen: false).resetValues();
-            Provider.of<RoomProvider>(context, listen: false)
-                .setHasUpdate(true);
-            entryProvider.removeAllSelectedEntries();
-            room = value as RoomDto?;
-          });
+        switch (widget.currentScreen) {
+          case CurrentScreen.homescreen:
+            _handleOnTapFromMeterCardList(
+              hasSelectedItems: hasSelectedItems,
+              meterProvider: meterProvider,
+              entryProvider: entryProvider,
+            );
+            break;
+          case CurrentScreen.detailsRoom:
+            _handleOnTapFromDetailsRoom(
+              roomProvider: roomProvider,
+              entryProvider: entryProvider,
+            );
+            break;
+          default:
+            null;
         }
       },
       child: Padding(

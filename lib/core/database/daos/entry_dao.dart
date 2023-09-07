@@ -49,7 +49,7 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
         .get();
   }
 
-  Stream<List<Entrie>> getNewestEntry(int meterId) {
+  Stream<Entrie> getNewestEntry(int meterId) {
     return (select(db.entries)
           ..where((tbl) => tbl.meter.equals(meterId))
           ..orderBy([
@@ -59,7 +59,7 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
                 ))
           ])
           ..limit(1))
-        .watch();
+        .watchSingle();
   }
 
   Future<int?> getTableLength() async {

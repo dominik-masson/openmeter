@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../utils/log.dart';
 import '../database/local_database.dart';
+import '../model/meter_dto.dart';
 import '../model/meter_with_room.dart';
 import '../model/room_dto.dart';
 import 'database_settings_provider.dart';
@@ -22,11 +23,15 @@ class RoomProvider extends ChangeNotifier {
   bool _hasSelected = false;
   int _selectedItemsLength = 0;
 
-  List<MeterWithRoom> _meters = [];
+  List<MeterWithRoom> _allMeters = [];
   bool _firstInit = true;
   int _meterCount = 0;
 
   bool _hasUpdate = false;
+
+  List<MeterDto> _meterInRoom = [];
+  bool _hasSelectedMeters = false;
+  int _selectedMeterLength = 0;
 
   RoomProvider() {
     _loadFromCache();
@@ -42,11 +47,19 @@ class RoomProvider extends ChangeNotifier {
 
   int get getSelectedRoomsLength => _selectedItemsLength;
 
-  List<MeterWithRoom> get getMetersWithRoom => _meters;
+  List<MeterWithRoom> get getAllMetersWithRoom => _allMeters;
 
   int get getMeterCount => _meterCount;
 
   bool get getHasUpdate => _hasUpdate;
+
+  List<MeterDto> get getMeterInRoom => _meterInRoom;
+
+  bool get getHasSelectedMeters => _hasSelectedMeters;
+
+  int get getSelectedMetersLength => _selectedMeterLength;
+
+  int get getMeterInRoomLength => _meterInRoom.length;
 
   setHasUpdate(bool value) {
     _hasUpdate = value;
@@ -204,9 +217,9 @@ class RoomProvider extends ChangeNotifier {
     log('get all meters', name: LogNames.addMeterToRoom);
 
     db.meterDao.watchAllMeterWithRooms(false).listen((event) {
-      _meters = event;
+      _allMeters = event;
     }).onData((data) {
-      _meters = data;
+      _allMeters = data;
       if (_firstInit == true) {
         _firstInit = false;
         notifyListeners();
@@ -224,11 +237,12 @@ class RoomProvider extends ChangeNotifier {
     _meterCount = await db.roomDao.getNumberCounts(roomId) ?? 0;
   }
 
-  Future<void> saveSelectedMeters({
+  Future<int> saveSelectedMeters({
     required List<int> withRooms,
     required List<int> withOutRooms,
     required String roomId,
     required LocalDatabase db,
+    required int currentLength,
   }) async {
     for (int meterId in withOutRooms) {
       final MeterInRoomCompanion data = MeterInRoomCompanion(
@@ -271,13 +285,13 @@ class RoomProvider extends ChangeNotifier {
     }
 
     int count = withRooms.length + withOutRooms.length;
-    setMeterCount(count);
+    return count + currentLength;
   }
 
   List<MeterWithRoom> searchForMeter(String value) {
     List<MeterWithRoom> searchItems = [];
 
-    for (MeterWithRoom data in _meters) {
+    for (MeterWithRoom data in _allMeters) {
       if (data.meter.number.toLowerCase().contains(value.toLowerCase())) {
         searchItems.add(data);
       }
@@ -309,5 +323,72 @@ class RoomProvider extends ChangeNotifier {
     splitRooms();
 
     return dto;
+  }
+
+  void setMeterInRoom(List<MeterDto> meters) {
+    _meterInRoom = meters;
+    // notifyListeners();
+  }
+
+  void toggleSelectedMeters(MeterDto meter) {
+    int index = _meterInRoom.indexWhere((element) => element.id == meter.id);
+
+    if (index >= 0) {
+      _meterInRoom.elementAt(index).isSelected =
+          !_meterInRoom.elementAt(index).isSelected;
+
+      _hasSelectedMeters = true;
+
+      int count = 0;
+
+      for (MeterDto meter in _meterInRoom) {
+        if (meter.isSelected) {
+          count++;
+        }
+      }
+
+      _selectedMeterLength = count;
+
+      if (_selectedMeterLength == 0) {
+        _hasSelectedMeters = false;
+      }
+    }
+
+    notifyListeners();
+  }
+
+  removeAllSelectedMetersInRoom() {
+    for (MeterDto data in _meterInRoom) {
+      if (data.isSelected) {
+        data.isSelected = false;
+      }
+    }
+
+    _hasSelectedMeters = false;
+    _selectedMeterLength = 0;
+
+    notifyListeners();
+  }
+
+  deleteAllSelectedMetersInRoom(LocalDatabase db) async {
+    int countDelete = 0;
+
+    for (var meter in _meterInRoom) {
+      if (meter.isSelected) {
+        await db.roomDao.deleteMeter(meter.id!);
+        countDelete--;
+      }
+    }
+
+    _meterInRoom.removeWhere((element) => element.isSelected == true);
+
+    setMeterCount(countDelete);
+    setHasUpdate(true);
+
+    _hasSelectedMeters = false;
+
+    log('delete all selected meters in room', name: LogNames.roomProvider);
+
+    notifyListeners();
   }
 }

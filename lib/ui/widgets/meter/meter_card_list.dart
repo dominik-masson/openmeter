@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:openmeter/core/provider/entry_card_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/current_screen.dart';
 import '../../../core/model/meter_with_room.dart';
 
 import '../../../core/model/room_dto.dart';
+import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/meter_provider.dart';
+import '../../../core/provider/room_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/custom_colors.dart';
+import '../../screens/details_single_meter.dart';
 import '../utils/empty_archiv.dart';
 import '../utils/empty_data.dart';
 import 'meter_card.dart';
@@ -76,6 +81,8 @@ class _MeterCardListState extends State<MeterCardList> {
     final meterProvider = Provider.of<MeterProvider>(context);
     final databaseSettingsProvider =
         Provider.of<DatabaseSettingsProvider>(context, listen: false);
+    final entryProvider =
+        Provider.of<EntryCardProvider>(context, listen: false);
 
     final sortBy = sortProvider.getSort;
     final orderBy = sortProvider.getOrder;
@@ -147,11 +154,11 @@ class _MeterCardListState extends State<MeterCardList> {
                         final String count;
                         final Entrie entry;
 
-                        if (entryList == null || entryList.isEmpty) {
+                        if (entryList == null) {
                           date = null;
                           count = 'none';
                         } else {
-                          entry = entryList[0];
+                          entry = entryList;
 
                           date = entry.date;
 
@@ -169,7 +176,11 @@ class _MeterCardListState extends State<MeterCardList> {
                                   room: room,
                                   date: date,
                                   count: count,
-                                  isSelected: element.isSelected)
+                                  isSelected: element.isSelected,
+                                  hasSelectedItems: hasSelectedItems,
+                                  entryProvider: entryProvider,
+                                  meterProvider: meterProvider,
+                                )
                               : _cardWithSlide(
                                   meterProvider: meterProvider,
                                   db: db,
@@ -179,7 +190,10 @@ class _MeterCardListState extends State<MeterCardList> {
                                   count: count,
                                   isSelected: element.isSelected,
                                   databaseSettingsProvider:
-                                      databaseSettingsProvider),
+                                      databaseSettingsProvider,
+                                  entryProvider: entryProvider,
+                                  hasSelectedItems: hasSelectedItems,
+                                ),
                         );
                       },
                     );
@@ -213,6 +227,8 @@ class _MeterCardListState extends State<MeterCardList> {
     required bool isSelected,
     required MeterProvider meterProvider,
     required DatabaseSettingsProvider databaseSettingsProvider,
+    required bool hasSelectedItems,
+    required EntryCardProvider entryProvider,
   }) {
     String label = isHomescreen ? 'Archivieren' : 'Wiederherstellen';
     IconData icon = isHomescreen ? Icons.archive : Icons.unarchive;
@@ -257,6 +273,7 @@ class _MeterCardListState extends State<MeterCardList> {
         date: date,
         count: count,
         isSelected: isSelected,
+        currentScreen: CurrentScreen.homescreen,
       ),
     );
   }
@@ -268,6 +285,9 @@ class _MeterCardListState extends State<MeterCardList> {
     required DateTime? date,
     required String count,
     required bool isSelected,
+    required bool hasSelectedItems,
+    required EntryCardProvider entryProvider,
+    required MeterProvider meterProvider,
   }) {
     return MeterCard(
       meter: meterItem,
@@ -275,6 +295,7 @@ class _MeterCardListState extends State<MeterCardList> {
       date: date,
       count: count,
       isSelected: isSelected,
+      currentScreen: CurrentScreen.homescreen,
     );
   }
 }

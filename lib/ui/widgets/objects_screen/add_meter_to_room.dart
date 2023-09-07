@@ -12,7 +12,10 @@ import '../meter/meter_circle_avatar.dart';
 class AddMeterToRoom extends StatefulWidget {
   final RoomDto room;
 
-  const AddMeterToRoom({super.key, required this.room});
+  const AddMeterToRoom({
+    super.key,
+    required this.room,
+  });
 
   @override
   State<AddMeterToRoom> createState() => _AddMeterToRoomState();
@@ -68,7 +71,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
 
     provider.loadAllMeterWithRoom(db);
 
-    _meters = provider.getMetersWithRoom;
+    _meters = provider.getAllMetersWithRoom;
 
     bool hasSelectedItems = false;
 
@@ -85,6 +88,12 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Zähler zuordnen'),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop([false, 0]);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
       ),
       floatingActionButton: SizedBox(
         width: 100,
@@ -93,24 +102,33 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
               ? () {
                   provider
                       .saveSelectedMeters(
-                          withRooms: _selectedItemsWithExists,
-                          withOutRooms: _selectedItemsWithoutExists,
-                          roomId: room.uuid!,
-                          db: db)
-                      .then((value) => Navigator.of(context).pop(true));
+                        withRooms: _selectedItemsWithExists,
+                        withOutRooms: _selectedItemsWithoutExists,
+                        roomId: room.uuid,
+                        db: db,
+                        currentLength: room.sumMeter ?? 0,
+                      )
+                      .then(
+                          (value) => Navigator.of(context).pop([true, value]));
                 }
               : null,
           child: const Text('Fertig'),
         ),
       ),
-      body: Column(
-        children: [
-          _searchWidget(),
-          const SizedBox(
-            height: 10,
-          ),
-          _searchText.isNotEmpty ? _searchList(db) : _meterList(db),
-        ],
+      body: WillPopScope(
+        onWillPop: () async {
+          Navigator.of(context).pop([false, 0]);
+          return true;
+        },
+        child: Column(
+          children: [
+            _searchWidget(),
+            const SizedBox(
+              height: 10,
+            ),
+            _searchText.isNotEmpty ? _searchList(db) : _meterList(db),
+          ],
+        ),
       ),
     );
   }
@@ -157,7 +175,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
         onTap: isInCurrentRoom == true
             ? null
             : () => _handleSelected(data.meter.id, isInARoom),
-        leading:   MeterCircleAvatar(
+        leading: MeterCircleAvatar(
           color: avatarData['color'],
           icon: avatarData['icon'],
         ),
