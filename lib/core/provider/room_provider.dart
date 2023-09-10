@@ -33,6 +33,8 @@ class RoomProvider extends ChangeNotifier {
   bool _hasSelectedMeters = false;
   int _selectedMeterLength = 0;
 
+  RoomDto? _currentRoom;
+
   RoomProvider() {
     _loadFromCache();
   }
@@ -391,4 +393,11 @@ class RoomProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void setCurrentRoom(RoomDto room){
+    _currentRoom = room;
+    // notifyListeners();
+  }
+
+  RoomDto? get getCurrentRoom => _currentRoom;
 }

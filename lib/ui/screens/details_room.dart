@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:openmeter/utils/custom_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
@@ -67,6 +66,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
           db: db, roomData: updateRoom, backupState: autoBackUp);
     }
 
+    roomProvider.setCurrentRoom(_currentRoom);
+
     setState(() {
       _update = false;
       _name.text = _currentRoom.name;
@@ -76,6 +77,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
   @override
   Widget build(BuildContext context) {
     final roomProvider = Provider.of<RoomProvider>(context);
+
+    roomProvider.setCurrentRoom(_currentRoom);
 
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final autoBackUp =
@@ -354,8 +357,6 @@ class _DetailsRoomState extends State<DetailsRoom> {
   }
 
   Widget _dropDownMenu(BuildContext context) {
-    bool hasFocus = _roomTypsFocus.hasFocus;
-
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: IgnorePointer(

@@ -145,6 +145,9 @@ class _MeterCardState extends State<MeterCard> {
     } else {
       entryProvider.setCurrentCount(widget.count);
       entryProvider.setOldDate(widget.date ?? DateTime.now());
+
+      room = roomProvider.getCurrentRoom;
+
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) {
@@ -152,7 +155,7 @@ class _MeterCardState extends State<MeterCard> {
 
             return DetailsSingleMeter(
               meter: widget.meter,
-              room: widget.room,
+              room: room,
               hasTags: hasTags,
             );
           },
@@ -164,14 +167,12 @@ class _MeterCardState extends State<MeterCard> {
 
         final newRoom = value as RoomDto?;
 
-        if (newRoom == null || (room != null && room?.id != newRoom.id)) {
+        if (newRoom == null || room?.id != newRoom.id) {
           final roomProvider =
               Provider.of<RoomProvider>(context, listen: false);
           roomProvider.setHasUpdate(true);
           roomProvider.setMeterCount(-1);
         }
-
-        room = newRoom;
       });
     }
   }

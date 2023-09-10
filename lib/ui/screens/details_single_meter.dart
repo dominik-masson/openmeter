@@ -119,6 +119,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
             return false;
           }
+
+          Navigator.of(context).pop(_room);
           return true;
         },
         child: SingleChildScrollView(

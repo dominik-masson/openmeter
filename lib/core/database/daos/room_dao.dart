@@ -64,7 +64,7 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
 
   Future<Future<List<String>>> getTypOfMeter(String roomId) async {
     const query =
-        'SELECT meter.typ as typ FROM meter INNER JOIN meter_in_room ON meter_id = meter.id WHERE room_id = ?';
+        'SELECT meter.typ as typ FROM meter INNER JOIN meter_in_room ON meter_id = meter.id WHERE room_id = ? ORDER BY typ';
 
     return customSelect(query,
             variables: [Variable.withString(roomId)],
