@@ -9,6 +9,7 @@ import 'package:openmeter/core/model/meter_dto.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:drift/drift.dart' as drift;
 
+import '../../utils/log.dart';
 import '../database/local_database.dart';
 import '../model/contract_dto.dart';
 import '../model/entry_dto.dart';
@@ -24,6 +25,9 @@ class DatabaseExportImportHelper {
   final Map<int, List<Entrie>> _entries = {};
   List<Tag> _tags = [];
   List<MeterWithTag> _meterWithTags = [];
+
+  final RegExp clearBackupSearchPattern =
+      RegExp(r'meter_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})');
 
   Future<bool> askPermission() async {
     var status = await Permission.manageExternalStorage.status;
@@ -127,10 +131,37 @@ class DatabaseExportImportHelper {
     return jsonEncode(result);
   }
 
+  /// delete all backup files except the latest two
+  Future<void> clearLastBackupFiles(String path) async {
+    Directory dir = Directory(path);
+    List<FileSystemEntity> files = dir.listSync();
+
+    files.sort((a, b) => a.uri.path.compareTo(b.uri.path));
+    files.removeWhere((element) =>
+        element is! File ||
+        clearBackupSearchPattern.firstMatch(element.path) == null);
+
+    files.sort(
+      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
+    );
+
+    for (int i = 0; i < files.length - 1; i++) {
+      try {
+        log('Datei ${files[i]} wurde erfolgreich gelöscht',
+            name: LogNames.databaseExportImport);
+        await files[i].delete();
+      } catch (e) {
+        log(e.toString(), name: LogNames.databaseExportImport);
+      }
+    }
+
+  }
+
   Future<bool> exportAsJSON(
       {required LocalDatabase db,
       required bool isBackup,
-      required String path}) async {
+      required String path,
+      required bool clearBackupFiles}) async {
     await _getData(db);
 
     String jsonResult = convertToJson();
@@ -143,11 +174,20 @@ class DatabaseExportImportHelper {
         String formattedDate = DateFormat('yyyy_MM_dd_HH_mm_ss').format(date);
 
         newPath = p.join(path, 'meter_$formattedDate.json');
+
+        if (clearBackupFiles) {
+          await clearLastBackupFiles(path);
+        }
+
       } else {
         newPath = p.join(path, 'meter.json');
       }
 
       File file = File(newPath);
+
+      if (await file.exists()) {
+        file.deleteSync();
+      }
 
       file.writeAsStringSync(jsonResult, flush: true, mode: FileMode.write);
 

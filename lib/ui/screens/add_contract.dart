@@ -213,6 +213,8 @@ class _AddContractState extends State<AddContract> {
 
       if (context.mounted) {
         Provider.of<RefreshProvider>(context, listen: false).setRefresh(true);
+        Provider.of<DatabaseSettingsProvider>(context, listen: false)
+            .setHasUpdate(true);
       }
     }
   }

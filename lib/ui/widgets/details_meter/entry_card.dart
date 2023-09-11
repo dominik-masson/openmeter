@@ -168,25 +168,6 @@ class EntryCard extends StatelessWidget {
             Icons.note,
             color: Colors.grey,
           ),
-        // IconButton(
-        //   onPressed: () {
-        //     if (entry.length > 1) {
-        //       reservedItem = reserved
-        //           .elementAt(entry.length - 2);
-        //       entryProvider
-        //           .setOldDate(reservedItem.date);
-        //       entryProvider.setCurrentCount(
-        //           reservedItem.count.toString());
-        //     } else {
-        //       entryProvider.setCurrentCount('none');
-        //     }
-        //     _deleteEntry(context, item.id);
-        //   },
-        //   icon: const Icon(
-        //     Icons.delete,
-        //     color: Colors.grey,
-        //   ),
-        // ),
       ],
     );
   }

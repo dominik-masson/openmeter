@@ -24,6 +24,8 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
   bool autoBackupState = false;
   String autoBackupDirectory = '';
 
+  bool clearOldestAutoBackupFiles = false;
+
   @override
   void initState() {
     _databaseHelper = DatabaseSettingsHelper(context);
@@ -49,7 +51,11 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
     }
 
     bool success = await _exportImportHelper.exportAsJSON(
-        db: db, isBackup: false, path: path);
+      db: db,
+      isBackup: false,
+      path: path,
+      clearBackupFiles: false,
+    );
 
     if (success == false) {
       provider.setHasUpdate(true);
@@ -105,6 +111,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
 
     autoBackupState = provider.getAutoBackupState;
     autoBackupDirectory = provider.getAutoBackupDirectory;
+    clearOldestAutoBackupFiles = provider.getClearBackupFilesState;
 
     return Scaffold(
       appBar: AppBar(
@@ -220,6 +227,24 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
               ? const Text('Es wurde noch kein Verzeichnis ausgewählt')
               : Text(autoBackupDirectory),
           onTap: () => _databaseHelper.selectAutoBackupPath(provider),
+        ),
+        SwitchListTile(
+          title: const Text(
+            'Alte Backups löschen',
+            style: TextStyle(fontSize: 18),
+          ),
+          subtitle: const Text(
+              'Es werden alle Backup Dateien gelöscht, bis auf die neusten zwei.'),
+          secondary: const Icon(Icons.auto_delete_outlined),
+          onChanged: (value) async {
+            if (autoBackupState) {
+              setState(() {
+                clearOldestAutoBackupFiles = value;
+                provider.setClearBackupFilesState(clearOldestAutoBackupFiles);
+              });
+            }
+          },
+          value: clearOldestAutoBackupFiles,
         ),
       ],
     );

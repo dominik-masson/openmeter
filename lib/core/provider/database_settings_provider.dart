@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../utils/log.dart';
+
 class DatabaseSettingsProvider extends ChangeNotifier {
   bool _autoBackupState = false;
   String _autoBackupDirectory = '';
@@ -10,12 +12,14 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   List<double> _itemStats = [];
   int _itemCount = 0;
   bool _hasReset = false;
+  bool _clearBackupFiles = false;
 
   late SharedPreferences _prefs;
   final keyAutoBackupDir = 'auto-backup-dir';
   final keyAutoBackupState = 'auto-backup-state';
   final keyStatsItems = 'database-stats';
   final keyStatsItemCounts = 'database-item-counts';
+  final keyClearBackupFiles = 'auto-backup-clear-state';
 
   DatabaseSettingsProvider() {
     _loadFromPrefs();
@@ -37,6 +41,8 @@ class DatabaseSettingsProvider extends ChangeNotifier {
             .toList() ??
         [];
     _itemCount = _prefs.getInt(keyStatsItemCounts) ?? 0;
+
+    _clearBackupFiles = _prefs.getBool(keyClearBackupFiles) ?? false;
 
     notifyListeners();
   }
@@ -70,7 +76,7 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   void setHasUpdate(bool value) {
     _hasUpdate = value;
 
-    log(value.toString(), name: 'state update');
+    log('has update: $value', name: LogNames.databaseSettingsProvider);
 
     notifyListeners();
   }
@@ -107,4 +113,12 @@ class DatabaseSettingsProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void setClearBackupFilesState(bool value){
+    _clearBackupFiles = value;
+
+    _prefs.setBool(keyClearBackupFiles, value);
+  }
+
+  bool get getClearBackupFilesState => _clearBackupFiles;
 }

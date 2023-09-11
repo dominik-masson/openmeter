@@ -11,4 +11,6 @@ class LogNames{
   static const String addMeterToRoom = 'Add meter to room';
   static const String contractProvider = 'Contract Provider';
   static const String torchHandler = 'Torch Handler';
+  static const String databaseExportImport = 'Database Export Import';
+  static const String databaseSettingsProvider = 'Database Settings Provider';
 }
