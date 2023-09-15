@@ -9,14 +9,11 @@ import '../../../core/enums/current_screen.dart';
 import '../../../core/model/meter_with_room.dart';
 
 import '../../../core/model/room_dto.dart';
-import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/meter_provider.dart';
-import '../../../core/provider/room_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/custom_colors.dart';
-import '../../screens/details_single_meter.dart';
 import '../utils/empty_archiv.dart';
 import '../utils/empty_data.dart';
 import 'meter_card.dart';

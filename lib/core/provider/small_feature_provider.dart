@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+
 
 class SmallFeatureProvider extends ChangeNotifier {
   late SharedPreferences _prefs;
   final String _keyAwake = 'state_display_awake';
-  final String _keyTorch = 'state_aktive_torch';
   final String _keyShowTags = 'state_show_tags';
 
   bool _displayAwake = false;
@@ -23,7 +23,7 @@ class SmallFeatureProvider extends ChangeNotifier {
     await _initPrefs();
 
     _displayAwake = _prefs.getBool(_keyAwake) ?? false;
-    Wakelock.toggle(enable: _displayAwake);
+    WakelockPlus.toggle(enable: _displayAwake);
 
     _showTags = _prefs.getBool(_keyShowTags) ?? true;
 
@@ -36,7 +36,7 @@ class SmallFeatureProvider extends ChangeNotifier {
     _displayAwake = state;
     _prefs.setBool(_keyAwake, state);
 
-    Wakelock.toggle(enable: _displayAwake);
+    WakelockPlus.toggle(enable: _displayAwake);
 
     notifyListeners();
   }

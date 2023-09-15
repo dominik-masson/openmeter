@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
-import '../../../core/provider/theme_changer.dart';
 
 class AddTags {
   final TextEditingController _nameController = TextEditingController();

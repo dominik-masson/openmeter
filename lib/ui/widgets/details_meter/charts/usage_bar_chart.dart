@@ -74,10 +74,10 @@ class _UsageBarChartState extends State<UsageBarChart> {
   FlTitlesData _titlesData() {
     return FlTitlesData(
       show: true,
-      topTitles: AxisTitles(
+      topTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
-      rightTitles: AxisTitles(
+      rightTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
       bottomTitles: _bottomTitles(),
@@ -146,7 +146,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
   }
 
   FlGridData _gridData() {
-    return FlGridData(show: false);
+    return const FlGridData(show: false);
   }
 
   Widget _monthlyChart(Map<int, int> data) {

@@ -13,7 +13,6 @@ import '../../../utils/custom_icons.dart';
 import '../../../utils/log.dart';
 import '../../screens/homescreen.dart';
 import '../../screens/objects.dart';
-import '../../screens/stats_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({Key? key}) : super(key: key);

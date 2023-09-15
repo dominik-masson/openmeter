@@ -102,10 +102,10 @@ class _CountLineChartState extends State<CountLineChart> {
 
   FlTitlesData _titlesData() {
     return FlTitlesData(
-      rightTitles: AxisTitles(
+      rightTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
-      topTitles: AxisTitles(
+      topTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
       bottomTitles: _bottomTitles(),
@@ -124,7 +124,7 @@ class _CountLineChartState extends State<CountLineChart> {
   }
 
   FlGridData _gridData() {
-    return FlGridData(show: false);
+    return const FlGridData(show: false);
   }
 
   LineTouchData _touchData() {

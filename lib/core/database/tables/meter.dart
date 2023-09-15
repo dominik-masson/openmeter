@@ -1,7 +1,6 @@
 
 import 'package:drift/drift.dart';
 
-import 'tags.dart';
 
 class Meter extends Table{
   IntColumn get id => integer().autoIncrement()(); // default primary key

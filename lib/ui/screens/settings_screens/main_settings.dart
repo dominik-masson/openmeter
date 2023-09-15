@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/settings_screen/active_torch.dart';
 import '../../widgets/settings_screen/tags_tile.dart';
-import 'database_screen.dart';
 import '../../widgets/settings_screen/database_listtile.dart';
 import '../../widgets/settings_screen/display_awake.dart';
 import '../../widgets/settings_screen/reading_reminder.dart';

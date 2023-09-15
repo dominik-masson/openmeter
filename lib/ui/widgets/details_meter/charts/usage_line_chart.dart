@@ -108,10 +108,10 @@ class _UsageLineChartState extends State<UsageLineChart> {
 
   FlTitlesData _titlesData() {
     return FlTitlesData(
-      rightTitles: AxisTitles(
+      rightTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
-      topTitles: AxisTitles(
+      topTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
       bottomTitles: _bottomTitles(),
@@ -130,7 +130,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
   }
 
   FlGridData _gridData() {
-    return FlGridData(show: false);
+    return const FlGridData(show: false);
   }
 
   LineTouchData _touchData() {

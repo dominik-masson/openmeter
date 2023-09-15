@@ -53,22 +53,22 @@ dependencies:
   intl: any
   grouped_list: ^5.1.2
   sticky_grouped_list: ^3.1.0
-  fl_chart: ^0.61.0
-  permission_handler: ^10.2.0
+  fl_chart: ^0.63.0
+  permission_handler: ^11.0.0
   font_awesome_flutter: ^10.3.0
-  wakelock: ^0.6.2
+  wakelock_plus: ^1.1.1
   flutter_slidable: ^3.0.0
-  uuid: ^3.0.7
+  uuid: ^4.0.0
   # Chart
   smooth_page_indicator: ^1.0.1
   # Local Push Notification
   flutter_local_notifications: ^15.1.0+1
   timezone: ^0.9.1
   # App Native Settings
-  flutter_launcher_icons: ^0.12.0
+  flutter_launcher_icons: ^0.13.1
   rename: ^2.0.1
   flutter_native_splash: ^2.2.16
-  file_picker: ^5.2.4
+  file_picker:
 
 dev_dependencies:
   flutter_test:

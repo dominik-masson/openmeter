@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../ui/screens/settings_screens/reminder_screen.dart';
 import '../enums/notifications_repeat_values.dart';
 import '../services/local_notification_helper.dart';
 
