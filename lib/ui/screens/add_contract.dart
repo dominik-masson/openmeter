@@ -54,7 +54,28 @@ class _AddContractState extends State<AddContract> {
       _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
       _setController();
     }
+
+    _setDateTimes();
+
     super.initState();
+  }
+
+  void _setDateTimes() {
+    if (widget.contract != null) {
+      final provider = widget.contract!.provider;
+
+      if (provider == null) {
+        _dateBeginController.text =
+            DateFormat('dd.MM.yyyy').format(_dateBegin!);
+        _dateEndController.text = DateFormat('dd.MM.yyyy').format(_dateEnd!);
+      } else {
+        _dateBegin = provider.validFrom!;
+        _dateEnd = provider.validUntil!;
+      }
+    } else {
+      _dateBeginController.text = DateFormat('dd.MM.yyyy').format(_dateBegin!);
+      _dateEndController.text = DateFormat('dd.MM.yyyy').format(_dateEnd!);
+    }
   }
 
   void _setController() {
@@ -81,14 +102,14 @@ class _AddContractState extends State<AddContract> {
     if (provider != null) {
       _providerName.text = provider.name!;
       _contractNumber.text = provider.contractNumber!;
+
       _dateBeginController.text =
           DateFormat('dd.MM.yyyy').format(provider.validFrom!);
       _dateEndController.text =
           DateFormat('dd.MM.yyyy').format(provider.validUntil!);
+
       _notice.text = provider.notice.toString();
       _providerExpand = true;
-    } else {
-      return;
     }
   }
 
@@ -111,30 +132,30 @@ class _AddContractState extends State<AddContract> {
   Future<int?> _createOrUpdateProvider(LocalDatabase db) async {
     int notice = _convertNotice();
 
-    if ((_providerExpand || _providerName.text.isNotEmpty) &&
-        _contractDto?.provider == null) {
-      final provider = ProviderCompanion(
-          name: drift.Value(_providerName.text),
-          contractNumber: drift.Value(_contractNumber.text),
-          notice: drift.Value(notice),
-          validFrom: drift.Value(_dateBegin!),
-          validUntil: drift.Value(_dateEnd!));
+    if (_providerExpand || _providerName.text.isNotEmpty) {
+      if (_isUpdate) {
+        final providerData = ProviderData(
+          id: _contractDto!.provider!.id!,
+          name: _providerName.text,
+          contractNumber: _contractNumber.text,
+          notice: int.parse(_notice.text),
+          validFrom: _dateBegin!,
+          validUntil: _dateEnd!,
+        );
 
-      return await db.contractDao.createProvider(provider);
-    } else if ((_providerExpand || _providerName.text.isNotEmpty) &&
-        _isUpdate) {
-      final providerData = ProviderData(
-        id: _contractDto!.provider!.id!,
-        name: _providerName.text,
-        contractNumber: _contractNumber.text,
-        notice: int.parse(_notice.text),
-        validFrom: _dateBegin!,
-        validUntil: _dateBegin!,
-      );
+        await db.contractDao.updateProvider(providerData);
 
-      await db.contractDao.updateProvider(providerData);
+        return _contractDto!.provider!.id!;
+      } else if (_contractDto?.provider == null) {
+        final provider = ProviderCompanion(
+            name: drift.Value(_providerName.text),
+            contractNumber: drift.Value(_contractNumber.text),
+            notice: drift.Value(notice),
+            validFrom: drift.Value(_dateBegin!),
+            validUntil: drift.Value(_dateEnd!));
 
-      return _contractDto!.provider!.id!;
+        return await db.contractDao.createProvider(provider);
+      }
     }
 
     return null;
@@ -410,10 +431,7 @@ class _AddContractState extends State<AddContract> {
                   flex: 1,
                   child: TextFormField(
                     readOnly: true,
-                    controller: _dateBeginController
-                      ..text = _dateBegin != null
-                          ? DateFormat('dd.MM.yyyy').format(_dateBegin!)
-                          : '',
+                    controller: _dateBeginController,
                     onTap: () => _showDatePicker(context, 'begin'),
                     decoration: const InputDecoration(
                       label: Text('Vertragsbeginn'),
@@ -427,10 +445,7 @@ class _AddContractState extends State<AddContract> {
                   flex: 1,
                   child: TextFormField(
                     readOnly: true,
-                    controller: _dateEndController
-                      ..text = _dateEnd != null
-                          ? DateFormat('dd.MM.yyyy').format(_dateEnd!)
-                          : '',
+                    controller: _dateEndController,
                     onTap: () => _showDatePicker(context, 'end'),
                     decoration: const InputDecoration(
                       label: Text('Vertragslaufzeit'),
