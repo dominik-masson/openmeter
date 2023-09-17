@@ -3,18 +3,19 @@ import 'package:drift/drift.dart' as drift;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../../core/enums/tag_chip_state.dart';
-import '../../core/model/room_dto.dart';
-import '../../core/provider/database_settings_provider.dart';
-import '../../core/provider/meter_provider.dart';
-import '../../core/provider/refresh_provider.dart';
-import '../../core/services/torch_controller.dart';
-import '../../../utils/meter_typ.dart';
-import '../../utils/convert_meter_unit.dart';
-import '../widgets/meter/meter_circle_avatar.dart';
-import '../widgets/tags_screen/add_tags.dart';
-import '../widgets/tags_screen/tag_chip.dart';
+import '../../../core/database/local_database.dart';
+import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/room_dto.dart';
+import '../../../core/model/tag_dto.dart';
+import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/meter_provider.dart';
+import '../../../core/provider/refresh_provider.dart';
+import '../../../core/services/torch_controller.dart';
+import '../../../../utils/meter_typ.dart';
+import '../../../utils/convert_meter_unit.dart';
+import '../../widgets/meter/meter_circle_avatar.dart';
+import '../../widgets/tags/add_tags.dart';
+import '../../widgets/tags/tag_chip.dart';
 
 class AddScreen extends StatefulWidget {
   final MeterData? meter;
@@ -389,7 +390,7 @@ class _AddScreenState extends State<AddScreen> {
                           padding: const EdgeInsets.all(8.0),
                           child: TagChip(
                             state: TagChipState.checked,
-                            tag: tags[index],
+                            tag: TagDto.fromData(tags[index]),
                           ),
                         );
                       } else {
@@ -397,7 +398,7 @@ class _AddScreenState extends State<AddScreen> {
                           padding: const EdgeInsets.all(8.0),
                           child: TagChip(
                             state: TagChipState.simple,
-                            tag: tags[index],
+                            tag: TagDto.fromData(tags[index]),
                           ),
                         );
                       }

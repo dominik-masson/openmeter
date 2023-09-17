@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/tag_dto.dart';
 import 'tag_chip.dart';
 
 class HorizontalTagsList extends StatelessWidget {
@@ -36,7 +37,7 @@ class HorizontalTagsList extends StatelessWidget {
 
         return Container(
           alignment: Alignment.centerLeft,
-          height: 30,
+          height: 25,
           child: ListView.builder(
             shrinkWrap: true,
             scrollDirection: Axis.horizontal,
@@ -49,7 +50,7 @@ class HorizontalTagsList extends StatelessWidget {
                 child: SizedBox(
                   width: 70,
                   child: TagChip(
-                    tag: tag,
+                    tag: TagDto.fromData(tag),
                     state: TagChipState.simple,
                   ),
                 ),

@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/stats_provider.dart';
-import '../tags_screen/add_tags.dart';
-import '../tags_screen/tag_chip.dart';
+import '../tags/add_tags.dart';
+import '../tags/tag_chip.dart';
 
 class TagWidget extends StatefulWidget {
   const TagWidget({Key? key}) : super(key: key);
@@ -93,12 +94,12 @@ class _TagWidgetState extends State<TagWidget> {
 
                     if (_tagsChecked.contains(listTags[index].id.toString())) {
                       child = TagChip(
-                        tag: listTags[index],
+                        tag: TagDto.fromData(listTags[index]),
                         state: TagChipState.checked,
                       );
                     } else {
                       child = TagChip(
-                        tag: listTags[index],
+                        tag: TagDto.fromData(listTags[index]),
                         state: TagChipState.simple,
                       );
                     }

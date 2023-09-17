@@ -3,21 +3,18 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
 
 class TagChip extends StatelessWidget {
-  final Tag tag;
+  final TagDto tag;
 
-  // final bool delete;
-  // final bool checked;
   final TagChipState state;
 
   const TagChip({
     Key? key,
     required this.tag,
     required this.state,
-    // required this.delete,
-    // required this.checked,
   }) : super(key: key);
 
   Future _deleteDialog(BuildContext context, LocalDatabase db) {
@@ -36,7 +33,7 @@ class TagChip extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                db.tagsDao.deleteTag(tag.uuid);
+                db.tagsDao.deleteTag(tag.uuid!);
                 Provider.of<DatabaseSettingsProvider>(context, listen: false)
                     .setHasUpdate(true);
                 Navigator.of(context).pop();
@@ -55,20 +52,17 @@ class TagChip extends StatelessWidget {
   Widget _checkedTag(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Color(tag.color),
-          width: 3,
-        ),
+        color: Color(tag.color),
         borderRadius: const BorderRadius.all(
-          Radius.circular(8),
+          Radius.circular(20),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.check,
-            color: Theme.of(context).hintColor,
+            color: Colors.white,
           ),
           const SizedBox(
             width: 8,
@@ -76,7 +70,7 @@ class TagChip extends StatelessWidget {
           Text(
             tag.name,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -88,32 +82,29 @@ class TagChip extends StatelessWidget {
   Widget _deleteTag(BuildContext context, LocalDatabase db) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Color(tag.color),
-          width: 3,
-        ),
+        color: Color(tag.color),
         borderRadius: const BorderRadius.all(
-          Radius.circular(8),
+          Radius.circular(20),
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            tag.name,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(
+              tag.name,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(
-            width: 8,
           ),
           IconButton(
             onPressed: () => _deleteDialog(context, db),
-            icon: Icon(
+            icon: const Icon(
               Icons.cancel,
-              color: Theme.of(context).hintColor,
+              color: Colors.white,
             ),
             tooltip: 'Tag löschen',
           ),
@@ -125,12 +116,9 @@ class TagChip extends StatelessWidget {
   Widget _simpleTag() {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Color(tag.color),
-          width: 2.5,
-        ),
+        color: Color(tag.color),
         borderRadius: const BorderRadius.all(
-          Radius.circular(8),
+          Radius.circular(20),
         ),
       ),
       child: Row(
@@ -139,7 +127,7 @@ class TagChip extends StatelessWidget {
           Text(
             tag.name,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),

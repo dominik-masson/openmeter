@@ -4,9 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/small_feature_provider.dart';
-import '../../widgets/tags_screen/add_tags.dart';
-import '../../widgets/tags_screen/tag_chip.dart';
+import '../../widgets/tags/add_tags.dart';
+import '../../widgets/tags/tag_chip.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({
@@ -110,7 +111,7 @@ class _TagsScreenState extends State<TagsScreen> {
                     return Padding(
                       padding: const EdgeInsets.all(8),
                       child: TagChip(
-                        tag: tags[index],
+                        tag: TagDto.fromData(tags[index]),
                         state: TagChipState.delete,
                       ),
                     );
