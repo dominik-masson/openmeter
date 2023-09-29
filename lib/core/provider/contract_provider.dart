@@ -8,10 +8,15 @@ import 'package:provider/provider.dart';
 
 import '../../utils/log.dart';
 import '../database/local_database.dart';
+import '../model/compare_costs.dart';
 import '../model/contract_dto.dart';
+import '../model/provider_dto.dart';
+import '../services/provider_helper.dart';
 import 'database_settings_provider.dart';
 
 class ContractProvider extends ChangeNotifier {
+  final ProviderHelper _providerHelper = ProviderHelper();
+
   String _cacheDir = '';
   final String _fileName = 'contract.json';
   List<ContractDto> _contracts = [];
@@ -84,6 +89,23 @@ class ContractProvider extends ChangeNotifier {
     return await db.contractDao.selectProvider(id);
   }
 
+  prepareProvider(LocalDatabase db) {
+    _contracts = _providerHelper.prepareProvider(_contracts, db);
+  }
+
+  _getCompareCosts(LocalDatabase db) async {
+    for (ContractDto contract in _contracts) {
+      final CostCompareData? costs =
+          await db.costCompareDao.getCompareCost(contract.id!);
+
+      if (costs != null) {
+        final CompareCosts costsDto = CompareCosts.fromData(costs);
+
+        contract.compareCosts = costsDto;
+      }
+    }
+  }
+
   convertData(List<ContractData> data, LocalDatabase db) async {
     _contracts = await Future.wait(data.map((e) async {
       ProviderData? provider;
@@ -96,7 +118,10 @@ class ContractProvider extends ChangeNotifier {
       }
     }).toList());
 
+    await _getCompareCosts(db);
+
     createCache(_contracts);
+
     splitContracts();
 
     notifyListeners();
@@ -211,6 +236,79 @@ class ContractProvider extends ChangeNotifier {
     _contracts[index] = ContractDto.fromData(data, provider);
 
     splitContracts();
+    createCache(_contracts);
+
+    log('Update Contract', name: LogNames.contractProvider);
+
+    notifyListeners();
+  }
+
+  ContractDto getSingleSelectedContract() {
+    final contract =
+        _contracts.firstWhere((element) => element.isSelected == true);
+
+    removeAllSelectedItems();
+
+    return contract;
+  }
+
+  updateProvider({
+    required LocalDatabase db,
+    required ProviderDto provider,
+    required int contractId,
+  }) async {
+    await db.contractDao.updateProvider(provider.toData());
+
+    int index = _contracts.indexWhere((element) => element.id == contractId);
+
+    _contracts[index].provider = provider;
+
+    createCache(_contracts);
+
+    prepareProvider(db);
+
+    log('Update Provider', name: LogNames.contractProvider);
+
+    notifyListeners();
+  }
+
+  removeProvider({
+    required int contractId,
+  }) {
+    int index = _contracts.indexWhere((element) => element.id == contractId);
+
+    _contracts[index].provider = null;
+
+    createCache(_contracts);
+
+    log('Remove provider from contract with id: $contractId',
+        name: LogNames.contractProvider);
+
+    notifyListeners();
+  }
+
+  updateCompareCosts({
+    required int contractId,
+    required CompareCosts? compare,
+  }) {
+    int index = _contracts.indexWhere((element) => element.id == contractId);
+
+    _contracts[index].compareCosts = compare;
+
+    createCache(_contracts);
+
+    log('Update Compare costs for contract id: $contractId',
+        name: LogNames.contractProvider);
+
+    notifyListeners();
+  }
+
+  addNewContract(ContractDto contract){
+    _contracts.add(contract);
+
+    createCache(_contracts);
+    splitContracts();
+
     notifyListeners();
   }
 }

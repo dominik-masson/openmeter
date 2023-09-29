@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/provider/contract_provider.dart';
+import '../../core/provider/details_contract_provider.dart';
 import '../../core/provider/room_provider.dart';
-import '../widgets/objects_screen/add_room.dart';
-import '../widgets/objects_screen/contract_card.dart';
-import '../widgets/objects_screen/room_card.dart';
-import 'add_contract.dart';
+import '../widgets/objects_screen/room/add_room.dart';
+import '../widgets/objects_screen/contract/contract_card.dart';
+import '../widgets/objects_screen/room/room_card.dart';
+import 'contract/add_contract.dart';
 
 class ObjectsScreen extends StatefulWidget {
   const ObjectsScreen({Key? key}) : super(key: key);
@@ -28,6 +29,8 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
   Widget build(BuildContext context) {
     final roomProvider = Provider.of<RoomProvider>(context);
     final contractProvider = Provider.of<ContractProvider>(context);
+
+    final detailsProvider = Provider.of<DetailsContractProvider>(context);
 
     return Scaffold(
       appBar: roomProvider.getStateHasSelected == true ||
@@ -64,7 +67,6 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                       style: TextStyle(fontSize: 18),
                     ),
                     trailing: const Icon(Icons.add),
-
                     onTap: () => _addRoom.getAddRoom(context),
                   ),
                 ),
@@ -81,7 +83,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                       MaterialPageRoute(
                         builder: (context) => const AddContract(contract: null),
                       ),
-                    ),
+                    ).then((value) => detailsProvider.setCurrentProvider(null)),
                   ),
                 ),
                 const ContractCard(),
@@ -98,10 +100,12 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       title: const Text('Objekte'),
       actions: [
         IconButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed('settings');
-            },
-            icon: const Icon(Icons.settings),tooltip: 'Einstellungen',),
+          onPressed: () {
+            Navigator.of(context).pushNamed('settings');
+          },
+          icon: const Icon(Icons.settings),
+          tooltip: 'Einstellungen',
+        ),
       ],
     );
   }
@@ -110,8 +114,10 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       {required RoomProvider roomProvider,
       required BuildContext context,
       required ContractProvider contractProvider}) {
+    int count = roomProvider.getSelectedRoomsLength +
+        contractProvider.getSelectedItemsLength;
 
-    int count = roomProvider.getSelectedRoomsLength + contractProvider.getSelectedItemsLength;
+    final detailsProvider = Provider.of<DetailsContractProvider>(context);
 
     return AppBar(
       title: Text('$count ausgewählt'),
@@ -128,6 +134,17 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         },
       ),
       actions: [
+        if (contractProvider.getSelectedItemsLength == 1)
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => AddContract(
+                  contract: contractProvider.getSingleSelectedContract(),
+                ),
+              )).then((value) => detailsProvider.setCurrentProvider(null));
+            },
+            icon: const Icon(Icons.edit),
+          ),
         IconButton(
           onPressed: () {
             if (roomProvider.getStateHasSelected == true) {

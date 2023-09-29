@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import '../../core/database/local_database.dart';
+import '../../../core/database/local_database.dart';
 
-import '../../core/model/room_dto.dart';
-import '../../core/provider/chart_provider.dart';
-import '../../core/provider/database_settings_provider.dart';
-import '../../core/provider/entry_card_provider.dart';
-import '../widgets/details_meter/add_entry.dart';
-import '../widgets/details_meter/charts/count_line_chart.dart';
-import '../widgets/details_meter/charts/usage_line_chart.dart';
-import '../widgets/details_meter/cost_card.dart';
-import '../widgets/details_meter/entry_card.dart';
-import '../widgets/details_meter/charts/usage_bar_chart.dart';
-import '../widgets/tags_screen/horizontal_tags_list.dart';
+import '../../../core/model/room_dto.dart';
+import '../../../core/provider/chart_provider.dart';
+import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/entry_card_provider.dart';
+import '../../widgets/details_meter/add_entry.dart';
+import '../../widgets/details_meter/charts/count_line_chart.dart';
+import '../../widgets/details_meter/charts/usage_line_chart.dart';
+import '../../widgets/details_meter/cost_card.dart';
+import '../../widgets/details_meter/entry_card.dart';
+import '../../widgets/details_meter/charts/usage_bar_chart.dart';
+import '../../widgets/tags/horizontal_tags_list.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {

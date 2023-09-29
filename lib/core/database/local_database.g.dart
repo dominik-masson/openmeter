@@ -40,16 +40,13 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
   static const VerificationMeta _isArchivedMeta =
       const VerificationMeta('isArchived');
   @override
-  late final GeneratedColumn<bool> isArchived =
-      GeneratedColumn<bool>('is_archived', aliasedName, false,
-          type: DriftSqlType.bool,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
-            SqlDialect.sqlite: 'CHECK ("is_archived" IN (0, 1))',
-            SqlDialect.mysql: '',
-            SqlDialect.postgres: '',
-          }),
-          defaultValue: const Constant(false));
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+      'is_archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
       [id, typ, note, number, unit, isArchived];
@@ -1141,8 +1138,8 @@ class $ProviderTable extends Provider
   static const VerificationMeta _noticeMeta = const VerificationMeta('notice');
   @override
   late final GeneratedColumn<int> notice = GeneratedColumn<int>(
-      'notice', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      'notice', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _validFromMeta =
       const VerificationMeta('validFrom');
   @override
@@ -1155,9 +1152,39 @@ class $ProviderTable extends Provider
   late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
       'valid_until', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _renewalMeta =
+      const VerificationMeta('renewal');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, contractNumber, notice, validFrom, validUntil];
+  late final GeneratedColumn<int> renewal = GeneratedColumn<int>(
+      'renewal', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _canceledMeta =
+      const VerificationMeta('canceled');
+  @override
+  late final GeneratedColumn<bool> canceled = GeneratedColumn<bool>(
+      'canceled', aliasedName, true,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("canceled" IN (0, 1))'));
+  static const VerificationMeta _canceledDateMeta =
+      const VerificationMeta('canceledDate');
+  @override
+  late final GeneratedColumn<DateTime> canceledDate = GeneratedColumn<DateTime>(
+      'canceled_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        contractNumber,
+        notice,
+        validFrom,
+        validUntil,
+        renewal,
+        canceled,
+        canceledDate
+      ];
   @override
   String get aliasedName => _alias ?? 'provider';
   @override
@@ -1187,8 +1214,6 @@ class $ProviderTable extends Provider
     if (data.containsKey('notice')) {
       context.handle(_noticeMeta,
           notice.isAcceptableOrUnknown(data['notice']!, _noticeMeta));
-    } else if (isInserting) {
-      context.missing(_noticeMeta);
     }
     if (data.containsKey('valid_from')) {
       context.handle(_validFromMeta,
@@ -1203,6 +1228,20 @@ class $ProviderTable extends Provider
               data['valid_until']!, _validUntilMeta));
     } else if (isInserting) {
       context.missing(_validUntilMeta);
+    }
+    if (data.containsKey('renewal')) {
+      context.handle(_renewalMeta,
+          renewal.isAcceptableOrUnknown(data['renewal']!, _renewalMeta));
+    }
+    if (data.containsKey('canceled')) {
+      context.handle(_canceledMeta,
+          canceled.isAcceptableOrUnknown(data['canceled']!, _canceledMeta));
+    }
+    if (data.containsKey('canceled_date')) {
+      context.handle(
+          _canceledDateMeta,
+          canceledDate.isAcceptableOrUnknown(
+              data['canceled_date']!, _canceledDateMeta));
     }
     return context;
   }
@@ -1220,11 +1259,17 @@ class $ProviderTable extends Provider
       contractNumber: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}contract_number'])!,
       notice: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}notice'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}notice']),
       validFrom: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_from'])!,
       validUntil: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until'])!,
+      renewal: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}renewal']),
+      canceled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}canceled']),
+      canceledDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}canceled_date']),
     );
   }
 
@@ -1238,25 +1283,42 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
   final int id;
   final String name;
   final String contractNumber;
-  final int notice;
+  final int? notice;
   final DateTime validFrom;
   final DateTime validUntil;
+  final int? renewal;
+  final bool? canceled;
+  final DateTime? canceledDate;
   const ProviderData(
       {required this.id,
       required this.name,
       required this.contractNumber,
-      required this.notice,
+      this.notice,
       required this.validFrom,
-      required this.validUntil});
+      required this.validUntil,
+      this.renewal,
+      this.canceled,
+      this.canceledDate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['contract_number'] = Variable<String>(contractNumber);
-    map['notice'] = Variable<int>(notice);
+    if (!nullToAbsent || notice != null) {
+      map['notice'] = Variable<int>(notice);
+    }
     map['valid_from'] = Variable<DateTime>(validFrom);
     map['valid_until'] = Variable<DateTime>(validUntil);
+    if (!nullToAbsent || renewal != null) {
+      map['renewal'] = Variable<int>(renewal);
+    }
+    if (!nullToAbsent || canceled != null) {
+      map['canceled'] = Variable<bool>(canceled);
+    }
+    if (!nullToAbsent || canceledDate != null) {
+      map['canceled_date'] = Variable<DateTime>(canceledDate);
+    }
     return map;
   }
 
@@ -1265,9 +1327,19 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
       id: Value(id),
       name: Value(name),
       contractNumber: Value(contractNumber),
-      notice: Value(notice),
+      notice:
+          notice == null && nullToAbsent ? const Value.absent() : Value(notice),
       validFrom: Value(validFrom),
       validUntil: Value(validUntil),
+      renewal: renewal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(renewal),
+      canceled: canceled == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canceled),
+      canceledDate: canceledDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canceledDate),
     );
   }
 
@@ -1278,9 +1350,12 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       contractNumber: serializer.fromJson<String>(json['contractNumber']),
-      notice: serializer.fromJson<int>(json['notice']),
+      notice: serializer.fromJson<int?>(json['notice']),
       validFrom: serializer.fromJson<DateTime>(json['validFrom']),
       validUntil: serializer.fromJson<DateTime>(json['validUntil']),
+      renewal: serializer.fromJson<int?>(json['renewal']),
+      canceled: serializer.fromJson<bool?>(json['canceled']),
+      canceledDate: serializer.fromJson<DateTime?>(json['canceledDate']),
     );
   }
   @override
@@ -1290,9 +1365,12 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'contractNumber': serializer.toJson<String>(contractNumber),
-      'notice': serializer.toJson<int>(notice),
+      'notice': serializer.toJson<int?>(notice),
       'validFrom': serializer.toJson<DateTime>(validFrom),
       'validUntil': serializer.toJson<DateTime>(validUntil),
+      'renewal': serializer.toJson<int?>(renewal),
+      'canceled': serializer.toJson<bool?>(canceled),
+      'canceledDate': serializer.toJson<DateTime?>(canceledDate),
     };
   }
 
@@ -1300,16 +1378,23 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
           {int? id,
           String? name,
           String? contractNumber,
-          int? notice,
+          Value<int?> notice = const Value.absent(),
           DateTime? validFrom,
-          DateTime? validUntil}) =>
+          DateTime? validUntil,
+          Value<int?> renewal = const Value.absent(),
+          Value<bool?> canceled = const Value.absent(),
+          Value<DateTime?> canceledDate = const Value.absent()}) =>
       ProviderData(
         id: id ?? this.id,
         name: name ?? this.name,
         contractNumber: contractNumber ?? this.contractNumber,
-        notice: notice ?? this.notice,
+        notice: notice.present ? notice.value : this.notice,
         validFrom: validFrom ?? this.validFrom,
         validUntil: validUntil ?? this.validUntil,
+        renewal: renewal.present ? renewal.value : this.renewal,
+        canceled: canceled.present ? canceled.value : this.canceled,
+        canceledDate:
+            canceledDate.present ? canceledDate.value : this.canceledDate,
       );
   @override
   String toString() {
@@ -1319,14 +1404,17 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
           ..write('contractNumber: $contractNumber, ')
           ..write('notice: $notice, ')
           ..write('validFrom: $validFrom, ')
-          ..write('validUntil: $validUntil')
+          ..write('validUntil: $validUntil, ')
+          ..write('renewal: $renewal, ')
+          ..write('canceled: $canceled, ')
+          ..write('canceledDate: $canceledDate')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, contractNumber, notice, validFrom, validUntil);
+  int get hashCode => Object.hash(id, name, contractNumber, notice, validFrom,
+      validUntil, renewal, canceled, canceledDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1336,16 +1424,22 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
           other.contractNumber == this.contractNumber &&
           other.notice == this.notice &&
           other.validFrom == this.validFrom &&
-          other.validUntil == this.validUntil);
+          other.validUntil == this.validUntil &&
+          other.renewal == this.renewal &&
+          other.canceled == this.canceled &&
+          other.canceledDate == this.canceledDate);
 }
 
 class ProviderCompanion extends UpdateCompanion<ProviderData> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> contractNumber;
-  final Value<int> notice;
+  final Value<int?> notice;
   final Value<DateTime> validFrom;
   final Value<DateTime> validUntil;
+  final Value<int?> renewal;
+  final Value<bool?> canceled;
+  final Value<DateTime?> canceledDate;
   const ProviderCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1353,17 +1447,22 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
     this.notice = const Value.absent(),
     this.validFrom = const Value.absent(),
     this.validUntil = const Value.absent(),
+    this.renewal = const Value.absent(),
+    this.canceled = const Value.absent(),
+    this.canceledDate = const Value.absent(),
   });
   ProviderCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String contractNumber,
-    required int notice,
+    this.notice = const Value.absent(),
     required DateTime validFrom,
     required DateTime validUntil,
+    this.renewal = const Value.absent(),
+    this.canceled = const Value.absent(),
+    this.canceledDate = const Value.absent(),
   })  : name = Value(name),
         contractNumber = Value(contractNumber),
-        notice = Value(notice),
         validFrom = Value(validFrom),
         validUntil = Value(validUntil);
   static Insertable<ProviderData> custom({
@@ -1373,6 +1472,9 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
     Expression<int>? notice,
     Expression<DateTime>? validFrom,
     Expression<DateTime>? validUntil,
+    Expression<int>? renewal,
+    Expression<bool>? canceled,
+    Expression<DateTime>? canceledDate,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1381,6 +1483,9 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
       if (notice != null) 'notice': notice,
       if (validFrom != null) 'valid_from': validFrom,
       if (validUntil != null) 'valid_until': validUntil,
+      if (renewal != null) 'renewal': renewal,
+      if (canceled != null) 'canceled': canceled,
+      if (canceledDate != null) 'canceled_date': canceledDate,
     });
   }
 
@@ -1388,9 +1493,12 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
       {Value<int>? id,
       Value<String>? name,
       Value<String>? contractNumber,
-      Value<int>? notice,
+      Value<int?>? notice,
       Value<DateTime>? validFrom,
-      Value<DateTime>? validUntil}) {
+      Value<DateTime>? validUntil,
+      Value<int?>? renewal,
+      Value<bool?>? canceled,
+      Value<DateTime?>? canceledDate}) {
     return ProviderCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1398,6 +1506,9 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
       notice: notice ?? this.notice,
       validFrom: validFrom ?? this.validFrom,
       validUntil: validUntil ?? this.validUntil,
+      renewal: renewal ?? this.renewal,
+      canceled: canceled ?? this.canceled,
+      canceledDate: canceledDate ?? this.canceledDate,
     );
   }
 
@@ -1422,6 +1533,15 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
     if (validUntil.present) {
       map['valid_until'] = Variable<DateTime>(validUntil.value);
     }
+    if (renewal.present) {
+      map['renewal'] = Variable<int>(renewal.value);
+    }
+    if (canceled.present) {
+      map['canceled'] = Variable<bool>(canceled.value);
+    }
+    if (canceledDate.present) {
+      map['canceled_date'] = Variable<DateTime>(canceledDate.value);
+    }
     return map;
   }
 
@@ -1433,7 +1553,10 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
           ..write('contractNumber: $contractNumber, ')
           ..write('notice: $notice, ')
           ..write('validFrom: $validFrom, ')
-          ..write('validUntil: $validUntil')
+          ..write('validUntil: $validUntil, ')
+          ..write('renewal: $renewal, ')
+          ..write('canceled: $canceled, ')
+          ..write('canceledDate: $canceledDate')
           ..write(')'))
         .toString();
   }
@@ -1490,16 +1613,35 @@ class $ContractTable extends Contract
   static const VerificationMeta _bonusMeta = const VerificationMeta('bonus');
   @override
   late final GeneratedColumn<int> bonus = GeneratedColumn<int>(
-      'bonus', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      'bonus', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isArchivedMeta =
+      const VerificationMeta('isArchived');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, meterTyp, provider, basicPrice, energyPrice, discount, bonus, note];
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+      'is_archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        meterTyp,
+        provider,
+        basicPrice,
+        energyPrice,
+        discount,
+        bonus,
+        note,
+        isArchived
+      ];
   @override
   String get aliasedName => _alias ?? 'contract';
   @override
@@ -1547,14 +1689,18 @@ class $ContractTable extends Contract
     if (data.containsKey('bonus')) {
       context.handle(
           _bonusMeta, bonus.isAcceptableOrUnknown(data['bonus']!, _bonusMeta));
-    } else if (isInserting) {
-      context.missing(_bonusMeta);
     }
     if (data.containsKey('note')) {
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     } else if (isInserting) {
       context.missing(_noteMeta);
+    }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+          _isArchivedMeta,
+          isArchived.isAcceptableOrUnknown(
+              data['is_archived']!, _isArchivedMeta));
     }
     return context;
   }
@@ -1578,9 +1724,11 @@ class $ContractTable extends Contract
       discount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}discount'])!,
       bonus: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}bonus'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}bonus']),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      isArchived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
     );
   }
 
@@ -1597,8 +1745,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
   final double basicPrice;
   final double energyPrice;
   final double discount;
-  final int bonus;
+  final int? bonus;
   final String note;
+  final bool isArchived;
   const ContractData(
       {required this.id,
       required this.meterTyp,
@@ -1606,8 +1755,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       required this.basicPrice,
       required this.energyPrice,
       required this.discount,
-      required this.bonus,
-      required this.note});
+      this.bonus,
+      required this.note,
+      required this.isArchived});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1619,8 +1769,11 @@ class ContractData extends DataClass implements Insertable<ContractData> {
     map['basic_price'] = Variable<double>(basicPrice);
     map['energy_price'] = Variable<double>(energyPrice);
     map['discount'] = Variable<double>(discount);
-    map['bonus'] = Variable<int>(bonus);
+    if (!nullToAbsent || bonus != null) {
+      map['bonus'] = Variable<int>(bonus);
+    }
     map['note'] = Variable<String>(note);
+    map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
 
@@ -1634,8 +1787,10 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       basicPrice: Value(basicPrice),
       energyPrice: Value(energyPrice),
       discount: Value(discount),
-      bonus: Value(bonus),
+      bonus:
+          bonus == null && nullToAbsent ? const Value.absent() : Value(bonus),
       note: Value(note),
+      isArchived: Value(isArchived),
     );
   }
 
@@ -1649,8 +1804,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       basicPrice: serializer.fromJson<double>(json['basicPrice']),
       energyPrice: serializer.fromJson<double>(json['energyPrice']),
       discount: serializer.fromJson<double>(json['discount']),
-      bonus: serializer.fromJson<int>(json['bonus']),
+      bonus: serializer.fromJson<int?>(json['bonus']),
       note: serializer.fromJson<String>(json['note']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
   @override
@@ -1663,8 +1819,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       'basicPrice': serializer.toJson<double>(basicPrice),
       'energyPrice': serializer.toJson<double>(energyPrice),
       'discount': serializer.toJson<double>(discount),
-      'bonus': serializer.toJson<int>(bonus),
+      'bonus': serializer.toJson<int?>(bonus),
       'note': serializer.toJson<String>(note),
+      'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
 
@@ -1675,8 +1832,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           double? basicPrice,
           double? energyPrice,
           double? discount,
-          int? bonus,
-          String? note}) =>
+          Value<int?> bonus = const Value.absent(),
+          String? note,
+          bool? isArchived}) =>
       ContractData(
         id: id ?? this.id,
         meterTyp: meterTyp ?? this.meterTyp,
@@ -1684,8 +1842,9 @@ class ContractData extends DataClass implements Insertable<ContractData> {
         basicPrice: basicPrice ?? this.basicPrice,
         energyPrice: energyPrice ?? this.energyPrice,
         discount: discount ?? this.discount,
-        bonus: bonus ?? this.bonus,
+        bonus: bonus.present ? bonus.value : this.bonus,
         note: note ?? this.note,
+        isArchived: isArchived ?? this.isArchived,
       );
   @override
   String toString() {
@@ -1697,14 +1856,15 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           ..write('energyPrice: $energyPrice, ')
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, meterTyp, provider, basicPrice, energyPrice, discount, bonus, note);
+  int get hashCode => Object.hash(id, meterTyp, provider, basicPrice,
+      energyPrice, discount, bonus, note, isArchived);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1716,7 +1876,8 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           other.energyPrice == this.energyPrice &&
           other.discount == this.discount &&
           other.bonus == this.bonus &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.isArchived == this.isArchived);
 }
 
 class ContractCompanion extends UpdateCompanion<ContractData> {
@@ -1726,8 +1887,9 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
   final Value<double> basicPrice;
   final Value<double> energyPrice;
   final Value<double> discount;
-  final Value<int> bonus;
+  final Value<int?> bonus;
   final Value<String> note;
+  final Value<bool> isArchived;
   const ContractCompanion({
     this.id = const Value.absent(),
     this.meterTyp = const Value.absent(),
@@ -1737,6 +1899,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     this.discount = const Value.absent(),
     this.bonus = const Value.absent(),
     this.note = const Value.absent(),
+    this.isArchived = const Value.absent(),
   });
   ContractCompanion.insert({
     this.id = const Value.absent(),
@@ -1745,13 +1908,13 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     required double basicPrice,
     required double energyPrice,
     required double discount,
-    required int bonus,
+    this.bonus = const Value.absent(),
     required String note,
+    this.isArchived = const Value.absent(),
   })  : meterTyp = Value(meterTyp),
         basicPrice = Value(basicPrice),
         energyPrice = Value(energyPrice),
         discount = Value(discount),
-        bonus = Value(bonus),
         note = Value(note);
   static Insertable<ContractData> custom({
     Expression<int>? id,
@@ -1762,6 +1925,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     Expression<double>? discount,
     Expression<int>? bonus,
     Expression<String>? note,
+    Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1772,6 +1936,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       if (discount != null) 'discount': discount,
       if (bonus != null) 'bonus': bonus,
       if (note != null) 'note': note,
+      if (isArchived != null) 'is_archived': isArchived,
     });
   }
 
@@ -1782,8 +1947,9 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       Value<double>? basicPrice,
       Value<double>? energyPrice,
       Value<double>? discount,
-      Value<int>? bonus,
-      Value<String>? note}) {
+      Value<int?>? bonus,
+      Value<String>? note,
+      Value<bool>? isArchived}) {
     return ContractCompanion(
       id: id ?? this.id,
       meterTyp: meterTyp ?? this.meterTyp,
@@ -1793,6 +1959,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       discount: discount ?? this.discount,
       bonus: bonus ?? this.bonus,
       note: note ?? this.note,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
@@ -1823,6 +1990,9 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
     return map;
   }
 
@@ -1836,7 +2006,8 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
           ..write('energyPrice: $energyPrice, ')
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
@@ -2270,6 +2441,336 @@ class MeterWithTagsCompanion extends UpdateCompanion<MeterWithTag> {
   }
 }
 
+class $CostCompareTable extends CostCompare
+    with TableInfo<$CostCompareTable, CostCompareData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CostCompareTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _basicPriceMeta =
+      const VerificationMeta('basicPrice');
+  @override
+  late final GeneratedColumn<double> basicPrice = GeneratedColumn<double>(
+      'basic_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _energyPriceMeta =
+      const VerificationMeta('energyPrice');
+  @override
+  late final GeneratedColumn<double> energyPrice = GeneratedColumn<double>(
+      'energy_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _bonusMeta = const VerificationMeta('bonus');
+  @override
+  late final GeneratedColumn<int> bonus = GeneratedColumn<int>(
+      'bonus', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _usageMeta = const VerificationMeta('usage');
+  @override
+  late final GeneratedColumn<int> usage = GeneratedColumn<int>(
+      'usage', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _parentIdMeta =
+      const VerificationMeta('parentId');
+  @override
+  late final GeneratedColumn<int> parentId = GeneratedColumn<int>(
+      'parent_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contract (id) ON DELETE CASCADE'));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, basicPrice, energyPrice, bonus, usage, parentId];
+  @override
+  String get aliasedName => _alias ?? 'cost_compare';
+  @override
+  String get actualTableName => 'cost_compare';
+  @override
+  VerificationContext validateIntegrity(Insertable<CostCompareData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('basic_price')) {
+      context.handle(
+          _basicPriceMeta,
+          basicPrice.isAcceptableOrUnknown(
+              data['basic_price']!, _basicPriceMeta));
+    } else if (isInserting) {
+      context.missing(_basicPriceMeta);
+    }
+    if (data.containsKey('energy_price')) {
+      context.handle(
+          _energyPriceMeta,
+          energyPrice.isAcceptableOrUnknown(
+              data['energy_price']!, _energyPriceMeta));
+    } else if (isInserting) {
+      context.missing(_energyPriceMeta);
+    }
+    if (data.containsKey('bonus')) {
+      context.handle(
+          _bonusMeta, bonus.isAcceptableOrUnknown(data['bonus']!, _bonusMeta));
+    } else if (isInserting) {
+      context.missing(_bonusMeta);
+    }
+    if (data.containsKey('usage')) {
+      context.handle(
+          _usageMeta, usage.isAcceptableOrUnknown(data['usage']!, _usageMeta));
+    } else if (isInserting) {
+      context.missing(_usageMeta);
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(_parentIdMeta,
+          parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
+    } else if (isInserting) {
+      context.missing(_parentIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CostCompareData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CostCompareData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      basicPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}basic_price'])!,
+      energyPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}energy_price'])!,
+      bonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}bonus'])!,
+      usage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}usage'])!,
+      parentId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}parent_id'])!,
+    );
+  }
+
+  @override
+  $CostCompareTable createAlias(String alias) {
+    return $CostCompareTable(attachedDatabase, alias);
+  }
+}
+
+class CostCompareData extends DataClass implements Insertable<CostCompareData> {
+  final int id;
+  final double basicPrice;
+  final double energyPrice;
+  final int bonus;
+  final int usage;
+  final int parentId;
+  const CostCompareData(
+      {required this.id,
+      required this.basicPrice,
+      required this.energyPrice,
+      required this.bonus,
+      required this.usage,
+      required this.parentId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['basic_price'] = Variable<double>(basicPrice);
+    map['energy_price'] = Variable<double>(energyPrice);
+    map['bonus'] = Variable<int>(bonus);
+    map['usage'] = Variable<int>(usage);
+    map['parent_id'] = Variable<int>(parentId);
+    return map;
+  }
+
+  CostCompareCompanion toCompanion(bool nullToAbsent) {
+    return CostCompareCompanion(
+      id: Value(id),
+      basicPrice: Value(basicPrice),
+      energyPrice: Value(energyPrice),
+      bonus: Value(bonus),
+      usage: Value(usage),
+      parentId: Value(parentId),
+    );
+  }
+
+  factory CostCompareData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CostCompareData(
+      id: serializer.fromJson<int>(json['id']),
+      basicPrice: serializer.fromJson<double>(json['basicPrice']),
+      energyPrice: serializer.fromJson<double>(json['energyPrice']),
+      bonus: serializer.fromJson<int>(json['bonus']),
+      usage: serializer.fromJson<int>(json['usage']),
+      parentId: serializer.fromJson<int>(json['parentId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'basicPrice': serializer.toJson<double>(basicPrice),
+      'energyPrice': serializer.toJson<double>(energyPrice),
+      'bonus': serializer.toJson<int>(bonus),
+      'usage': serializer.toJson<int>(usage),
+      'parentId': serializer.toJson<int>(parentId),
+    };
+  }
+
+  CostCompareData copyWith(
+          {int? id,
+          double? basicPrice,
+          double? energyPrice,
+          int? bonus,
+          int? usage,
+          int? parentId}) =>
+      CostCompareData(
+        id: id ?? this.id,
+        basicPrice: basicPrice ?? this.basicPrice,
+        energyPrice: energyPrice ?? this.energyPrice,
+        bonus: bonus ?? this.bonus,
+        usage: usage ?? this.usage,
+        parentId: parentId ?? this.parentId,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('CostCompareData(')
+          ..write('id: $id, ')
+          ..write('basicPrice: $basicPrice, ')
+          ..write('energyPrice: $energyPrice, ')
+          ..write('bonus: $bonus, ')
+          ..write('usage: $usage, ')
+          ..write('parentId: $parentId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, basicPrice, energyPrice, bonus, usage, parentId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CostCompareData &&
+          other.id == this.id &&
+          other.basicPrice == this.basicPrice &&
+          other.energyPrice == this.energyPrice &&
+          other.bonus == this.bonus &&
+          other.usage == this.usage &&
+          other.parentId == this.parentId);
+}
+
+class CostCompareCompanion extends UpdateCompanion<CostCompareData> {
+  final Value<int> id;
+  final Value<double> basicPrice;
+  final Value<double> energyPrice;
+  final Value<int> bonus;
+  final Value<int> usage;
+  final Value<int> parentId;
+  const CostCompareCompanion({
+    this.id = const Value.absent(),
+    this.basicPrice = const Value.absent(),
+    this.energyPrice = const Value.absent(),
+    this.bonus = const Value.absent(),
+    this.usage = const Value.absent(),
+    this.parentId = const Value.absent(),
+  });
+  CostCompareCompanion.insert({
+    this.id = const Value.absent(),
+    required double basicPrice,
+    required double energyPrice,
+    required int bonus,
+    required int usage,
+    required int parentId,
+  })  : basicPrice = Value(basicPrice),
+        energyPrice = Value(energyPrice),
+        bonus = Value(bonus),
+        usage = Value(usage),
+        parentId = Value(parentId);
+  static Insertable<CostCompareData> custom({
+    Expression<int>? id,
+    Expression<double>? basicPrice,
+    Expression<double>? energyPrice,
+    Expression<int>? bonus,
+    Expression<int>? usage,
+    Expression<int>? parentId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (basicPrice != null) 'basic_price': basicPrice,
+      if (energyPrice != null) 'energy_price': energyPrice,
+      if (bonus != null) 'bonus': bonus,
+      if (usage != null) 'usage': usage,
+      if (parentId != null) 'parent_id': parentId,
+    });
+  }
+
+  CostCompareCompanion copyWith(
+      {Value<int>? id,
+      Value<double>? basicPrice,
+      Value<double>? energyPrice,
+      Value<int>? bonus,
+      Value<int>? usage,
+      Value<int>? parentId}) {
+    return CostCompareCompanion(
+      id: id ?? this.id,
+      basicPrice: basicPrice ?? this.basicPrice,
+      energyPrice: energyPrice ?? this.energyPrice,
+      bonus: bonus ?? this.bonus,
+      usage: usage ?? this.usage,
+      parentId: parentId ?? this.parentId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (basicPrice.present) {
+      map['basic_price'] = Variable<double>(basicPrice.value);
+    }
+    if (energyPrice.present) {
+      map['energy_price'] = Variable<double>(energyPrice.value);
+    }
+    if (bonus.present) {
+      map['bonus'] = Variable<int>(bonus.value);
+    }
+    if (usage.present) {
+      map['usage'] = Variable<int>(usage.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<int>(parentId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostCompareCompanion(')
+          ..write('id: $id, ')
+          ..write('basicPrice: $basicPrice, ')
+          ..write('energyPrice: $energyPrice, ')
+          ..write('bonus: $bonus, ')
+          ..write('usage: $usage, ')
+          ..write('parentId: $parentId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   late final $MeterTable meter = $MeterTable(this);
@@ -2280,11 +2781,14 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   late final $ContractTable contract = $ContractTable(this);
   late final $TagsTable tags = $TagsTable(this);
   late final $MeterWithTagsTable meterWithTags = $MeterWithTagsTable(this);
+  late final $CostCompareTable costCompare = $CostCompareTable(this);
   late final MeterDao meterDao = MeterDao(this as LocalDatabase);
   late final EntryDao entryDao = EntryDao(this as LocalDatabase);
   late final RoomDao roomDao = RoomDao(this as LocalDatabase);
   late final ContractDao contractDao = ContractDao(this as LocalDatabase);
   late final TagsDao tagsDao = TagsDao(this as LocalDatabase);
+  late final CostCompareDao costCompareDao =
+      CostCompareDao(this as LocalDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2297,7 +2801,8 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
         provider,
         contract,
         tags,
-        meterWithTags
+        meterWithTags,
+        costCompare
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -2328,6 +2833,13 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('meter_with_tags', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('contract',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('cost_compare', kind: UpdateKind.delete),
             ],
           ),
         ],

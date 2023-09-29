@@ -8,11 +8,13 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
 import 'daos/contract_dao.dart';
+import 'daos/cost_compare_dao.dart';
 import 'daos/entry_dao.dart';
 import 'daos/meter_dao.dart';
 import 'daos/room_dao.dart';
 import 'daos/tags_dao.dart';
 import 'tables/contract.dart';
+import 'tables/cost_compare.dart';
 import 'tables/entries.dart';
 import 'tables/meter.dart';
 import 'tables/room.dart';
@@ -30,19 +32,21 @@ part 'local_database.g.dart';
   Contract,
   Provider,
   Tags,
-  MeterWithTags
+  MeterWithTags,
+  CostCompare
 ], daos: [
   MeterDao,
   EntryDao,
   RoomDao,
   ContractDao,
-  TagsDao
+  TagsDao,
+  CostCompareDao
 ])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,8 +54,15 @@ class LocalDatabase extends _$LocalDatabase {
           await customStatement('PRAGMA foreign_keys = ON');
         },
         onUpgrade: (m, from, to) async {
-          if(from < 2){
+          if (from < 2) {
             await m.addColumn(meter, meter.isArchived);
+          }
+          if (from < 3) {
+            await m.addColumn(provider, provider.canceled);
+            await m.addColumn(provider, provider.renewal);
+          }
+          if (from < 4) {
+            await m.addColumn(provider, provider.canceledDate);
           }
         },
       );

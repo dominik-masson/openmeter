@@ -5,8 +5,9 @@ class Contract extends Table {
 
   TextColumn get meterTyp => text()();
 
-  IntColumn get provider =>
-      integer().references(Provider, #id, onDelete: KeyAction.setNull).nullable()();
+  IntColumn get provider => integer()
+      .references(Provider, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
   RealColumn get basicPrice => real()();
 
@@ -14,9 +15,11 @@ class Contract extends Table {
 
   RealColumn get discount => real()();
 
-  IntColumn get bonus => integer()();
+  IntColumn get bonus => integer().nullable()();
 
   TextColumn get note => text()();
+
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 }
 
 class Provider extends Table {
@@ -26,9 +29,15 @@ class Provider extends Table {
 
   TextColumn get contractNumber => text()();
 
-  IntColumn get notice => integer()();
+  IntColumn get notice => integer().nullable()();
 
   DateTimeColumn get validFrom => dateTime()();
 
   DateTimeColumn get validUntil => dateTime()();
+
+  IntColumn get renewal => integer().nullable()();
+
+  BoolColumn get canceled => boolean().nullable()();
+
+  DateTimeColumn get canceledDate => dateTime().nullable()();
 }

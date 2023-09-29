@@ -14,8 +14,8 @@ import '../../../core/provider/small_feature_provider.dart';
 import '../../../core/provider/sort_provider.dart';
 import '../../../utils/convert_meter_unit.dart';
 import '../../../utils/meter_typ.dart';
-import '../../screens/details_single_meter.dart';
-import '../tags_screen/horizontal_tags_list.dart';
+import '../../screens/meters/details_single_meter.dart';
+import '../tags/horizontal_tags_list.dart';
 import 'meter_circle_avatar.dart';
 
 class MeterCard extends StatefulWidget {

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/database/local_database.dart';
-import '../../core/enums/current_screen.dart';
-import '../../core/model/meter_dto.dart';
-import '../../core/model/room_dto.dart';
-import '../../core/provider/database_settings_provider.dart';
-import '../../core/provider/room_provider.dart';
-import '../../utils/custom_colors.dart';
-import '../../utils/room_typ.dart';
-import '../widgets/meter/meter_card.dart';
-import '../widgets/objects_screen/add_meter_to_room.dart';
+import '../../../core/database/local_database.dart';
+import '../../../core/enums/current_screen.dart';
+import '../../../core/model/meter_dto.dart';
+import '../../../core/model/room_dto.dart';
+import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/room_provider.dart';
+import '../../../utils/custom_colors.dart';
+import '../../../utils/room_typ.dart';
+import '../../widgets/meter/meter_card.dart';
+import '../../widgets/objects_screen/room/add_meter_to_room.dart';
 
 class DetailsRoom extends StatefulWidget {
   final RoomDto roomData;

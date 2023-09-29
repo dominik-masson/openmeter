@@ -29,8 +29,8 @@ class AddTags {
     Color(0xffF5704A),
     Color(0xffA9612B),
     Color(0xff432D2D),
+    Color(0xffF46060),
     Color(0xffBC0000),
-    Color(0xff680003),
   ];
 
   AddTags();

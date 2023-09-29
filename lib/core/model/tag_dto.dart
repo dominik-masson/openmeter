@@ -6,7 +6,9 @@ class TagDto {
   String name = '';
   int color = -1;
 
-  TagDto({required String name, required int color});
+  TagDto.fromValue({required String name, required int color})
+      : this.name = name,
+        this.color = color;
 
   TagDto.fromData(Tag data)
       : id = data.id,

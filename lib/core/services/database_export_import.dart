@@ -44,7 +44,7 @@ class DatabaseExportImportHelper {
   _getData(LocalDatabase db) async {
     _metersWithRoom = await db.meterDao.getAllMeterWithRooms();
     _rooms = await db.roomDao.getAllRooms();
-    _contracts = await db.contractDao.getAllContractsWithProvider();
+    _contracts = await db.contractDao.getAllContractsDto();
     _tags = await db.tagsDao.getAllTags();
     _meterWithTags = await db.tagsDao.getAllMeterWithTags();
 
@@ -154,7 +154,6 @@ class DatabaseExportImportHelper {
         log(e.toString(), name: LogNames.databaseExportImport);
       }
     }
-
   }
 
   Future<bool> exportAsJSON(
@@ -178,7 +177,6 @@ class DatabaseExportImportHelper {
         if (clearBackupFiles) {
           await clearLastBackupFiles(path);
         }
-
       } else {
         newPath = p.join(path, 'meter.json');
       }
@@ -218,24 +216,37 @@ class DatabaseExportImportHelper {
       if (contract.provider != null) {
         final ProviderDto provider = contract.provider!;
 
-        providerId = await db.contractDao.createProvider(ProviderCompanion(
-            name: drift.Value(provider.name!),
-            contractNumber: drift.Value(provider.contractNumber!),
+        providerId = await db.contractDao.createProvider(
+          ProviderCompanion(
+            name: drift.Value(provider.name),
+            contractNumber: drift.Value(provider.contractNumber),
             notice: drift.Value(provider.notice!),
-            validFrom: drift.Value(provider.validFrom!),
-            validUntil: drift.Value(provider.validUntil!)));
+            validFrom: drift.Value(provider.validFrom),
+            validUntil: drift.Value(provider.validUntil),
+            renewal: drift.Value(provider.renewal),
+            canceled: drift.Value(provider.canceled),
+            canceledDate: drift.Value(provider.canceledDate),
+          ),
+        );
       }
 
       ContractCompanion contractCompanion = ContractCompanion(
           provider: drift.Value(providerId),
           note: drift.Value(contract.note!),
-          meterTyp: drift.Value(contract.meterTyp!),
-          energyPrice: drift.Value(contract.energyPrice!),
-          discount: drift.Value(contract.discount!),
+          meterTyp: drift.Value(contract.meterTyp),
+          energyPrice: drift.Value(contract.energyPrice),
+          discount: drift.Value(contract.discount),
           bonus: drift.Value(contract.bonus!),
-          basicPrice: drift.Value(contract.basicPrice!));
+          basicPrice: drift.Value(contract.basicPrice));
 
-      await db.contractDao.createContract(contractCompanion);
+      int contractId = await db.contractDao.createContract(contractCompanion);
+
+      if (contract.compareCosts != null) {
+        final compareCosts = contract.compareCosts!;
+        compareCosts.parentId = contractId;
+
+        await db.costCompareDao.createCompareCost(compareCosts.toCostCompareCompanion());
+      }
     }
   }
 

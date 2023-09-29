@@ -71,92 +71,97 @@ class _TagsScreenState extends State<TagsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.asset(
-                'assets/icons/tag.png',
-                width: 200,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Image.asset(
+                  'assets/icons/tag.png',
+                  width: 200,
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            const Text(
-              'Aktuelle Tags:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              const SizedBox(
+                height: 50,
               ),
-            ),
-            StreamBuilder(
-              stream: db.tagsDao.watchAllTags(),
-              builder: (context, snapshot) {
-                final List<Tag> tags = snapshot.data ?? [];
+              const Text(
+                'Aktuelle Tags:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              StreamBuilder(
+                stream: db.tagsDao.watchAllTags(),
+                builder: (context, snapshot) {
+                  final List<Tag> tags = snapshot.data ?? [];
 
-                if (tags.isEmpty) {
-                  return _noTags();
-                }
+                  if (tags.isEmpty) {
+                    return _noTags();
+                  }
 
-                return GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: MediaQuery.of(context).size.width /
-                        (MediaQuery.of(context).size.height / 4),
-                  ),
-                  shrinkWrap: true,
-                  itemCount: tags.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: TagChip(
-                        tag: TagDto.fromData(tags[index]),
-                        state: TagChipState.delete,
+                  return SizedBox(
+                    height: 250,
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: MediaQuery.of(context).size.width /
+                            (MediaQuery.of(context).size.height / 4),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            SwitchListTile(
-              title: const Text('Tags anzeigen'),
-              subtitle: const Text(
-                  'Ermöglicht das anzeigen eines Tags auf der Startseite.'),
-              secondary: _showTags
-                  ? FaIcon(
-                      FontAwesomeIcons.eye,
-                      color: Theme.of(context).indicatorColor,
-                    )
-                  : FaIcon(
-                      FontAwesomeIcons.eyeSlash,
-                      color: Theme.of(context).indicatorColor,
+                      shrinkWrap: true,
+                      itemCount: tags.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: TagChip(
+                            tag: TagDto.fromData(tags[index]),
+                            state: TagChipState.delete,
+                          ),
+                        );
+                      },
                     ),
-              value: _showTags,
-              onChanged: (value) {
-                setState(() {
-                  _showTags = value;
-                });
-                smallProvider.setShowTags(_showTags);
-              },
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            // const Text(
-            //   'Informationen:',
-            //   style: TextStyle(
-            //     fontSize: 18,
-            //     fontWeight: FontWeight.bold,
-            //   ),
-            // ),
-            // const Text(
-            //     'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
-            //     'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
-          ],
+                  );
+                },
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              SwitchListTile(
+                title: const Text('Tags anzeigen'),
+                subtitle: const Text(
+                    'Ermöglicht das anzeigen eines Tags auf der Startseite.'),
+                secondary: _showTags
+                    ? FaIcon(
+                        FontAwesomeIcons.eye,
+                        color: Theme.of(context).indicatorColor,
+                      )
+                    : FaIcon(
+                        FontAwesomeIcons.eyeSlash,
+                        color: Theme.of(context).indicatorColor,
+                      ),
+                value: _showTags,
+                onChanged: (value) {
+                  setState(() {
+                    _showTags = value;
+                  });
+                  smallProvider.setShowTags(_showTags);
+                },
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              // const Text(
+              //   'Informationen:',
+              //   style: TextStyle(
+              //     fontSize: 18,
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
+              // const Text(
+              //     'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
+              //     'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
+            ],
+          ),
         ),
       ),
     );

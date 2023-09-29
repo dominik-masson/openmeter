@@ -121,6 +121,7 @@ class TagChip extends StatelessWidget {
           Radius.circular(20),
         ),
       ),
+      width: tag.name.length * 10.5,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

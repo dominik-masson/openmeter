@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 
+import '../../model/compare_costs.dart';
 import '../../model/contract_dto.dart';
+import '../../model/provider_dto.dart';
 import '../local_database.dart';
 import '../tables/contract.dart';
 
@@ -21,22 +23,30 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
     return await db.into(db.contract).insert(contract);
   }
 
-  Stream<List<ContractData>> watchALlContracts() {
+  Stream<List<ContractData>> watchAllContracts() {
     return db.select(db.contract).watch();
   }
 
-  Future<List<ContractDto>> getAllContractsWithProvider() async {
+  Future<List<ContractDto>> getAllContractsDto() async {
     List<ContractDto> result = [];
     List<ContractData> contracts = await select(db.contract).get();
 
     for (ContractData contract in contracts) {
+      ContractDto contractDto = ContractDto.fromData(contract, null);
+
       if (contract.provider != null) {
         ProviderData provider = await selectProvider(contract.provider!);
 
-        result.add(ContractDto.fromData(contract, provider));
-      } else {
-        result.add(ContractDto.fromData(contract, null));
+        contractDto.provider = ProviderDto.fromData(provider);
       }
+
+      final compareCosts = await db.costCompareDao.getCompareCost(contract.id);
+
+      if (compareCosts != null) {
+        contractDto.compareCosts = CompareCosts.fromData(compareCosts);
+      }
+
+      result.add(contractDto);
     }
 
     return result;
@@ -77,5 +87,16 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
     return await (db.selectOnly(db.contract)..addColumns([count]))
         .map((row) => row.read(count))
         .getSingleOrNull();
+  }
+
+  Future<int> linkProviderToContract(
+      {required int contractId, required int providerId}) async {
+    return await (update(db.contract)
+          ..where((tbl) => tbl.id.equals(contractId)))
+        .write(
+      ContractCompanion(
+        provider: Value(providerId),
+      ),
+    );
   }
 }

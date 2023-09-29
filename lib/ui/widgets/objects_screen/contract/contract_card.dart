@@ -5,14 +5,17 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import '../../../core/database/local_database.dart';
-import '../../../core/model/contract_dto.dart';
-import '../../../core/model/provider_dto.dart';
-import '../../../core/provider/contract_provider.dart';
-import '../../../core/provider/room_provider.dart';
-import '../../screens/add_contract.dart';
-import '../../../utils/meter_typ.dart';
-import '../meter/meter_circle_avatar.dart';
+import '../../../../core/database/local_database.dart';
+import '../../../../core/model/contract_dto.dart';
+import '../../../../core/model/provider_dto.dart';
+import '../../../../core/provider/contract_provider.dart';
+import '../../../../core/provider/details_contract_provider.dart';
+import '../../../../core/provider/room_provider.dart';
+import '../../../../utils/meter_typ.dart';
+import '../../../screens/contract/details_contract.dart';
+import '../../meter/meter_circle_avatar.dart';
+import '../../tags/canceled_tag.dart';
+import '../../tags/should_cancel_tag.dart';
 
 class ContractCard extends StatefulWidget {
   const ContractCard({Key? key}) : super(key: key);
@@ -32,8 +35,10 @@ class _ContractCardState extends State<ContractCard> {
     final contractProvider = Provider.of<ContractProvider>(context);
     final roomProvider = Provider.of<RoomProvider>(context);
 
+    final detailsProvider = Provider.of<DetailsContractProvider>(context);
+
     return StreamBuilder(
-      stream: db.contractDao.watchALlContracts(),
+      stream: db.contractDao.watchAllContracts(),
       builder: (context, snapshot) {
         final items = snapshot.data ?? [];
 
@@ -51,8 +56,18 @@ class _ContractCardState extends State<ContractCard> {
           contractProvider.convertData(items, db);
         }
 
+        contractProvider.prepareProvider(db);
+
         final first = contractProvider.getFirstContracts;
         final second = contractProvider.getSecondContracts;
+
+        if (_pageController.positions.isNotEmpty) {
+          int currentPage = _pageController.page! > 0.5 ? 1 : 0;
+
+          if (_pageIndex != currentPage && _pageController.page! < 1.0) {
+            _pageIndex = 0;
+          }
+        }
 
         return Column(
           children: [
@@ -81,12 +96,14 @@ class _ContractCardState extends State<ContractCard> {
                         contract: contract1,
                         provider: contractProvider,
                         roomProvider: roomProvider,
+                        detailsProvider: detailsProvider,
                       ),
                       if (contract2 != null)
                         _card(
                           contract: contract2,
                           provider: contractProvider,
                           roomProvider: roomProvider,
+                          detailsProvider: detailsProvider,
                         ),
                     ],
                   );
@@ -120,7 +137,7 @@ class _ContractCardState extends State<ContractCard> {
             Column(
               children: [
                 Text(
-                  provider.name!,
+                  provider.name,
                   style: const TextStyle(fontSize: 15),
                 ),
                 const Text(
@@ -132,7 +149,7 @@ class _ContractCardState extends State<ContractCard> {
             Column(
               children: [
                 Text(
-                  provider.contractNumber!,
+                  provider.contractNumber,
                   style: const TextStyle(fontSize: 15),
                 ),
                 const Text(
@@ -150,8 +167,12 @@ class _ContractCardState extends State<ContractCard> {
   Widget _card(
       {required ContractDto contract,
       required ContractProvider provider,
-      required RoomProvider roomProvider}) {
+      required RoomProvider roomProvider,
+      required DetailsContractProvider detailsProvider}) {
     bool hasSelected = provider.getHasSelectedItems;
+
+    final ProviderDto? providerDto = contract.provider;
+    bool isCanceled = providerDto?.canceled ?? false;
 
     final String local = Platform.localeName;
     final formatSimpleCurrency = NumberFormat.simpleCurrency(locale: local);
@@ -172,8 +193,24 @@ class _ContractCardState extends State<ContractCard> {
           if (hasSelected) {
             provider.toggleSelectedContracts(contract);
           } else {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => AddContract(contract: contract)));
+            Provider.of<DetailsContractProvider>(context, listen: false)
+                .setCurrentProvider(contract.provider);
+
+            Navigator.of(context)
+                .push(
+              MaterialPageRoute(
+                builder: (context) => DetailsContract(
+                  contract: contract,
+                ),
+              ),
+            )
+                .then(
+              (value) {
+                detailsProvider.setCurrentProvider(null);
+              },
+            );
+
+            detailsProvider.setCompareContract(null, true);
           }
         }
       },
@@ -181,7 +218,9 @@ class _ContractCardState extends State<ContractCard> {
         padding: const EdgeInsets.only(left: 8, right: 8),
         height: 175,
         child: Card(
-          color: contract.isSelected! ? Colors.grey.withOpacity(0.5) : null,
+          color: (contract.isSelected != null && contract.isSelected!)
+              ? Colors.grey.withOpacity(0.5)
+              : null,
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
@@ -199,6 +238,18 @@ class _ContractCardState extends State<ContractCard> {
                       meterTyps[contract.meterTyp]['anbieter'],
                       style: const TextStyle(fontSize: 16),
                     ),
+                    const Spacer(),
+                    if (isCanceled)
+                      const SizedBox(
+                        height: 25,
+                        child: CanceledTag(),
+                      ),
+                    if (contract.provider != null &&
+                        contract.provider!.showShouldCanceled)
+                      const SizedBox(
+                        height: 25,
+                        child: ShouldCancelTag(),
+                      ),
                   ],
                 ),
                 const SizedBox(
@@ -222,7 +273,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          '${formatDecimal.format(contract.energyPrice!)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(

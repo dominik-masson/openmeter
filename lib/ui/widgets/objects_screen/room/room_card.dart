@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import '../../../core/database/local_database.dart';
-import '../../../core/model/room_dto.dart';
-import '../../../core/provider/contract_provider.dart';
-import '../../../core/provider/room_provider.dart';
-import '../../screens/details_room.dart';
-import '../../../utils/meter_typ.dart';
-import '../meter/meter_circle_avatar.dart';
+import '../../../../core/database/local_database.dart';
+import '../../../../core/model/room_dto.dart';
+import '../../../../core/provider/contract_provider.dart';
+import '../../../../core/provider/room_provider.dart';
+import '../../../screens/rooms/details_room.dart';
+import '../../../../utils/meter_typ.dart';
+import '../../meter/meter_circle_avatar.dart';
 
 class RoomCard extends StatefulWidget {
   const RoomCard({Key? key}) : super(key: key);

@@ -158,20 +158,15 @@ class AddEntry {
                                   await _torchController.getTorch();
                                   setState(() {
                                     isTorchOn = !isTorchOn;
-                                    print("switch state: $isTorchOn");
                                     torchProvider.setIsTorchOn(isTorchOn);
                                   });
                                 },
                                 icon: isTorchOn
                                     ? const Icon(
                                         Icons.flashlight_on,
-                                        // color: darkMode
-                                        //     ? Colors.white
-                                        //     : Colors.black,
                                       )
                                     : const Icon(
                                         Icons.flashlight_off,
-                                        // color: darkMode ? Colors.white : Colors.black,
                                       ),
                               ),
                             ],

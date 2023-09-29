@@ -13,4 +13,5 @@ class LogNames{
   static const String torchHandler = 'Torch Handler';
   static const String databaseExportImport = 'Database Export Import';
   static const String databaseSettingsProvider = 'Database Settings Provider';
+  static const String compareCostHelper = 'Compare Cost Helper';
 }
