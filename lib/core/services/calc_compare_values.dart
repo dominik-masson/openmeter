@@ -14,11 +14,11 @@ class CalcCompareValues {
   _compareBonus() {
     final compareCosts = _compareCost.costs;
 
-    if (_currentCost.bonus != null) {
+    if (_currentCost.costs.bonus != null) {
       if (compareCosts.bonus != null) {
-        return compareCosts.bonus! - _currentCost.bonus!;
+        return compareCosts.bonus! - _currentCost.costs.bonus!;
       } else {
-        return _currentCost.bonus!;
+        return _currentCost.costs.bonus!;
       }
     } else if (compareCosts.bonus != null) {
       return compareCosts.bonus!;
@@ -27,13 +27,14 @@ class CalcCompareValues {
 
   _calcTotalDifference() {
     int usage = _compareCost.usage;
+    ContractCosts currentCosts = _currentCost.costs;
 
-    int currentBonus = _currentCost.bonus ?? 0;
+    int currentBonus = currentCosts.bonus ?? 0;
 
-    double energyPriceTotalCurrent = usage * _currentCost.energyPrice / 100;
+    double energyPriceTotalCurrent = usage * currentCosts.energyPrice / 100;
 
     double currentTotal =
-        energyPriceTotalCurrent + _currentCost.basicPrice - currentBonus;
+        energyPriceTotalCurrent + currentCosts.basicPrice - currentBonus;
     double compareTotal = getCompareTotal();
 
     return currentTotal - compareTotal;
@@ -51,9 +52,10 @@ class CalcCompareValues {
 
   ContractCosts compareCosts() {
     final compareCosts = _compareCost.costs;
+    ContractCosts currentCosts = _currentCost.costs;
 
-    double basicPrice = _currentCost.basicPrice - compareCosts.basicPrice;
-    double energyPrice = _currentCost.energyPrice - compareCosts.energyPrice;
+    double basicPrice = currentCosts.basicPrice - compareCosts.basicPrice;
+    double energyPrice = currentCosts.energyPrice - compareCosts.energyPrice;
     int bonus = _compareBonus();
 
     double total = _calcTotalDifference();

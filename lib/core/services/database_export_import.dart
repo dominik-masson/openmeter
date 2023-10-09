@@ -234,10 +234,10 @@ class DatabaseExportImportHelper {
           provider: drift.Value(providerId),
           note: drift.Value(contract.note!),
           meterTyp: drift.Value(contract.meterTyp),
-          energyPrice: drift.Value(contract.energyPrice),
-          discount: drift.Value(contract.discount),
-          bonus: drift.Value(contract.bonus!),
-          basicPrice: drift.Value(contract.basicPrice));
+          energyPrice: drift.Value(contract.costs.energyPrice),
+          discount: drift.Value(contract.costs.discount ?? 0),
+          bonus: drift.Value(contract.costs.bonus),
+          basicPrice: drift.Value(contract.costs.basicPrice));
 
       int contractId = await db.contractDao.createContract(contractCompanion);
 

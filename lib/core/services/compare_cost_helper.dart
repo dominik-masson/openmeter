@@ -15,7 +15,6 @@ class CompareCostHelper {
     required ContractProvider contractProvider,
   }) async {
     try {
-      print(compare.parentId);
       if (compare.parentId == null) {
         return;
       }
@@ -88,12 +87,11 @@ class CompareCostHelper {
         discount = discount + bonus;
       }
 
+      costs.discount = discount.roundToDouble();
+
       final ContractDto newContract = ContractDto(
-        energyPrice: costs.energyPrice,
-        basicPrice: costs.basicPrice,
-        discount: discount.roundToDouble(),
+        costs: costs,
         meterTyp: currentContract.meterTyp,
-        bonus: costs.bonus,
         isSelected: false,
       );
 

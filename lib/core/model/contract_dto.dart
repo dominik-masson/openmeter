@@ -2,15 +2,13 @@ import 'package:drift/drift.dart';
 
 import '../database/local_database.dart';
 import 'compare_costs.dart';
+import 'contract_costs.dart';
 import 'provider_dto.dart';
 
 class ContractDto {
   int? id;
   String meterTyp;
-  double basicPrice;
-  double energyPrice;
-  double discount;
-  int? bonus;
+  ContractCosts costs;
   String? note;
   ProviderDto? provider;
   bool? isSelected;
@@ -20,10 +18,7 @@ class ContractDto {
   ContractDto({
     this.id,
     required this.meterTyp,
-    required this.basicPrice,
-    required this.energyPrice,
-    required this.discount,
-    this.bonus,
+    required this.costs,
     this.note,
     this.provider,
     this.isSelected,
@@ -32,10 +27,12 @@ class ContractDto {
   ContractDto.fromData(ContractData data, ProviderData? provider)
       : id = data.id,
         meterTyp = data.meterTyp,
-        basicPrice = data.basicPrice,
-        energyPrice = data.energyPrice,
-        discount = data.discount,
-        bonus = data.bonus,
+        costs = ContractCosts(
+          basicPrice: data.basicPrice,
+          energyPrice: data.energyPrice,
+          discount: data.discount,
+          bonus: data.bonus,
+        ),
         note = data.note,
         provider = provider == null ? null : ProviderDto.formData(provider),
         isSelected = false,
@@ -47,10 +44,12 @@ class ContractDto {
     this.provider,
   })  : id = contractId,
         meterTyp = data.meterTyp.value,
-        basicPrice = data.basicPrice.value,
-        energyPrice = data.energyPrice.value,
-        discount = data.discount.value,
-        bonus = data.bonus.value,
+        costs = ContractCosts(
+          basicPrice: data.basicPrice.value,
+          energyPrice: data.energyPrice.value,
+          discount: data.discount.value,
+          bonus: data.bonus.value,
+        ),
         note = data.note.value,
         isSelected = false,
         isArchived = data.isArchived.value;
@@ -58,10 +57,12 @@ class ContractDto {
   ContractDto.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         meterTyp = json['meterTyp'],
-        basicPrice = json['basicPrice'],
-        energyPrice = json['energyPrice'],
-        discount = json['discount'],
-        bonus = json['bonus'],
+        costs = ContractCosts(
+          basicPrice: json['basicPrice'],
+          energyPrice: json['energyPrice'],
+          discount: json['discount'],
+          bonus: json['bonus'],
+        ),
         note = json['note'],
         isSelected = json['isSelected'],
         isArchived = json['isArchived'],
@@ -79,10 +80,10 @@ class ContractDto {
     return {
       'id': id,
       'meterTyp': meterTyp,
-      'basicPrice': basicPrice,
-      'energyPrice': energyPrice,
-      'discount': discount,
-      'bonus': bonus,
+      'basicPrice': costs.basicPrice,
+      'energyPrice': costs.energyPrice,
+      'discount': costs.discount,
+      'bonus': costs.bonus,
       'note': note,
       'isSelected': isSelected,
       'isArchived': isArchived,
@@ -93,10 +94,10 @@ class ContractDto {
 
   ContractCompanion toCompanion() {
     return ContractCompanion(
-      bonus: Value(bonus),
-      energyPrice: Value(energyPrice),
-      discount: Value(discount),
-      basicPrice: Value(basicPrice),
+      bonus: Value(costs.bonus),
+      energyPrice: Value(costs.energyPrice),
+      discount: Value(costs.discount ?? 0),
+      basicPrice: Value(costs.basicPrice),
       meterTyp: Value(meterTyp),
       isArchived: Value(isArchived),
       provider: Value(provider?.id),

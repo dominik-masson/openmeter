@@ -261,7 +261,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          formatSimpleCurrency.format(contract.basicPrice),
+                          formatSimpleCurrency.format(contract.costs.basicPrice),
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(
@@ -273,7 +273,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          '${formatDecimal.format(contract.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(
@@ -285,7 +285,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          formatSimpleCurrency.format(contract.discount),
+                          formatSimpleCurrency.format(contract.costs.discount),
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(

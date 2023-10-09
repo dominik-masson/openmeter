@@ -83,7 +83,11 @@ class RoomProvider extends ChangeNotifier {
     splitRooms();
   }
 
-  createCacheFile(List<RoomDto> items) {
+  createCacheFile(List<RoomDto> items) async {
+    if (_cacheDir.isEmpty) {
+      await _getDir();
+    }
+
     File file = File('$_cacheDir/$_fileName');
     log('create file to path: $_cacheDir/$_fileName ',
         name: LogNames.roomProvider);
@@ -394,7 +398,7 @@ class RoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCurrentRoom(RoomDto room){
+  void setCurrentRoom(RoomDto room) {
     _currentRoom = room;
     // notifyListeners();
   }

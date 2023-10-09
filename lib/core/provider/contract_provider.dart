@@ -74,8 +74,6 @@ class ContractProvider extends ChangeNotifier {
 
         _contracts = json.map((e) => ContractDto.fromJson(e)).toList();
 
-        // _contracts.sort((a, b) => a.meterTyp!.compareTo(b.meterTyp!));
-
         splitContracts();
       } catch (err) {
         log('ERROR: $err', name: LogNames.contractProvider);

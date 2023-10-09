@@ -80,10 +80,10 @@ class _AddContractState extends State<AddContract> {
 
     _isUpdate = true;
     _meterTyp = _contractDto!.meterTyp;
-    _basicPrice.text = formatPattern.format(_contractDto!.basicPrice);
-    _energyPrice.text = formatPattern.format(_contractDto!.energyPrice);
-    _discount.text = formatPattern.format(_contractDto!.discount);
-    _bonus.text = _contractDto!.bonus.toString();
+    _basicPrice.text = formatPattern.format(_contractDto!.costs.basicPrice);
+    _energyPrice.text = formatPattern.format(_contractDto!.costs.energyPrice);
+    _discount.text = formatPattern.format(_contractDto!.costs.discount);
+    _bonus.text = _contractDto!.costs.bonus.toString();
     _note.text = _contractDto!.note!;
   }
 
@@ -136,6 +136,14 @@ class _AddContractState extends State<AddContract> {
     return double.parse(newText.replaceAll(',', '.'));
   }
 
+  double _convertEnergyPrice(String energyPrice){
+    if(energyPrice.contains(',')){
+      return double.parse(energyPrice.replaceAll(',', '.'));
+    }else{
+      return double.parse(energyPrice);
+    }
+  }
+
   Future<void> _createEntry(LocalDatabase db) async {
     int bonus = _convertBonus();
 
@@ -145,7 +153,7 @@ class _AddContractState extends State<AddContract> {
       meterTyp: drift.Value(_meterTyp),
       provider: drift.Value(provider?.id),
       basicPrice: drift.Value(_convertDouble(_basicPrice.text)),
-      energyPrice: drift.Value(_convertDouble(_energyPrice.text)),
+      energyPrice: drift.Value(_convertEnergyPrice(_energyPrice.text)),
       discount: drift.Value(_convertDouble(_discount.text)),
       bonus: drift.Value(bonus),
       note: drift.Value(_note.text),
@@ -174,7 +182,7 @@ class _AddContractState extends State<AddContract> {
       meterTyp: _meterTyp,
       provider: providerDto?.id,
       basicPrice: _convertDouble(_basicPrice.text),
-      energyPrice: _convertDouble(_energyPrice.text),
+      energyPrice: _convertEnergyPrice(_energyPrice.text),
       discount: _convertDouble(_discount.text),
       bonus: bonus,
       note: _note.text,

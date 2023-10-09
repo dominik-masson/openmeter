@@ -109,7 +109,7 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          formatSimpleCurrency.format(contract.basicPrice),
+                          formatSimpleCurrency.format(contract.costs.basicPrice),
                           style: textStyle,
                         ),
                       ),
@@ -127,7 +127,7 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          '${formatDecimal.format(contract.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
                           style: textStyle,
                         ),
                       ),
@@ -145,7 +145,7 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          formatSimpleCurrency.format(contract.discount),
+                          formatSimpleCurrency.format(contract.costs.discount),
                           style: textStyle,
                         ),
                       ),
@@ -163,7 +163,7 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          formatSimpleCurrency.format(contract.bonus),
+                          formatSimpleCurrency.format(contract.costs.bonus),
                           style: textStyle,
                         ),
                       ),
