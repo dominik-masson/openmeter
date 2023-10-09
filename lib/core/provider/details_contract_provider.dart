@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../model/compare_costs.dart';
+import '../model/contract_dto.dart';
 import '../model/provider_dto.dart';
 
 class DetailsContractProvider extends ChangeNotifier {
@@ -8,6 +9,8 @@ class DetailsContractProvider extends ChangeNotifier {
   CompareCosts? _compareCosts;
   bool _deleteProvider = false;
   bool _removeCanceledDate = false;
+  String _unit = '';
+  late ContractDto _currentContract;
 
   get getCurrentProvider => _provider;
 
@@ -52,4 +55,18 @@ class DetailsContractProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get getUnit => _unit;
+
+  void setUnit(String value){
+    _unit = value;
+    notifyListeners();
+  }
+
+  ContractDto get getCurrentContract => _currentContract;
+
+  void setCurrentContract(ContractDto contract){
+    _currentContract = contract;
+
+    notifyListeners();
+  }
 }

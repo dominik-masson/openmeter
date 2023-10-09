@@ -231,7 +231,10 @@ class ContractProvider extends ChangeNotifier {
 
     int index = _contracts.indexWhere((element) => element.id == data.id);
 
+    CompareCosts? compareCosts = _contracts[index].compareCosts;
+
     _contracts[index] = ContractDto.fromData(data, provider);
+    _contracts[index].compareCosts = compareCosts;
 
     splitContracts();
     createCache(_contracts);

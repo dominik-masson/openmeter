@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/model/contract_dto.dart';
-import '../../../../utils/meter_typ.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'add_costs.dart';
 
 class CostCard extends StatelessWidget {
   final ContractDto contract;
   final String local = Platform.localeName;
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   CostCard({super.key, required this.contract});
 
@@ -29,24 +30,24 @@ class CostCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             height: 500,
             width: double.infinity,
-            child:  SingleChildScrollView(
+            child: const SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     height: 5,
                   ),
-                  const Text(
+                  Text(
                     'Vergleichsdaten erstellen',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 15,
                   ),
-                  AddCosts(contract: contract,),
+                  AddCosts(),
                 ],
               ),
             ),
@@ -55,7 +56,7 @@ class CostCard extends StatelessWidget {
       },
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final formatSimpleCurrency = NumberFormat.simpleCurrency(locale: local);
@@ -109,7 +110,8 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          formatSimpleCurrency.format(contract.costs.basicPrice),
+                          formatSimpleCurrency
+                              .format(contract.costs.basicPrice),
                           style: textStyle,
                         ),
                       ),
@@ -127,7 +129,7 @@ class CostCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
-                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${_convertMeterUnit.getUnitString(contract.unit)}',
                           style: textStyle,
                         ),
                       ),

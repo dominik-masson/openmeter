@@ -1620,6 +1620,11 @@ class $ContractTable extends Contract
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _isArchivedMeta =
       const VerificationMeta('isArchived');
   @override
@@ -1640,6 +1645,7 @@ class $ContractTable extends Contract
         discount,
         bonus,
         note,
+        unit,
         isArchived
       ];
   @override
@@ -1696,6 +1702,12 @@ class $ContractTable extends Contract
     } else if (isInserting) {
       context.missing(_noteMeta);
     }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
     if (data.containsKey('is_archived')) {
       context.handle(
           _isArchivedMeta,
@@ -1727,6 +1739,8 @@ class $ContractTable extends Contract
           .read(DriftSqlType.int, data['${effectivePrefix}bonus']),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
       isArchived: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
     );
@@ -1747,6 +1761,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
   final double discount;
   final int? bonus;
   final String note;
+  final String unit;
   final bool isArchived;
   const ContractData(
       {required this.id,
@@ -1757,6 +1772,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       required this.discount,
       this.bonus,
       required this.note,
+      required this.unit,
       required this.isArchived});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1773,6 +1789,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       map['bonus'] = Variable<int>(bonus);
     }
     map['note'] = Variable<String>(note);
+    map['unit'] = Variable<String>(unit);
     map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
@@ -1790,6 +1807,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       bonus:
           bonus == null && nullToAbsent ? const Value.absent() : Value(bonus),
       note: Value(note),
+      unit: Value(unit),
       isArchived: Value(isArchived),
     );
   }
@@ -1806,6 +1824,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       discount: serializer.fromJson<double>(json['discount']),
       bonus: serializer.fromJson<int?>(json['bonus']),
       note: serializer.fromJson<String>(json['note']),
+      unit: serializer.fromJson<String>(json['unit']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
@@ -1821,6 +1840,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       'discount': serializer.toJson<double>(discount),
       'bonus': serializer.toJson<int?>(bonus),
       'note': serializer.toJson<String>(note),
+      'unit': serializer.toJson<String>(unit),
       'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
@@ -1834,6 +1854,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           double? discount,
           Value<int?> bonus = const Value.absent(),
           String? note,
+          String? unit,
           bool? isArchived}) =>
       ContractData(
         id: id ?? this.id,
@@ -1844,6 +1865,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
         discount: discount ?? this.discount,
         bonus: bonus.present ? bonus.value : this.bonus,
         note: note ?? this.note,
+        unit: unit ?? this.unit,
         isArchived: isArchived ?? this.isArchived,
       );
   @override
@@ -1857,6 +1879,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
           ..write('note: $note, ')
+          ..write('unit: $unit, ')
           ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
@@ -1864,7 +1887,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
 
   @override
   int get hashCode => Object.hash(id, meterTyp, provider, basicPrice,
-      energyPrice, discount, bonus, note, isArchived);
+      energyPrice, discount, bonus, note, unit, isArchived);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1877,6 +1900,7 @@ class ContractData extends DataClass implements Insertable<ContractData> {
           other.discount == this.discount &&
           other.bonus == this.bonus &&
           other.note == this.note &&
+          other.unit == this.unit &&
           other.isArchived == this.isArchived);
 }
 
@@ -1889,6 +1913,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
   final Value<double> discount;
   final Value<int?> bonus;
   final Value<String> note;
+  final Value<String> unit;
   final Value<bool> isArchived;
   const ContractCompanion({
     this.id = const Value.absent(),
@@ -1899,6 +1924,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     this.discount = const Value.absent(),
     this.bonus = const Value.absent(),
     this.note = const Value.absent(),
+    this.unit = const Value.absent(),
     this.isArchived = const Value.absent(),
   });
   ContractCompanion.insert({
@@ -1910,12 +1936,14 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     required double discount,
     this.bonus = const Value.absent(),
     required String note,
+    required String unit,
     this.isArchived = const Value.absent(),
   })  : meterTyp = Value(meterTyp),
         basicPrice = Value(basicPrice),
         energyPrice = Value(energyPrice),
         discount = Value(discount),
-        note = Value(note);
+        note = Value(note),
+        unit = Value(unit);
   static Insertable<ContractData> custom({
     Expression<int>? id,
     Expression<String>? meterTyp,
@@ -1925,6 +1953,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     Expression<double>? discount,
     Expression<int>? bonus,
     Expression<String>? note,
+    Expression<String>? unit,
     Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
@@ -1936,6 +1965,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       if (discount != null) 'discount': discount,
       if (bonus != null) 'bonus': bonus,
       if (note != null) 'note': note,
+      if (unit != null) 'unit': unit,
       if (isArchived != null) 'is_archived': isArchived,
     });
   }
@@ -1949,6 +1979,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       Value<double>? discount,
       Value<int?>? bonus,
       Value<String>? note,
+      Value<String>? unit,
       Value<bool>? isArchived}) {
     return ContractCompanion(
       id: id ?? this.id,
@@ -1959,6 +1990,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       discount: discount ?? this.discount,
       bonus: bonus ?? this.bonus,
       note: note ?? this.note,
+      unit: unit ?? this.unit,
       isArchived: isArchived ?? this.isArchived,
     );
   }
@@ -1990,6 +2022,9 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
     if (isArchived.present) {
       map['is_archived'] = Variable<bool>(isArchived.value);
     }
@@ -2007,6 +2042,7 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
           ..write('note: $note, ')
+          ..write('unit: $unit, ')
           ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();

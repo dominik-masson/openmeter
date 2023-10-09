@@ -237,7 +237,8 @@ class DatabaseExportImportHelper {
           energyPrice: drift.Value(contract.costs.energyPrice),
           discount: drift.Value(contract.costs.discount ?? 0),
           bonus: drift.Value(contract.costs.bonus),
-          basicPrice: drift.Value(contract.costs.basicPrice));
+          basicPrice: drift.Value(contract.costs.basicPrice),
+          unit: drift.Value(contract.unit));
 
       int contractId = await db.contractDao.createContract(contractCompanion);
 
@@ -245,7 +246,8 @@ class DatabaseExportImportHelper {
         final compareCosts = contract.compareCosts!;
         compareCosts.parentId = contractId;
 
-        await db.costCompareDao.createCompareCost(compareCosts.toCostCompareCompanion());
+        await db.costCompareDao
+            .createCompareCost(compareCosts.toCostCompareCompanion());
       }
     }
   }

@@ -36,6 +36,17 @@ class CompareCosts {
           bonus: costs.bonus,
         );
 
+  CostCompareData toData() {
+    return CostCompareData(
+      bonus: costs.bonus ?? 0,
+      basicPrice: costs.basicPrice,
+      energyPrice: costs.energyPrice,
+      parentId: parentId!,
+      usage: usage,
+      id: id!,
+    );
+  }
+
   toJson() {
     return {
       'usage': usage,

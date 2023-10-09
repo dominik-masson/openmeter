@@ -93,6 +93,7 @@ class CompareCostHelper {
         costs: costs,
         meterTyp: currentContract.meterTyp,
         isSelected: false,
+        unit: currentContract.unit,
       );
 
       int id = await db.contractDao.createContract(newContract.toCompanion());
@@ -112,5 +113,34 @@ class CompareCostHelper {
 
       return false;
     }
+  }
+
+  _getNewContract({
+    required CompareCosts compare,
+    required ContractDto currentContract,
+  }) {
+    currentContract.compareCosts = compare;
+
+    return currentContract;
+  }
+
+  Future updateCompare({
+    required CompareCosts compare,
+    required LocalDatabase db,
+    required ContractProvider contractProvider,
+    required DetailsContractProvider provider,
+    required ContractDto currentContract,
+  }) async {
+    await db.costCompareDao.updateCompareCost(compare.toData());
+
+    provider.setCompareContract(compare, true);
+
+    contractProvider.updateCompareCosts(
+        contractId: currentContract.id!, compare: compare);
+
+    provider.setCurrentContract(
+        _getNewContract(compare: compare, currentContract: currentContract));
+
+    log('update current compare costs', name: LogNames.compareCostHelper);
   }
 }

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/database/local_database.dart';
 import '../../../../core/model/compare_costs.dart';
 import '../../../../core/model/contract_costs.dart';
 import '../../../../core/model/contract_dto.dart';
+import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
-import '../../../../utils/meter_typ.dart';
+import '../../../../core/services/compare_cost_helper.dart';
+import '../../../../utils/convert_meter_unit.dart';
 
 class AddCosts extends StatefulWidget {
-  final ContractDto contract;
-
-  const AddCosts({super.key, required this.contract});
+  const AddCosts({super.key});
 
   @override
   State<AddCosts> createState() => _AddCostsState();
@@ -23,6 +24,11 @@ class _AddCostsState extends State<AddCosts> {
   final TextEditingController _energyPrice = TextEditingController();
   final TextEditingController _bonus = TextEditingController();
   final TextEditingController _usage = TextEditingController();
+
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
+  bool _isUpdate = false;
+
+  late ContractDto contract;
 
   @override
   void dispose() {
@@ -56,15 +62,15 @@ class _AddCostsState extends State<AddCosts> {
     );
   }
 
-  double _convertEnergyPrice(){
-    if(_energyPrice.text.contains(',')){
+  double _convertEnergyPrice() {
+    if (_energyPrice.text.contains(',')) {
       return double.parse(_energyPrice.text.replaceAll(',', '.'));
-    }else{
+    } else {
       return double.parse(_energyPrice.text);
     }
   }
 
-  _handleOnSave() {
+  _handleOnSave() async {
     if (_form.currentState!.validate()) {
       final provider =
           Provider.of<DetailsContractProvider>(context, listen: false);
@@ -72,35 +78,68 @@ class _AddCostsState extends State<AddCosts> {
       int bonus = _bonus.text.isEmpty ? 0 : int.parse(_bonus.text);
 
       ContractCosts costs = ContractCosts(
-        basicPrice:  double.parse(_basicPrice.text),
+        basicPrice: double.parse(_basicPrice.text),
         energyPrice: _convertEnergyPrice(),
         bonus: bonus,
       );
 
       CompareCosts compareCosts = CompareCosts(
         costs: costs,
-        usage:int.parse(_usage.text),
-        parentId: widget.contract.id,
+        usage: int.parse(_usage.text),
+        parentId: contract.id,
       );
 
-      provider.setCompareContract(compareCosts, true);
+      if (!_isUpdate) {
+        provider.setCompareContract(compareCosts, true);
 
-      Navigator.of(context).pop();
+        Navigator.of(context).pop();
+      } else {
+        final CompareCostHelper helper = CompareCostHelper();
+        final db = Provider.of<LocalDatabase>(context, listen: false);
+        final contractProvider =
+            Provider.of<ContractProvider>(context, listen: false);
+
+        final oldCompareCosts = contract.compareCosts;
+
+        if (oldCompareCosts != null) {
+          compareCosts.id = oldCompareCosts.id;
+        }
+
+        helper
+            .updateCompare(
+                compare: compareCosts,
+                db: db,
+                contractProvider: contractProvider,
+                provider: provider,
+                currentContract: contract)
+            .then((value) => Navigator.of(context).pop());
+      }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<DetailsContractProvider>(context, listen: false);
-
-    final compareContract = provider.getCompareContract;
-
-    if(compareContract != null){
+  _initController(CompareCosts? compareContract) {
+    if (compareContract != null) {
       final costs = compareContract.costs;
       _basicPrice.text = costs.basicPrice.toString();
       _energyPrice.text = costs.energyPrice.toString();
       _bonus.text = costs.bonus == null ? '' : costs.bonus.toString();
       _usage.text = compareContract.usage.toString();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider =
+        Provider.of<DetailsContractProvider>(context, listen: false);
+
+    contract = provider.getCurrentContract;
+
+    final compareContract = provider.getCompareContract;
+
+    _initController(compareContract);
+
+    if (contract.compareCosts != null) {
+      _isUpdate = true;
     }
 
     return Form(
@@ -144,7 +183,8 @@ class _AddCostsState extends State<AddCosts> {
               },
               decoration: InputDecoration(
                 label: const Text('Verbrauch'),
-                suffix: Text('in ${meterTyps[widget.contract.meterTyp]['einheit']}'),
+                suffix: Text(
+                    'in ${_convertMeterUnit.getUnitString(contract.unit)}'),
                 labelStyle: const TextStyle(
                   fontSize: 16,
                 ),

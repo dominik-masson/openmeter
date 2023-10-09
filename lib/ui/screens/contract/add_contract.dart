@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/refresh_provider.dart';
 import '../../../core/services/provider_helper.dart';
+import '../../../utils/convert_meter_unit.dart';
 import '../../widgets/meter/meter_circle_avatar.dart';
 import '../../widgets/objects_screen/contract/add_provider.dart';
 
@@ -34,6 +36,9 @@ class _AddContractState extends State<AddContract> {
   final TextEditingController _discount = TextEditingController();
   final TextEditingController _bonus = TextEditingController();
   final TextEditingController _note = TextEditingController();
+  final TextEditingController _unitController = TextEditingController();
+
+  final ConvertMeterUnit convertMeterUnit = ConvertMeterUnit();
 
   String _meterTyp = 'Stromzähler';
   bool _providerExpand = false;
@@ -49,11 +54,7 @@ class _AddContractState extends State<AddContract> {
 
   @override
   void initState() {
-    if (widget.contract != null) {
-      _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
-      _setController();
-    }
-
+    _setController();
     super.initState();
   }
 
@@ -64,6 +65,8 @@ class _AddContractState extends State<AddContract> {
     _discount.dispose();
     _bonus.dispose();
     _note.dispose();
+    _unitController.dispose();
+
     super.dispose();
   }
 
@@ -71,6 +74,7 @@ class _AddContractState extends State<AddContract> {
     _contractDto = widget.contract;
 
     if (_contractDto == null) {
+      _unitController.text = meterTyps[_meterTyp]['einheit'];
       return;
     }
 
@@ -78,6 +82,7 @@ class _AddContractState extends State<AddContract> {
     final formatPattern =
         NumberFormat.decimalPatternDigits(locale: local, decimalDigits: 2);
 
+    _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
     _isUpdate = true;
     _meterTyp = _contractDto!.meterTyp;
     _basicPrice.text = formatPattern.format(_contractDto!.costs.basicPrice);
@@ -85,6 +90,7 @@ class _AddContractState extends State<AddContract> {
     _discount.text = formatPattern.format(_contractDto!.costs.discount);
     _bonus.text = _contractDto!.costs.bonus.toString();
     _note.text = _contractDto!.note!;
+    _unitController.text = _contractDto!.unit;
   }
 
   int _convertBonus() {
@@ -136,10 +142,10 @@ class _AddContractState extends State<AddContract> {
     return double.parse(newText.replaceAll(',', '.'));
   }
 
-  double _convertEnergyPrice(String energyPrice){
-    if(energyPrice.contains(',')){
+  double _convertEnergyPrice(String energyPrice) {
+    if (energyPrice.contains(',')) {
       return double.parse(energyPrice.replaceAll(',', '.'));
-    }else{
+    } else {
       return double.parse(energyPrice);
     }
   }
@@ -158,6 +164,7 @@ class _AddContractState extends State<AddContract> {
       bonus: drift.Value(bonus),
       note: drift.Value(_note.text),
       isArchived: drift.Value(_contractDto?.isArchived ?? false),
+      unit: drift.Value(_unitController.text),
     );
 
     int contractId = await db.contractDao.createContract(contract);
@@ -187,6 +194,7 @@ class _AddContractState extends State<AddContract> {
       bonus: bonus,
       note: _note.text,
       isArchived: false,
+      unit: _unitController.text,
     );
 
     await db.contractDao.updateContract(contract).then((value) {
@@ -354,6 +362,54 @@ class _AddContractState extends State<AddContract> {
     return result;
   }
 
+  _unitField() {
+    return Row(
+      children: [
+        Flexible(
+          child: TextFormField(
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+                icon: FaIcon(
+                  FontAwesomeIcons.ruler,
+                  size: 16,
+                ),
+                label: Text('Einheit'),
+                hintText: 'm^3 entspricht m\u00B3'),
+            controller: _unitController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Bitte geben Sie eine Einheit an!';
+              }
+              return null;
+            },
+            onChanged: (value) {
+              setState(() {});
+            },
+          ),
+        ),
+        Column(
+          children: [
+            const Text(
+              'Vorschau',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            convertMeterUnit.getUnitWidget(
+              count: '',
+              unit: _unitController.text,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 19,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> newMeterTyps = _filterMeterTyps();
@@ -376,6 +432,10 @@ class _AddContractState extends State<AddContract> {
             child: Column(
               children: [
                 _dropdownMeterTyp(context, newMeterTyps),
+                const SizedBox(
+                  height: 15,
+                ),
+                _unitField(),
                 const SizedBox(
                   height: 15,
                 ),

@@ -1,5 +1,6 @@
 enum CompareCostsMenu{
   delete,
   save,
-  newContract
+  newContract,
+  edit
 }

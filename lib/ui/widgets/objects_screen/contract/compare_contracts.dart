@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -15,12 +14,11 @@ import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
 import '../../../../core/services/calc_compare_values.dart';
 import '../../../../core/services/compare_cost_helper.dart';
-import '../../../../utils/meter_typ.dart';
+import '../../../../utils/convert_meter_unit.dart';
+import 'add_costs.dart';
 
 class CompareContracts extends StatefulWidget {
-  final ContractDto contract;
-
-  const CompareContracts({super.key, required this.contract});
+  const CompareContracts({super.key});
 
   @override
   State<CompareContracts> createState() => _CompareContractsState();
@@ -28,15 +26,12 @@ class CompareContracts extends StatefulWidget {
 
 class _CompareContractsState extends State<CompareContracts> {
   final TextStyle textStyle = const TextStyle(fontSize: 16);
-  late final ContractDto contract;
+  late ContractDto contract;
 
   final String local = Platform.localeName;
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  @override
-  void initState() {
-    contract = widget.contract;
-    super.initState();
-  }
+  String _unit = '';
 
   _createTableRows({
     required String title,
@@ -110,7 +105,7 @@ class _CompareContractsState extends State<CompareContracts> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 15),
                 child: Text(
-                  '${compareContract.usage} ${meterTyps[widget.contract.meterTyp]['einheit']}',
+                  '${compareContract.usage} ${_convertMeterUnit.getUnitString(_unit)}',
                   style: textStyle,
                 ),
               ),
@@ -194,6 +189,49 @@ class _CompareContractsState extends State<CompareContracts> {
     );
   }
 
+  _openBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            height: 500,
+            width: double.infinity,
+            child: const SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    'Vergleichsdaten bearbeiten',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  AddCosts(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   _popupMenu(CompareCosts compareContract, DetailsContractProvider provider) {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final contractProvider =
@@ -229,7 +267,7 @@ class _CompareContractsState extends State<CompareContracts> {
                     db: db,
                     contractProvider: contractProvider,
                     provider: provider,
-                    currentContract: widget.contract)
+                    currentContract: contract)
                 .then((value) {
               if (value) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -239,6 +277,9 @@ class _CompareContractsState extends State<CompareContracts> {
                 ));
               }
             });
+            break;
+          case CompareCostsMenu.edit:
+            _openBottomSheet(context);
             break;
           default:
             'No PopUpMenuButton';
@@ -286,6 +327,24 @@ class _CompareContractsState extends State<CompareContracts> {
           ),
         ),
         PopupMenuItem(
+          value: CompareCostsMenu.edit,
+          child: Row(
+            children: [
+              const Icon(
+                Icons.edit,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bearbeiten',
+                style: textStyle,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
           value: CompareCostsMenu.delete,
           child: Row(
             children: [
@@ -315,10 +374,18 @@ class _CompareContractsState extends State<CompareContracts> {
   Widget build(BuildContext context) {
     final provider = Provider.of<DetailsContractProvider>(context);
 
+    contract = provider.getCurrentContract;
+
+    _unit = provider.getUnit;
+
+    if (_unit.isEmpty) {
+      _unit = contract.unit;
+    }
+
     final CompareCosts? compareContract = provider.getCompareContract;
 
-    final compareValuesHelper = CalcCompareValues(
-        compareCost: compareContract!, currentCost: widget.contract);
+    final compareValuesHelper =
+        CalcCompareValues(compareCost: compareContract!, currentCost: contract);
 
     final ContractCosts compareValues = compareValuesHelper.compareCosts();
 

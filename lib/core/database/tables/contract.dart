@@ -19,6 +19,8 @@ class Contract extends Table {
 
   TextColumn get note => text()();
 
+  TextColumn get unit => text()();
+
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 }
 

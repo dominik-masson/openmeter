@@ -26,4 +26,8 @@ class CostCompareDao extends DatabaseAccessor<LocalDatabase>
     return await (delete(db.costCompare)..where((tbl) => tbl.id.equals(id)))
         .go();
   }
+
+  Future updateCompareCost(CostCompareData cost) async {
+    return await update(db.costCompare).replace(cost);
+  }
 }

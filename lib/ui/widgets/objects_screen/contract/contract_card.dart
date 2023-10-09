@@ -11,6 +11,7 @@ import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
 import '../../../../core/provider/room_provider.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import '../../../../utils/meter_typ.dart';
 import '../../../screens/contract/details_contract.dart';
 import '../../meter/meter_circle_avatar.dart';
@@ -25,6 +26,8 @@ class ContractCard extends StatefulWidget {
 }
 
 class _ContractCardState extends State<ContractCard> {
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
+
   int _pageIndex = 0;
   final _pageController = PageController(initialPage: 0, keepPage: true);
 
@@ -193,8 +196,10 @@ class _ContractCardState extends State<ContractCard> {
           if (hasSelected) {
             provider.toggleSelectedContracts(contract);
           } else {
-            Provider.of<DetailsContractProvider>(context, listen: false)
-                .setCurrentProvider(contract.provider);
+            final provider =
+                Provider.of<DetailsContractProvider>(context, listen: false);
+            provider.setCurrentProvider(contract.provider);
+            provider.setCurrentContract(contract);
 
             Navigator.of(context)
                 .push(
@@ -261,7 +266,8 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          formatSimpleCurrency.format(contract.costs.basicPrice),
+                          formatSimpleCurrency
+                              .format(contract.costs.basicPrice),
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(
@@ -273,7 +279,7 @@ class _ContractCardState extends State<ContractCard> {
                     Column(
                       children: [
                         Text(
-                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${meterTyps[contract.meterTyp]['einheit']}',
+                          '${formatDecimal.format(contract.costs.energyPrice)} Cent/${_convertMeterUnit.getUnitString(contract.unit)}',
                           style: const TextStyle(fontSize: 15),
                         ),
                         const Text(

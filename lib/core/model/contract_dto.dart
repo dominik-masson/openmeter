@@ -14,6 +14,7 @@ class ContractDto {
   bool? isSelected;
   bool isArchived = false;
   CompareCosts? compareCosts;
+  String unit;
 
   ContractDto({
     this.id,
@@ -22,6 +23,7 @@ class ContractDto {
     this.note,
     this.provider,
     this.isSelected,
+    required this.unit,
   });
 
   ContractDto.fromData(ContractData data, ProviderData? provider)
@@ -36,7 +38,8 @@ class ContractDto {
         note = data.note,
         provider = provider == null ? null : ProviderDto.formData(provider),
         isSelected = false,
-        isArchived = data.isArchived;
+        isArchived = data.isArchived,
+        unit = data.unit;
 
   ContractDto.fromCompanion({
     required ContractCompanion data,
@@ -52,7 +55,8 @@ class ContractDto {
         ),
         note = data.note.value,
         isSelected = false,
-        isArchived = data.isArchived.value;
+        isArchived = data.isArchived.value,
+        unit = data.unit.value;
 
   ContractDto.fromJson(Map<String, dynamic> json)
       : id = json['id'],
@@ -74,12 +78,14 @@ class ContractDto {
             : CompareCosts.fromJson(
                 json['compareCosts'],
                 json['id'],
-              );
+              ),
+        unit = json['unit'];
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'meterTyp': meterTyp,
+      'unit': unit,
       'basicPrice': costs.basicPrice,
       'energyPrice': costs.energyPrice,
       'discount': costs.discount,
@@ -102,6 +108,7 @@ class ContractDto {
       isArchived: Value(isArchived),
       provider: Value(provider?.id),
       note: Value(note ?? ''),
+      unit: Value(unit),
     );
   }
 }

@@ -34,7 +34,7 @@ class _DetailsContractState extends State<DetailsContract> {
   Widget build(BuildContext context) {
     final provider = Provider.of<DetailsContractProvider>(context);
 
-    if(_currentContract.compareCosts != null) {
+    if (_currentContract.compareCosts != null) {
       provider.setCompareContract(_currentContract.compareCosts, false);
     }
 
@@ -58,7 +58,10 @@ class _DetailsContractState extends State<DetailsContract> {
                     _currentContract = value;
                     _currentProvider = _currentContract.provider;
 
+                    _currentContract.compareCosts = provider.getCompareContract;
+
                     provider.setCurrentProvider(_currentProvider);
+                    provider.setUnit(_currentContract.unit);
                   }
                 });
               });
@@ -80,7 +83,7 @@ class _DetailsContractState extends State<DetailsContract> {
                       height: 10,
                     ),
                   if (provider.getCompareContract != null)
-                    CompareContracts(contract: _currentContract),
+                    const CompareContracts(),
                   const SizedBox(
                     height: 10,
                   ),
