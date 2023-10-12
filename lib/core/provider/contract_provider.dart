@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 import '../../utils/log.dart';
 import '../database/local_database.dart';
@@ -12,7 +11,6 @@ import '../model/compare_costs.dart';
 import '../model/contract_dto.dart';
 import '../model/provider_dto.dart';
 import '../services/provider_helper.dart';
-import 'database_settings_provider.dart';
 
 class ContractProvider extends ChangeNotifier {
   final ProviderHelper _providerHelper = ProviderHelper();
@@ -25,6 +23,10 @@ class ContractProvider extends ChangeNotifier {
 
   int _selectedItemsLength = 0;
   bool _hasSelectedItems = false;
+
+  List<ContractDto> _archivedContracts = [];
+
+  int get getArchivedContractsLength => _archivedContracts.length;
 
   ContractProvider() {
     _loadFromCache();
@@ -71,8 +73,17 @@ class ContractProvider extends ChangeNotifier {
         List<dynamic> json = jsonDecode(file.readAsStringSync());
 
         _contracts.clear();
+        _archivedContracts.clear();
 
-        _contracts = json.map((e) => ContractDto.fromJson(e)).toList();
+        for (var element in json) {
+          bool isArchived = element['isArchived'];
+
+          if (isArchived) {
+            _archivedContracts.add(ContractDto.fromJson(element));
+          } else {
+            _contracts.add(ContractDto.fromJson(element));
+          }
+        }
 
         splitContracts();
       } catch (err) {
@@ -87,12 +98,17 @@ class ContractProvider extends ChangeNotifier {
     return await db.contractDao.selectProvider(id);
   }
 
-  prepareProvider(LocalDatabase db) {
-    _contracts = _providerHelper.prepareProvider(_contracts, db);
+  prepareProvider(LocalDatabase db, bool isArchived) {
+    if (isArchived) {
+      _archivedContracts =
+          _providerHelper.prepareProvider(_archivedContracts, db);
+    } else {
+      _contracts = _providerHelper.prepareProvider(_contracts, db);
+    }
   }
 
-  _getCompareCosts(LocalDatabase db) async {
-    for (ContractDto contract in _contracts) {
+  _getCompareCosts(LocalDatabase db, List<ContractDto> contracts) async {
+    for (ContractDto contract in contracts) {
       final CostCompareData? costs =
           await db.costCompareDao.getCompareCost(contract.id!);
 
@@ -104,23 +120,51 @@ class ContractProvider extends ChangeNotifier {
     }
   }
 
-  convertData(List<ContractData> data, LocalDatabase db) async {
-    _contracts = await Future.wait(data.map((e) async {
-      ProviderData? provider;
+  List<ContractDto> _getAllContracts() {
+    final List<ContractDto> allContracts = _contracts + _archivedContracts;
 
-      if (e.provider != null) {
-        provider = await _getProviderData(e.provider!, db);
-        return ContractDto.fromData(e, provider);
-      } else {
-        return ContractDto.fromData(e, null);
-      }
-    }).toList());
+    allContracts.sort(
+      (a, b) => a.id!.compareTo(b.id!),
+    );
 
-    await _getCompareCosts(db);
+    return allContracts;
+  }
 
-    createCache(_contracts);
+  convertData(
+      {required List<ContractData> data,
+      required LocalDatabase db,
+      required bool isArchived}) async {
+    if (isArchived) {
+      _archivedContracts = await Future.wait(data.map((e) async {
+        ProviderData? provider;
 
-    splitContracts();
+        if (e.provider != null) {
+          provider = await _getProviderData(e.provider!, db);
+          return ContractDto.fromData(e, provider);
+        } else {
+          return ContractDto.fromData(e, null);
+        }
+      }).toList());
+
+      await _getCompareCosts(db, _archivedContracts);
+    } else {
+      _contracts = await Future.wait(data.map((e) async {
+        ProviderData? provider;
+
+        if (e.provider != null) {
+          provider = await _getProviderData(e.provider!, db);
+          return ContractDto.fromData(e, provider);
+        } else {
+          return ContractDto.fromData(e, null);
+        }
+      }).toList());
+
+      await _getCompareCosts(db, _contracts);
+
+      splitContracts();
+    }
+
+    createCache(_getAllContracts());
 
     notifyListeners();
   }
@@ -150,17 +194,16 @@ class ContractProvider extends ChangeNotifier {
     }
   }
 
-  toggleSelectedContracts(ContractDto contractDto) {
-    int index =
-        _contracts.indexWhere((element) => element.id == contractDto.id);
+  _toggleSelected(List<ContractDto> toggleList, int contractId) {
+    int index = toggleList.indexWhere((element) => element.id == contractId);
 
     if (index >= 0) {
-      _contracts.elementAt(index).isSelected =
-          !_contracts.elementAt(index).isSelected!;
+      toggleList.elementAt(index).isSelected =
+          !toggleList.elementAt(index).isSelected!;
 
       int count = 0;
 
-      for (var e in _contracts) {
+      for (var e in toggleList) {
         if (e.isSelected!) {
           count++;
         }
@@ -173,15 +216,28 @@ class ContractProvider extends ChangeNotifier {
       } else {
         _hasSelectedItems = true;
       }
-
-      splitContracts();
-
-      notifyListeners();
     }
+  }
+
+  toggleSelectedContracts(ContractDto contractDto) {
+    if (contractDto.isArchived) {
+      _toggleSelected(_archivedContracts, contractDto.id!);
+    } else {
+      _toggleSelected(_contracts, contractDto.id!);
+      splitContracts();
+    }
+
+    notifyListeners();
   }
 
   removeAllSelectedItems() {
     for (ContractDto data in _contracts) {
+      if (data.isSelected! == true) {
+        data.isSelected = false;
+      }
+    }
+
+    for (ContractDto data in _archivedContracts) {
       if (data.isSelected! == true) {
         data.isSelected = false;
       }
@@ -194,13 +250,10 @@ class ContractProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  deleteAllSelectedContracts(BuildContext context) async {
-    Provider.of<DatabaseSettingsProvider>(context, listen: false)
-        .setHasUpdate(true);
-
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-
-    for (ContractDto data in _contracts) {
+  _deleteContracts(
+      {required List<ContractDto> currentList,
+      required LocalDatabase db}) async {
+    for (ContractDto data in currentList) {
       if (data.isSelected! == true) {
         if (data.provider != null) {
           await db.contractDao.deleteProvider(data.provider!.id!);
@@ -210,11 +263,39 @@ class ContractProvider extends ChangeNotifier {
       }
     }
 
-    _contracts.removeWhere((element) => element.isSelected == true);
+    currentList.removeWhere((element) => element.isSelected == true);
+  }
+
+  deleteAllSelectedContracts(LocalDatabase db, bool isArchiv) async {
+    if (isArchiv) {
+      _deleteContracts(currentList: _archivedContracts, db: db);
+    } else {
+      _deleteContracts(currentList: _contracts, db: db);
+      splitContracts();
+    }
+
     _hasSelectedItems = false;
 
-    createCache(_contracts);
-    splitContracts();
+    createCache(_getAllContracts());
+
+    notifyListeners();
+  }
+
+  deleteSingleContract(
+      {required ContractDto contract, required LocalDatabase db}) async {
+    if (contract.isArchived) {
+      _archivedContracts.removeWhere((element) => element.id == contract.id);
+    } else {
+      _contracts.removeWhere((element) => element.id == contract.id);
+      splitContracts();
+    }
+
+    if (contract.provider != null) {
+      await db.contractDao.deleteProvider(contract.provider!.id!);
+    }
+
+    await db.contractDao.deleteContract(contract.id!);
+    createCache(_getAllContracts());
 
     notifyListeners();
   }
@@ -229,15 +310,26 @@ class ContractProvider extends ChangeNotifier {
       provider = await _getProviderData(providerId, db);
     }
 
-    int index = _contracts.indexWhere((element) => element.id == data.id);
+    if (data.isArchived) {
+      int index =
+          _archivedContracts.indexWhere((element) => element.id == data.id);
 
-    CompareCosts? compareCosts = _contracts[index].compareCosts;
+      CompareCosts? compareCosts = _archivedContracts[index].compareCosts;
 
-    _contracts[index] = ContractDto.fromData(data, provider);
-    _contracts[index].compareCosts = compareCosts;
+      _archivedContracts[index] = ContractDto.fromData(data, provider);
+      _archivedContracts[index].compareCosts = compareCosts;
+    } else {
+      int index = _contracts.indexWhere((element) => element.id == data.id);
 
-    splitContracts();
-    createCache(_contracts);
+      CompareCosts? compareCosts = _contracts[index].compareCosts;
+
+      _contracts[index] = ContractDto.fromData(data, provider);
+      _contracts[index].compareCosts = compareCosts;
+
+      splitContracts();
+    }
+
+    createCache(_getAllContracts());
 
     log('Update Contract', name: LogNames.contractProvider);
 
@@ -257,16 +349,26 @@ class ContractProvider extends ChangeNotifier {
     required LocalDatabase db,
     required ProviderDto provider,
     required int contractId,
+    required bool isArchiv,
   }) async {
     await db.contractDao.updateProvider(provider.toData());
 
-    int index = _contracts.indexWhere((element) => element.id == contractId);
+    if (isArchiv) {
+      int index =
+          _archivedContracts.indexWhere((element) => element.id == contractId);
 
-    _contracts[index].provider = provider;
+      _archivedContracts[index].provider = provider;
 
-    createCache(_contracts);
+      prepareProvider(db, true);
+    } else {
+      int index = _contracts.indexWhere((element) => element.id == contractId);
 
-    prepareProvider(db);
+      _contracts[index].provider = provider;
+
+      prepareProvider(db, false);
+    }
+
+    createCache(_getAllContracts());
 
     log('Update Provider', name: LogNames.contractProvider);
 
@@ -278,9 +380,15 @@ class ContractProvider extends ChangeNotifier {
   }) {
     int index = _contracts.indexWhere((element) => element.id == contractId);
 
-    _contracts[index].provider = null;
+    if (index != -1) {
+      _contracts[index].provider = null;
+    } else {
+      index =
+          _archivedContracts.indexWhere((element) => element.id == contractId);
+      _archivedContracts[index].provider = null;
+    }
 
-    createCache(_contracts);
+    createCache(_getAllContracts());
 
     log('Remove provider from contract with id: $contractId',
         name: LogNames.contractProvider);
@@ -289,14 +397,22 @@ class ContractProvider extends ChangeNotifier {
   }
 
   updateCompareCosts({
+    required bool isArchived,
     required int contractId,
     required CompareCosts? compare,
   }) {
-    int index = _contracts.indexWhere((element) => element.id == contractId);
+    if (isArchived) {
+      int index =
+          _archivedContracts.indexWhere((element) => element.id == contractId);
 
-    _contracts[index].compareCosts = compare;
+      _archivedContracts[index].compareCosts = compare;
+    } else {
+      int index = _contracts.indexWhere((element) => element.id == contractId);
 
-    createCache(_contracts);
+      _contracts[index].compareCosts = compare;
+    }
+
+    createCache(_getAllContracts());
 
     log('Update Compare costs for contract id: $contractId',
         name: LogNames.contractProvider);
@@ -304,12 +420,47 @@ class ContractProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  addNewContract(ContractDto contract){
-    _contracts.add(contract);
+  addNewContract(ContractDto newContract, ContractDto oldContract) {
+    _contracts.add(newContract);
 
-    createCache(_contracts);
+    oldContract.isArchived = true;
+    _archivedContracts.add(oldContract);
+    _contracts.removeWhere((element) => element.id! == oldContract.id!);
+
+    createCache(_getAllContracts());
     splitContracts();
 
     notifyListeners();
   }
+
+  archiveAllSelectedContract(LocalDatabase db) async {
+    for (ContractDto contract in _contracts) {
+      if (contract.isSelected != null && contract.isSelected!) {
+        await db.contractDao
+            .updateIsArchived(contractId: contract.id!, isArchived: true);
+
+        contract.isArchived = true;
+      }
+    }
+  }
+
+  unarchiveSelectedContracts(LocalDatabase db) async {
+    for (ContractDto contract in _archivedContracts) {
+      if (contract.isSelected != null && contract.isSelected!) {
+        await db.contractDao
+            .updateIsArchived(contractId: contract.id!, isArchived: false);
+
+        contract.isArchived = false;
+      }
+    }
+  }
+
+  unarchiveSingleContract(LocalDatabase db, ContractDto contract) async {
+    await db.contractDao
+        .updateIsArchived(contractId: contract.id!, isArchived: false);
+
+    contract.isArchived = false;
+  }
+
+  List<ContractDto> get getArchivedContracts => _archivedContracts;
 }

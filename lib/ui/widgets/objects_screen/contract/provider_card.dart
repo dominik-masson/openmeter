@@ -66,6 +66,7 @@ class _ProviderCardState extends State<ProviderCard> {
         db: db,
         provider: currentProvider!,
         contractId: widget.contract.id!,
+        isArchiv: widget.contract.isArchived,
       );
 
       detailsContractProvider.setCurrentProvider(currentProvider);
@@ -254,7 +255,7 @@ class _ProviderCardState extends State<ProviderCard> {
       backgroundColor: Colors.transparent,
       builder: (context) => ProviderBottomSheet(
         createProvider: currentProvider != null ? false : true,
-        contractId: widget.contract.id!,
+        contract: widget.contract,
       ),
     );
   }

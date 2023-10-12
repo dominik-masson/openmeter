@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class EmptyArchiv extends StatelessWidget {
-  const EmptyArchiv({super.key});
+  final String titel;
+
+  const EmptyArchiv({super.key, required this.titel});
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +19,9 @@ class EmptyArchiv extends StatelessWidget {
           const SizedBox(
             height: 10,
           ),
-          const Text(
-            'Es wurden noch keine Zähler archiviert.',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            titel,
+            style: const TextStyle(color: Colors.grey),
           ),
         ],
       ),

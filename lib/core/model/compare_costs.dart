@@ -49,6 +49,7 @@ class CompareCosts {
 
   toJson() {
     return {
+      'id': id,
       'usage': usage,
       'basicPrice': costs.basicPrice,
       'energyPrice': costs.energyPrice,
@@ -62,5 +63,6 @@ class CompareCosts {
           energyPrice: json['energyPrice'],
           bonus: json['bonus'],
         ),
-        usage = json['usage'];
+        usage = json['usage'],
+        id = json['id'];
 }

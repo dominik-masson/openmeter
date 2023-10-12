@@ -13,6 +13,7 @@ class CompareCostHelper {
     required LocalDatabase db,
     required DetailsContractProvider provider,
     required ContractProvider contractProvider,
+    required bool isArchived,
   }) async {
     try {
       if (compare.parentId == null) {
@@ -26,7 +27,9 @@ class CompareCostHelper {
         provider.setCompareId(id);
 
         contractProvider.updateCompareCosts(
-            contractId: compare.parentId!, compare: compare);
+            contractId: compare.parentId!,
+            compare: compare,
+            isArchived: isArchived);
 
         log('create compare costs', name: LogNames.compareCostHelper);
       }
@@ -46,6 +49,7 @@ class CompareCostHelper {
     required LocalDatabase db,
     required ContractProvider contractProvider,
     required DetailsContractProvider provider,
+    required bool isArchived,
   }) async {
     try {
       if (compare.parentId == null || compare.id == null) {
@@ -58,7 +62,7 @@ class CompareCostHelper {
       provider.setCompareContract(null, true);
 
       contractProvider.updateCompareCosts(
-          contractId: compare.parentId!, compare: null);
+          contractId: compare.parentId!, isArchived: isArchived, compare: null);
 
       log('delete compare costs', name: LogNames.compareCostHelper);
     } catch (e) {
@@ -98,9 +102,12 @@ class CompareCostHelper {
 
       int id = await db.contractDao.createContract(newContract.toCompanion());
 
+      await db.contractDao
+          .updateIsArchived(contractId: currentContract.id!, isArchived: true);
+
       newContract.id = id;
 
-      contractProvider.addNewContract(newContract);
+      contractProvider.addNewContract(newContract, currentContract);
 
       log('create new contract', name: LogNames.compareCostHelper);
 
@@ -133,10 +140,12 @@ class CompareCostHelper {
   }) async {
     await db.costCompareDao.updateCompareCost(compare.toData());
 
-    provider.setCompareContract(compare, true);
-
     contractProvider.updateCompareCosts(
-        contractId: currentContract.id!, compare: compare);
+        isArchived: currentContract.isArchived,
+        contractId: compare.parentId!,
+        compare: compare);
+
+    provider.setCompareContract(compare, true);
 
     provider.setCurrentContract(
         _getNewContract(compare: compare, currentContract: currentContract));

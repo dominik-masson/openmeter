@@ -19,6 +19,7 @@ import 'core/provider/stats_provider.dart';
 import 'core/provider/theme_changer.dart';
 
 import 'core/provider/torch_provider.dart';
+import 'ui/screens/contract/archive_contracts.dart';
 import 'ui/screens/meters/archived_meters.dart';
 import 'ui/screens/settings_screens/main_settings.dart';
 import 'ui/screens/settings_screens/reminder_screen.dart';
@@ -110,6 +111,7 @@ class MyApp extends StatelessWidget {
               'database_export_import': (_) => const DatabaseExportImport(),
               'tags_screen': (_) => const TagsScreen(),
               'archive':(_) => const ArchivedMeters(),
+              'archive_contract': (_) => const ArchiveContract(),
             },
           );
         },

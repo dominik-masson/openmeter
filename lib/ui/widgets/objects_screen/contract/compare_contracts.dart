@@ -26,9 +26,11 @@ class CompareContracts extends StatefulWidget {
 
 class _CompareContractsState extends State<CompareContracts> {
   final TextStyle textStyle = const TextStyle(fontSize: 16);
+
   late ContractDto contract;
 
   final String local = Platform.localeName;
+
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   String _unit = '';
@@ -232,7 +234,8 @@ class _CompareContractsState extends State<CompareContracts> {
     );
   }
 
-  _popupMenu(CompareCosts compareContract, DetailsContractProvider provider) {
+  _popupMenu(CompareCosts compareContract, DetailsContractProvider provider,
+      BuildContext context) {
     final db = Provider.of<LocalDatabase>(context, listen: false);
     final contractProvider =
         Provider.of<ContractProvider>(context, listen: false);
@@ -250,6 +253,7 @@ class _CompareContractsState extends State<CompareContracts> {
               db: db,
               provider: provider,
               contractProvider: contractProvider,
+              isArchived: contract.isArchived,
             );
             break;
           case CompareCostsMenu.delete:
@@ -258,6 +262,7 @@ class _CompareContractsState extends State<CompareContracts> {
               db: db,
               provider: provider,
               contractProvider: contractProvider,
+              isArchived: contract.isArchived,
             );
             break;
           case CompareCostsMenu.newContract:
@@ -374,15 +379,21 @@ class _CompareContractsState extends State<CompareContracts> {
   Widget build(BuildContext context) {
     final provider = Provider.of<DetailsContractProvider>(context);
 
+    CompareCosts? compareContract = provider.getCompareContract;
+
     contract = provider.getCurrentContract;
+
+    if (!identical(compareContract, contract.compareCosts) &&
+        contract.compareCosts != null) {
+      compareContract = contract.compareCosts;
+      provider.setCompareContract(compareContract, false);
+    }
 
     _unit = provider.getUnit;
 
     if (_unit.isEmpty) {
       _unit = contract.unit;
     }
-
-    final CompareCosts? compareContract = provider.getCompareContract;
 
     final compareValuesHelper =
         CalcCompareValues(compareCost: compareContract!, currentCost: contract);
@@ -409,7 +420,7 @@ class _CompareContractsState extends State<CompareContracts> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  _popupMenu(compareContract, provider),
+                  _popupMenu(compareContract, provider, context),
                 ],
               ),
               const SizedBox(

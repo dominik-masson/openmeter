@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/database/local_database.dart';
 import '../../core/provider/contract_provider.dart';
+import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/details_contract_provider.dart';
 import '../../core/provider/room_provider.dart';
 import '../widgets/objects_screen/room/add_room.dart';
-import '../widgets/objects_screen/contract/contract_card.dart';
+import '../widgets/objects_screen/contract/contract_grid_view.dart';
 import '../widgets/objects_screen/room/room_card.dart';
 import 'contract/add_contract.dart';
 
@@ -25,12 +27,55 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
     super.dispose();
   }
 
+  _contractListTile(ContractProvider contractProvider) {
+    final detailsProvider = Provider.of<DetailsContractProvider>(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Meine Verträge',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  if (contractProvider.getHasSelectedItems) {
+                    contractProvider.removeAllSelectedItems();
+                  }
+                  Navigator.of(context).pushNamed('archive_contract');
+                },
+                icon: const Icon(Icons.archive_outlined),
+                tooltip: 'Archivierte Verträge anzeigen',
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context)
+                    .push(
+                      MaterialPageRoute(
+                        builder: (context) => const AddContract(contract: null),
+                      ),
+                    )
+                    .then((value) => detailsProvider.setCurrentProvider(null)),
+                icon: const Icon(Icons.add),
+                tooltip: 'Vertrag erstellen',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final roomProvider = Provider.of<RoomProvider>(context);
     final contractProvider = Provider.of<ContractProvider>(context);
-
-    final detailsProvider = Provider.of<DetailsContractProvider>(context);
 
     return Scaffold(
       appBar: roomProvider.getStateHasSelected == true ||
@@ -71,22 +116,8 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
                   ),
                 ),
                 const RoomCard(),
-                Tooltip(
-                  message: 'Vertrag erstellen',
-                  child: ListTile(
-                    title: const Text(
-                      'Meine Verträge',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    trailing: const Icon(Icons.add),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AddContract(contract: null),
-                      ),
-                    ).then((value) => detailsProvider.setCurrentProvider(null)),
-                  ),
-                ),
-                const ContractCard(),
+                _contractListTile(contractProvider),
+                const ContractGridView(),
               ],
             ),
           ),
@@ -118,6 +149,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         contractProvider.getSelectedItemsLength;
 
     final detailsProvider = Provider.of<DetailsContractProvider>(context);
+    final db = Provider.of<LocalDatabase>(context, listen: false);
 
     return AppBar(
       title: Text('$count ausgewählt'),
@@ -137,13 +169,31 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
         if (contractProvider.getSelectedItemsLength == 1)
           IconButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => AddContract(
-                  contract: contractProvider.getSingleSelectedContract(),
-                ),
-              )).then((value) => detailsProvider.setCurrentProvider(null));
+              Navigator.of(context)
+                  .push(MaterialPageRoute(
+                    builder: (context) => AddContract(
+                      contract: contractProvider.getSingleSelectedContract(),
+                    ),
+                  ))
+                  .then((value) => detailsProvider.setCurrentProvider(null));
             },
             icon: const Icon(Icons.edit),
+            tooltip: 'Bearbeiten',
+          ),
+        if (contractProvider.getHasSelectedItems &&
+            !roomProvider.getHasSelectedMeters)
+          IconButton(
+            onPressed: () async {
+              await contractProvider.archiveAllSelectedContract(db);
+              contractProvider.removeAllSelectedItems();
+
+              if (mounted) {
+                Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                    .setHasUpdate(true);
+              }
+            },
+            icon: const Icon(Icons.archive),
+            tooltip: 'Archivieren',
           ),
         IconButton(
           onPressed: () {
@@ -152,7 +202,9 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
             }
 
             if (contractProvider.getHasSelectedItems == true) {
-              contractProvider.deleteAllSelectedContracts(context);
+              contractProvider.deleteAllSelectedContracts(db, false);
+              Provider.of<DatabaseSettingsProvider>(context, listen: false)
+                  .setHasUpdate(true);
             }
           },
           icon: const Icon(Icons.delete),

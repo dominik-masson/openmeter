@@ -81,7 +81,7 @@ class _AddProviderState extends State<AddProvider> {
       _dateBeginController.text = _formatDate.format(provider.validFrom);
       _dateEndController.text = _formatDate.format(provider.validUntil);
 
-      _notice.text = provider.notice.toString();
+      _notice.text = provider.notice == null ? '' : provider.notice.toString();
 
       _renewal.text =
           provider.renewal == null ? '' : provider.renewal.toString();
@@ -328,6 +328,10 @@ class _AddProviderState extends State<AddProvider> {
             alignment: Alignment.bottomRight,
             child: FloatingActionButton.extended(
               onPressed: () {
+                if (isDelete) {
+                  widget.onSave(isDelete ? null : getProvider(), isDelete);
+                  return;
+                }
                 if (_formKey.currentState!.validate()) {
                   widget.onSave(isDelete ? null : getProvider(), isDelete);
                 }

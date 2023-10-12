@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/contract_dto.dart';
 import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
@@ -11,10 +12,10 @@ import 'add_provider.dart';
 
 class ProviderBottomSheet extends StatefulWidget {
   final bool createProvider;
-  final int contractId;
+  final ContractDto contract;
 
   const ProviderBottomSheet(
-      {super.key, required this.createProvider, required this.contractId});
+      {super.key, required this.createProvider, required this.contract});
 
   @override
   State<ProviderBottomSheet> createState() => _ProviderBottomSheetState();
@@ -43,7 +44,8 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
               contractProvider.updateProvider(
                 db: db,
                 provider: _currentProvider!,
-                contractId: widget.contractId,
+                contractId: widget.contract.id!,
+                isArchiv: false,
               );
 
               _setAutoUpdateHasUpdate();
@@ -67,7 +69,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
                 db: db,
                 provider: _currentProvider!,
                 contractProvider: contractProvider,
-                contractId: widget.contractId,
+                contractId: widget.contract.id!,
               );
 
               _setAutoUpdateHasUpdate();
@@ -109,7 +111,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
       _currentProvider = await _helper.createProvider(
         db: db,
         provider: newProvider!,
-        contractId: widget.contractId,
+        contractId: widget.contract.id!,
       );
     } else {
       _currentProvider =
@@ -119,7 +121,8 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
     contractProvider.updateProvider(
       db: db,
       provider: _currentProvider!,
-      contractId: widget.contractId,
+      contractId: widget.contract.id!,
+      isArchiv: false,
     );
 
     provider.setCurrentProvider(_currentProvider);

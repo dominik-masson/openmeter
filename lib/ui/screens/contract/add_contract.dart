@@ -12,6 +12,7 @@ import '../../../core/model/contract_dto.dart';
 import '../../../core/model/provider_dto.dart';
 import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/details_contract_provider.dart';
 import '../../../core/provider/refresh_provider.dart';
 import '../../../core/services/provider_helper.dart';
 import '../../../utils/convert_meter_unit.dart';
@@ -104,6 +105,8 @@ class _AddContractState extends State<AddContract> {
   Future<ProviderDto?> _handleProvider(LocalDatabase db) async {
     final contractProvider =
         Provider.of<ContractProvider>(context, listen: false);
+    final detailsProvider =
+        Provider.of<DetailsContractProvider>(context, listen: false);
 
     // Create Provider
     if (_contractDto?.provider == null && _providerDto != null) {
@@ -113,27 +116,27 @@ class _AddContractState extends State<AddContract> {
       return provider;
     }
 
+    // Delete Provider
+    if (_deleteProvider) {
+      await _providerHelper.deleteProvider(
+        db: db,
+        provider: _contractDto!.provider!,
+        contractProvider: contractProvider,
+        contractId: _contractDto!.id!,
+      );
+
+      return null;
+    }
+
     // Update Provider
     if (_isUpdate && _providerDto != null) {
-      // Delete Provider
-      if (_deleteProvider) {
-        await _providerHelper.deleteProvider(
-          db: db,
-          provider: _contractDto!.provider!,
-          contractProvider: contractProvider,
-          contractId: _contractDto!.id!,
-        );
-
-        return null;
-      }
-
       ProviderDto? provider =
           await _providerHelper.updateProvider(db: db, provider: _providerDto!);
 
       return provider;
     }
 
-    return null;
+    return detailsProvider.getCurrentProvider;
   }
 
   _convertDouble(String text) {
@@ -193,7 +196,7 @@ class _AddContractState extends State<AddContract> {
       discount: _convertDouble(_discount.text),
       bonus: bonus,
       note: _note.text,
-      isArchived: false,
+      isArchived: _contractDto!.isArchived,
       unit: _unitController.text,
     );
 

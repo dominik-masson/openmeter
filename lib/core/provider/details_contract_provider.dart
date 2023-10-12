@@ -12,7 +12,7 @@ class DetailsContractProvider extends ChangeNotifier {
   String _unit = '';
   late ContractDto _currentContract;
 
-  get getCurrentProvider => _provider;
+  ProviderDto? get getCurrentProvider => _provider;
 
   void setCurrentProvider(ProviderDto? provider) {
     _provider = provider;

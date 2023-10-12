@@ -108,7 +108,8 @@ class _MeterCardListState extends State<MeterCardList> {
             if (isHomescreen) {
               return const EmptyData();
             } else {
-              return const EmptyArchiv();
+              return const EmptyArchiv(
+                  titel: 'Es wurden noch keine Zähler archiviert.');
             }
           }
 

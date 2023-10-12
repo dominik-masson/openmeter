@@ -23,8 +23,10 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
     return await db.into(db.contract).insert(contract);
   }
 
-  Stream<List<ContractData>> watchAllContracts() {
-    return db.select(db.contract).watch();
+  Stream<List<ContractData>> watchAllContracts(bool isArchived) {
+    return (select(db.contract)
+          ..where((tbl) => tbl.isArchived.equals(isArchived)))
+        .watch();
   }
 
   Future<List<ContractDto>> getAllContractsDto() async {
@@ -98,5 +100,11 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
         provider: Value(providerId),
       ),
     );
+  }
+
+  Future updateIsArchived(
+      {required int contractId, required bool isArchived}) async {
+    return await (update(contract)..where((tbl) => tbl.id.equals(contractId)))
+        .write(ContractCompanion(isArchived: Value(isArchived)));
   }
 }
