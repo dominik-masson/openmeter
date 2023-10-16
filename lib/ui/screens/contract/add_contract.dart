@@ -49,7 +49,6 @@ class _AddContractState extends State<AddContract> {
 
   ContractDto? _contractDto;
   ProviderDto? _providerDto;
-  bool _deleteProvider = false;
 
   final ProviderHelper _providerHelper = ProviderHelper();
 
@@ -102,11 +101,10 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  Future<ProviderDto?> _handleProvider(LocalDatabase db) async {
+  Future<ProviderDto?> _handleProvider(
+      LocalDatabase db, DetailsContractProvider detailsProvider) async {
     final contractProvider =
         Provider.of<ContractProvider>(context, listen: false);
-    final detailsProvider =
-        Provider.of<DetailsContractProvider>(context, listen: false);
 
     // Create Provider
     if (_contractDto?.provider == null && _providerDto != null) {
@@ -117,13 +115,15 @@ class _AddContractState extends State<AddContract> {
     }
 
     // Delete Provider
-    if (_deleteProvider) {
+    if (detailsProvider.getDeleteProviderState) {
       await _providerHelper.deleteProvider(
         db: db,
         provider: _contractDto!.provider!,
         contractProvider: contractProvider,
         contractId: _contractDto!.id!,
       );
+
+      detailsProvider.setDeleteProviderState(false, false);
 
       return null;
     }
@@ -153,10 +153,11 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  Future<void> _createEntry(LocalDatabase db) async {
+  Future<void> _createEntry(
+      LocalDatabase db, DetailsContractProvider detailsProvider) async {
     int bonus = _convertBonus();
 
-    ProviderDto? provider = await _handleProvider(db);
+    ProviderDto? provider = await _handleProvider(db, detailsProvider);
 
     final contract = ContractCompanion(
       meterTyp: drift.Value(_meterTyp),
@@ -181,11 +182,12 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  Future<void> _updateEntry(LocalDatabase db) async {
+  Future<void> _updateEntry(
+      LocalDatabase db, DetailsContractProvider detailsProvider) async {
     final provider = Provider.of<ContractProvider>(context, listen: false);
 
     int bonus = _convertBonus();
-    ProviderDto? providerDto = await _handleProvider(db);
+    ProviderDto? providerDto = await _handleProvider(db, detailsProvider);
 
     final contract = ContractData(
       id: _contractDto!.id!,
@@ -213,14 +215,14 @@ class _AddContractState extends State<AddContract> {
         db: db, data: contract, providerId: providerDto?.id);
   }
 
-  Future<void> _handleOnSave() async {
+  Future<void> _handleOnSave(DetailsContractProvider detailsProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     if (_formKey.currentState!.validate()) {
       if (_isUpdate) {
-        await _updateEntry(db);
+        await _updateEntry(db, detailsProvider);
       } else {
-        await _createEntry(db);
+        await _createEntry(db, detailsProvider);
       }
 
       if (context.mounted) {
@@ -306,12 +308,10 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  _getProvider(ProviderDto? provider, bool isDelete) {
+  _getProvider(ProviderDto? provider, DetailsContractProvider detailsProvider) {
     _providerDto = provider;
 
-    _deleteProvider = isDelete;
-
-    _handleOnSave();
+    _handleOnSave(detailsProvider);
   }
 
   Widget _provider() {
@@ -416,6 +416,7 @@ class _AddContractState extends State<AddContract> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> newMeterTyps = _filterMeterTyps();
+    final detailsProvider = Provider.of<DetailsContractProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -424,7 +425,7 @@ class _AddContractState extends State<AddContract> {
       floatingActionButton: _providerExpand
           ? null
           : FloatingActionButton.extended(
-              onPressed: _handleOnSave,
+              onPressed: () => _handleOnSave(detailsProvider),
               label: const Text('Speichern'),
             ),
       body: SingleChildScrollView(

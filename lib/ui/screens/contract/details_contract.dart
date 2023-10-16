@@ -38,6 +38,12 @@ class _DetailsContractState extends State<DetailsContract> {
       provider.setCompareContract(_currentContract.compareCosts, false);
     }
 
+    _currentProvider = provider.getCurrentProvider;
+
+    if (_currentProvider != null && _currentContract.provider == null) {
+      _currentContract.provider = _currentProvider;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(meterTyps[_currentContract.meterTyp]['anbieter']),

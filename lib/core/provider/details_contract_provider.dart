@@ -45,26 +45,26 @@ class DetailsContractProvider extends ChangeNotifier {
   void setCompareContract(CompareCosts? costs, bool notify) {
     _compareCosts = costs;
 
-    if(notify) {
+    if (notify) {
       notifyListeners();
     }
   }
 
-  void setCompareId(int id){
+  void setCompareId(int id) {
     _compareCosts!.id = id;
     notifyListeners();
   }
 
   String get getUnit => _unit;
 
-  void setUnit(String value){
+  void setUnit(String value) {
     _unit = value;
     notifyListeners();
   }
 
   ContractDto get getCurrentContract => _currentContract;
 
-  void setCurrentContract(ContractDto contract){
+  void setCurrentContract(ContractDto contract) {
     _currentContract = contract;
 
     notifyListeners();

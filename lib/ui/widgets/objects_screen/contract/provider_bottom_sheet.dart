@@ -77,6 +77,10 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
               setState(() {
                 provider.setCurrentProvider(null);
               });
+
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             }
           },
           child: const Text('Details entfernen'),
@@ -100,10 +104,10 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
     );
   }
 
-  void handleOnSave(ProviderDto? newProvider, bool isDelete) async {
+  void handleOnSave(
+      ProviderDto? newProvider, DetailsContractProvider provider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
-    final provider =
-        Provider.of<DetailsContractProvider>(context, listen: false);
+
     final ContractProvider contractProvider =
         Provider.of<ContractProvider>(context, listen: false);
 

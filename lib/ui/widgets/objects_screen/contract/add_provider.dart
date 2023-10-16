@@ -9,7 +9,7 @@ class AddProvider extends StatefulWidget {
   final bool showCanceledButton;
   final ProviderDto? provider;
   final double textSize;
-  final Function(ProviderDto?, bool) onSave;
+  final Function(ProviderDto?, DetailsContractProvider) onSave;
   final bool createProvider;
 
   const AddProvider({
@@ -176,9 +176,11 @@ class _AddProviderState extends State<AddProvider> {
     );
   }
 
-  _deleteProvider() {
+  _deleteProvider(DetailsContractProvider provider) {
     _resetController();
     isDelete = true;
+
+    provider.setDeleteProviderState(true, true);
   }
 
   @override
@@ -189,7 +191,7 @@ class _AddProviderState extends State<AddProvider> {
 
     _initController(provider.getDeleteProviderState);
 
-    if (provider.getDeleteProviderState) {
+    if (provider.getDeleteProviderState && !isDelete) {
       provider.setDeleteProviderState(false, false);
     }
 
@@ -205,7 +207,7 @@ class _AddProviderState extends State<AddProvider> {
         children: [
           if (widget.showCanceledButton)
             TextButton(
-              onPressed: _deleteProvider,
+              onPressed: () => _deleteProvider(provider),
               child: const Text(
                 'Anbieter löschen',
                 style: TextStyle(color: Colors.redAccent, fontSize: 16),
@@ -329,11 +331,11 @@ class _AddProviderState extends State<AddProvider> {
             child: FloatingActionButton.extended(
               onPressed: () {
                 if (isDelete) {
-                  widget.onSave(isDelete ? null : getProvider(), isDelete);
+                  widget.onSave(isDelete ? null : getProvider(), provider);
                   return;
                 }
                 if (_formKey.currentState!.validate()) {
-                  widget.onSave(isDelete ? null : getProvider(), isDelete);
+                  widget.onSave(isDelete ? null : getProvider(), provider);
                 }
               },
               label: const Text('Speichern'),
