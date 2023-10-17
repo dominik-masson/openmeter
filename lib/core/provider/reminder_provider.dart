@@ -69,7 +69,7 @@ class ReminderProvider extends ChangeNotifier {
     _hour = _prefs.getInt(keyHour) ?? 0;
     _minute = _prefs.getInt(keyMinute) ?? 0;
 
-    _monthDay = _prefs.getInt(keyMonthDay) ?? 1;
+    _monthDay = _prefs.getInt(keyMonthDay) ?? 0;
 
     notifyListeners();
   }

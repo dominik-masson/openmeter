@@ -192,9 +192,9 @@ class _UsageLineChartState extends State<UsageLineChart> {
         }
 
         if (_twelveMonths && entries.length > 12) {
-          List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries = newEntries
-              .getRange(newEntries.length - 12, newEntries.length)
+          // List<Entrie> newEntries = _helper.getLastMonths(entries);
+          finalEntries = entries
+              .getRange(entries.length - 12, entries.length)
               .toList();
         } else {
           finalEntries = entries;

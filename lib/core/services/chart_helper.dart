@@ -43,35 +43,39 @@ class ChartHelper {
     return result;
   }
 
-  getLastMonths(List<Entrie> entries) {
-    List<Entrie> newEntries = [];
-
-    for (int i = 0; i < entries.length;) {
-      newEntries.add(entries[i]);
-
-      for (int j = i + 1; j < entries.length; j++) {
-        if (entries[i].date.month == entries[j].date.month &&
-            entries[i].date.year == entries[j].date.year) {
-          int count = entries[j].count + entries[j].usage;
-          int usage = entries[j].usage + entries[i].usage;
-
-          newEntries.removeAt(j - 1);
-          newEntries.add(Entrie(
-              id: entries[j].id,
-              meter: entries[j].meter,
-              count: count,
-              usage: usage,
-              date: entries[j].date,
-              days: entries[j].days));
-
-          i++;
-        }
-      }
-      i++;
-    }
-
-    return newEntries;
-  }
+  // getLastMonths(List<Entrie> entries) {
+  //   List<Entrie> newEntries = [];
+  //
+  //   for (int i = 0; i < entries.length;) {
+  //     newEntries.add(entries[i]);
+  //
+  //     for (int j = i + 1; j < entries.length; j++) {
+  //       if (entries[i].date.month == entries[j].date.month &&
+  //           entries[i].date.year == entries[j].date.year) {
+  //         int count = entries[j].count + entries[i].usage;
+  //         int usage = entries[j].usage + entries[i].usage;
+  //
+  //         print(newEntries);
+  //         print(j - 1);
+  //
+  //         newEntries.add(Entrie(
+  //             id: entries[j].id,
+  //             meter: entries[j].meter,
+  //             count: count,
+  //             usage: usage,
+  //             date: entries[j].date,
+  //             days: entries[j].days));
+  //
+  //         newEntries.removeAt(j - 1);
+  //
+  //         i++;
+  //       }
+  //     }
+  //     i++;
+  //   }
+  //
+  //   return newEntries;
+  // }
 
   String getTitleMonths(int month) {
     switch (month) {

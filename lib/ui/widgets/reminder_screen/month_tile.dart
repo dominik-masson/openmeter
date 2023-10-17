@@ -52,6 +52,10 @@ class _MonthTileState extends State<MonthTile> {
   Widget build(BuildContext context) {
     final reminderProvider = Provider.of<ReminderProvider>(context);
 
+    if(reminderProvider.monthDay != 0){
+      _selectedDay = reminderProvider.monthDay;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

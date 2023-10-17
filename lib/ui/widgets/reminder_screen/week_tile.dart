@@ -58,6 +58,11 @@ class _WeekTileState extends State<WeekTile> {
   @override
   Widget build(BuildContext context) {
     final reminderProvider = Provider.of<ReminderProvider>(context);
+    
+    if(reminderProvider.weekDay != 0){
+      _selectedWeek = weekDays.elementAt(reminderProvider.weekDay);
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
