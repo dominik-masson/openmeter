@@ -12,7 +12,6 @@ import '../../../core/provider/entry_card_provider.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
-
 class DetailsEntry {
   bool _stateNote = false; // if ture => write some note
   final TextEditingController _noteController = TextEditingController();
@@ -43,8 +42,9 @@ class DetailsEntry {
 
     await db.entryDao.updateEntry(newEntry);
 
-    if(context.mounted) {
-      Provider.of<DatabaseSettingsProvider>(context, listen:false).setHasUpdate(true);
+    if (context.mounted) {
+      Provider.of<DatabaseSettingsProvider>(context, listen: false)
+          .setHasUpdate(true);
     }
   }
 
@@ -264,13 +264,13 @@ class DetailsEntry {
     );
   }
 
-  _firstCount(BuildContext context) {
+  _extraInformation(BuildContext context, String text) {
     return Column(
       children: [
-        const Center(
+        Center(
           child: Text(
-            'Erstablesung',
-            style: TextStyle(
+            text,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -298,7 +298,8 @@ class DetailsEntry {
         usage: entry.usage,
         date: entry.date,
         days: entry.days,
-        note: entry.note);
+        note: entry.note,
+        isReset: entry.isReset);
 
     if (_entry.note == null || _entry.note!.isEmpty) {
       _stateNote = false;
@@ -346,7 +347,9 @@ class DetailsEntry {
                   const SizedBox(
                     height: 5,
                   ),
-                  if (usage == -1) _firstCount(context),
+                  if (usage == -1 && !_entry.isReset)
+                    _extraInformation(context, 'Erstablesung'),
+                  if (_entry.isReset) _extraInformation(context, 'Zurückgesetzt'),
                   if (usage != -1)
                     _information(
                       context: context,

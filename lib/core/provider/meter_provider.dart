@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:drift/drift.dart' as drift;
 
 import '../database/local_database.dart';
 import '../model/meter_with_room.dart';
@@ -153,5 +154,24 @@ class MeterProvider extends ChangeNotifier {
     _archivMetersLength = value;
 
     _prefs.setInt(keyArchivLength, value);
+  }
+
+  void resetSelectedMeters(LocalDatabase db) async {
+    for (MeterWithRoom meter in _meters) {
+      if (meter.isSelected) {
+        final EntriesCompanion entry = EntriesCompanion(
+          meter: drift.Value(meter.meter.id),
+          date: drift.Value(DateTime.now()),
+          count: const drift.Value(0),
+          usage: const drift.Value(-1),
+          days: const drift.Value(-1),
+          isReset: const drift.Value(true),
+        );
+
+        await db.entryDao.createEntry(entry);
+      }
+    }
+
+    removeAllSelectedMeters(notify: true);
   }
 }

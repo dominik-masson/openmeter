@@ -372,9 +372,19 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isResetMeta =
+      const VerificationMeta('isReset');
+  @override
+  late final GeneratedColumn<bool> isReset = GeneratedColumn<bool>(
+      'is_reset', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_reset" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
-      [id, meter, count, usage, date, days, note];
+      [id, meter, count, usage, date, days, note, isReset];
   @override
   String get aliasedName => _alias ?? 'entries';
   @override
@@ -421,6 +431,10 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
+    if (data.containsKey('is_reset')) {
+      context.handle(_isResetMeta,
+          isReset.isAcceptableOrUnknown(data['is_reset']!, _isResetMeta));
+    }
     return context;
   }
 
@@ -444,6 +458,8 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           .read(DriftSqlType.int, data['${effectivePrefix}days'])!,
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      isReset: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_reset'])!,
     );
   }
 
@@ -461,6 +477,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
   final DateTime date;
   final int days;
   final String? note;
+  final bool isReset;
   const Entrie(
       {required this.id,
       required this.meter,
@@ -468,7 +485,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       required this.usage,
       required this.date,
       required this.days,
-      this.note});
+      this.note,
+      required this.isReset});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -481,6 +499,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    map['is_reset'] = Variable<bool>(isReset);
     return map;
   }
 
@@ -493,6 +512,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       date: Value(date),
       days: Value(days),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      isReset: Value(isReset),
     );
   }
 
@@ -507,6 +527,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       date: serializer.fromJson<DateTime>(json['date']),
       days: serializer.fromJson<int>(json['days']),
       note: serializer.fromJson<String?>(json['note']),
+      isReset: serializer.fromJson<bool>(json['isReset']),
     );
   }
   @override
@@ -520,6 +541,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       'date': serializer.toJson<DateTime>(date),
       'days': serializer.toJson<int>(days),
       'note': serializer.toJson<String?>(note),
+      'isReset': serializer.toJson<bool>(isReset),
     };
   }
 
@@ -530,7 +552,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           int? usage,
           DateTime? date,
           int? days,
-          Value<String?> note = const Value.absent()}) =>
+          Value<String?> note = const Value.absent(),
+          bool? isReset}) =>
       Entrie(
         id: id ?? this.id,
         meter: meter ?? this.meter,
@@ -539,6 +562,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
         date: date ?? this.date,
         days: days ?? this.days,
         note: note.present ? note.value : this.note,
+        isReset: isReset ?? this.isReset,
       );
   @override
   String toString() {
@@ -549,13 +573,15 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           ..write('usage: $usage, ')
           ..write('date: $date, ')
           ..write('days: $days, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isReset: $isReset')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, meter, count, usage, date, days, note);
+  int get hashCode =>
+      Object.hash(id, meter, count, usage, date, days, note, isReset);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -566,7 +592,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           other.usage == this.usage &&
           other.date == this.date &&
           other.days == this.days &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.isReset == this.isReset);
 }
 
 class EntriesCompanion extends UpdateCompanion<Entrie> {
@@ -577,6 +604,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
   final Value<DateTime> date;
   final Value<int> days;
   final Value<String?> note;
+  final Value<bool> isReset;
   const EntriesCompanion({
     this.id = const Value.absent(),
     this.meter = const Value.absent(),
@@ -585,6 +613,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     this.date = const Value.absent(),
     this.days = const Value.absent(),
     this.note = const Value.absent(),
+    this.isReset = const Value.absent(),
   });
   EntriesCompanion.insert({
     this.id = const Value.absent(),
@@ -594,6 +623,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     required DateTime date,
     required int days,
     this.note = const Value.absent(),
+    this.isReset = const Value.absent(),
   })  : meter = Value(meter),
         count = Value(count),
         usage = Value(usage),
@@ -607,6 +637,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     Expression<DateTime>? date,
     Expression<int>? days,
     Expression<String>? note,
+    Expression<bool>? isReset,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -616,6 +647,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       if (date != null) 'date': date,
       if (days != null) 'days': days,
       if (note != null) 'note': note,
+      if (isReset != null) 'is_reset': isReset,
     });
   }
 
@@ -626,7 +658,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       Value<int>? usage,
       Value<DateTime>? date,
       Value<int>? days,
-      Value<String?>? note}) {
+      Value<String?>? note,
+      Value<bool>? isReset}) {
     return EntriesCompanion(
       id: id ?? this.id,
       meter: meter ?? this.meter,
@@ -635,6 +668,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       date: date ?? this.date,
       days: days ?? this.days,
       note: note ?? this.note,
+      isReset: isReset ?? this.isReset,
     );
   }
 
@@ -662,6 +696,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (isReset.present) {
+      map['is_reset'] = Variable<bool>(isReset.value);
+    }
     return map;
   }
 
@@ -674,7 +711,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
           ..write('usage: $usage, ')
           ..write('date: $date, ')
           ..write('days: $days, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isReset: $isReset')
           ..write(')'))
         .toString();
   }

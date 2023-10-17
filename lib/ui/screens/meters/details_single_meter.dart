@@ -41,8 +41,6 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   int _activeChartWidget = 0;
 
-  late final AddEntry _addEntry;
-
   List<Tag> _tags = [];
   bool _updateTags = false;
 
@@ -52,14 +50,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     _meter = widget.meter;
     _room = widget.room;
     _roomName = widget.room?.name ?? '';
-    _addEntry = AddEntry(meter: _meter);
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    _addEntry.dispose();
-    super.dispose();
   }
 
   getTags(List<Tag> tags) {
@@ -111,7 +102,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     return Scaffold(
       appBar: hasSelectedEntries
           ? _selectedAppBar(entryProvider)
-          : _unselectedAppBar(entryProvider),
+          : _unselectedAppBar(entryProvider, _meter),
       body: WillPopScope(
         onWillPop: () async {
           if (hasSelectedEntries) {
@@ -185,7 +176,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     );
   }
 
-  AppBar _unselectedAppBar(EntryCardProvider entryProvider) {
+  AppBar _unselectedAppBar(EntryCardProvider entryProvider, MeterData meter) {
     return AppBar(
       title: Text(_meterName),
       leading: BackButton(
@@ -194,13 +185,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
         },
       ),
       actions: [
-        IconButton(
-          onPressed: () {
-            _addEntry.showBottomModel(context, entryProvider);
-          },
-          icon: const Icon(Icons.add),
-          tooltip: 'Eintrag erstellen',
-        ),
+        AddEntry(meter: meter),
         IconButton(
           onPressed: () {
             Navigator.push(

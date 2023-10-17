@@ -10,4 +10,5 @@ class Entries extends Table{
   DateTimeColumn get date => dateTime()();
   IntColumn get days => integer()();
   TextColumn get note => text().nullable()();
+  BoolColumn get isReset => boolean().withDefault(const Constant(false))();
 }

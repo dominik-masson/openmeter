@@ -23,11 +23,11 @@ class TorchController {
     }
   }
 
-  Future<void> getTorch() async {
+  Future<bool> getTorch() async {
     bool torchAvailable = await _isTorchAvailable();
 
     if (!torchAvailable) {
-      return;
+      return false;
     }
 
     _toggleTorch();
@@ -35,6 +35,7 @@ class TorchController {
     if (_torch) {
       try {
         await _channel.invokeMethod(_enableTorch);
+        return true;
       } on PlatformException catch (e) {
         _torch = false;
         log(e.message ?? '', name: LogNames.torchHandler);
@@ -42,11 +43,14 @@ class TorchController {
     } else {
       try {
         await _channel.invokeMethod(_disableTorch);
+        return true;
       } on PlatformException catch (e) {
         _torch = false;
         log(e.message ?? '', name: LogNames.torchHandler);
       }
     }
+
+    return false;
   }
 
   _toggleTorch() {

@@ -40,7 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return true;
         },
         child: MeterCardList(
-            stream: db.meterDao.watchAllMeterWithRooms(false), isHomescreen: true),
+            stream: db.meterDao.watchAllMeterWithRooms(false),
+            isHomescreen: true),
       ),
     );
   }
@@ -54,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => meterProvider.removeAllSelectedMeters(),
       ),
       actions: [
+        IconButton(
+          onPressed: () {
+            meterProvider.resetSelectedMeters(db);
+          },
+          icon: const Icon(Icons.restart_alt),
+          tooltip: 'Zähler zurücksetzen',
+        ),
         IconButton(
           tooltip: 'Zähler archivieren',
           icon: const Icon(Icons.archive),
@@ -101,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
         IconButton(
           onPressed: () {
             Navigator.of(context).pushNamed('settings');
-                // .then((value) => provider.setStateHasUpdate(true));
+            // .then((value) => provider.setStateHasUpdate(true));
           },
           icon: const Icon(Icons.settings),
           tooltip: 'Einstellungen',

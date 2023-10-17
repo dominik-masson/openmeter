@@ -212,9 +212,14 @@ class EntryCard extends StatelessWidget {
               ),
             ],
           ),
-        if (usage == -1)
+        if (usage == -1 && !item.isReset)
           const Text(
             'Erstablesung',
+            style: TextStyle(fontSize: 16),
+          ),
+        if (item.isReset)
+          const Text(
+            'Zurückgesetzt',
             style: TextStyle(fontSize: 16),
           ),
       ],

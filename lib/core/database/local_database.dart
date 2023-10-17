@@ -46,7 +46,7 @@ class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +63,9 @@ class LocalDatabase extends _$LocalDatabase {
           }
           if (from < 4) {
             await m.addColumn(provider, provider.canceledDate);
+          }
+          if(from < 5){
+            await m.addColumn(entries, entries.isReset);
           }
         },
       );

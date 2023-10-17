@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:openmeter/utils/convert_count.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -9,26 +8,35 @@ import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/torch_provider.dart';
 import '../../../core/services/torch_controller.dart';
+import '../../../utils/convert_count.dart';
 
-class AddEntry {
+class AddEntry extends StatefulWidget {
+  final MeterData meter;
+
+  const AddEntry({super.key, required this.meter});
+
+  @override
+  State<AddEntry> createState() => _AddEntryState();
+}
+
+class _AddEntryState extends State<AddEntry> {
   final TextEditingController _datecontroller = TextEditingController();
   final TextEditingController _countercontroller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime? _selectedDate = DateTime.now();
 
-  final MeterData meter;
-
   final TorchController _torchController = TorchController();
   bool _stateTorch = false;
+  bool _isReset = false;
 
-  AddEntry({required this.meter});
-
+  @override
   void dispose() {
+    super.dispose();
     _datecontroller.dispose();
     _countercontroller.dispose();
   }
 
-  void _showDatePicker(BuildContext context) async {
+  void _showDatePicker() async {
     await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -43,46 +51,6 @@ class AddEntry {
       _selectedDate = pickedDate;
       _datecontroller.text = DateFormat('dd.MM.yyyy').format(_selectedDate!);
     });
-  }
-
-  _saveEntry(BuildContext context, TorchProvider torchProvider,
-      EntryCardProvider entryProvider) async {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-
-    String currentCount = entryProvider.getCurrentCount;
-    DateTime oldDate = entryProvider.getOldDate;
-
-    if (_formKey.currentState!.validate()) {
-      final entry = EntriesCompanion(
-        meter: drift.Value(meter.id),
-        date: drift.Value(_selectedDate!),
-        count: drift.Value(int.parse(_countercontroller.text)),
-        usage: drift.Value(_calcUsage(currentCount)),
-        days: drift.Value(_calcDays(_selectedDate!, oldDate)),
-      );
-
-      Provider.of<DatabaseSettingsProvider>(context, listen: false)
-          .setHasUpdate(true);
-
-      await db.entryDao.createEntry(entry).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Eintrag wird hinzugefügt!'),
-          ),
-        );
-
-        if (_torchController.stateTorch && torchProvider.stateTorch) {
-          _torchController.getTorch();
-          _stateTorch = false;
-        }
-
-        entryProvider.setCurrentCount(_countercontroller.text);
-        entryProvider.setOldDate(_selectedDate!);
-        Navigator.pop(context, true);
-        _countercontroller.clear();
-        _selectedDate = DateTime.now();
-      });
-    }
   }
 
   int _calcUsage(String currentCount) {
@@ -103,12 +71,65 @@ class AddEntry {
     return newDate.difference(oldDate).inDays;
   }
 
-  showBottomModel(
-    BuildContext context,
-    EntryCardProvider entryProvider,
-  ) {
-    final torchProvider = Provider.of<TorchProvider>(context, listen: false);
+  _saveEntry(
+      TorchProvider torchProvider, EntryCardProvider entryProvider) async {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
 
+    String currentCount = entryProvider.getCurrentCount;
+    DateTime oldDate = entryProvider.getOldDate;
+
+    if (_formKey.currentState!.validate()) {
+      late EntriesCompanion entry;
+
+      if (_isReset) {
+        int count = 0;
+
+        if(_countercontroller.text.isNotEmpty){
+          count = int.parse(_countercontroller.text);
+        }
+
+        entry = EntriesCompanion(
+          meter: drift.Value(widget.meter.id),
+          date: drift.Value(_selectedDate!),
+          count: drift.Value(count),
+          usage: const drift.Value(-1),
+          days: const drift.Value(-1),
+          isReset: const drift.Value(true),
+        );
+      } else {
+        entry = EntriesCompanion(
+          meter: drift.Value(widget.meter.id),
+          date: drift.Value(_selectedDate!),
+          count: drift.Value(int.parse(_countercontroller.text)),
+          usage: drift.Value(_calcUsage(currentCount)),
+          days: drift.Value(_calcDays(_selectedDate!, oldDate)),
+        );
+      }
+
+      Provider.of<DatabaseSettingsProvider>(context, listen: false)
+          .setHasUpdate(true);
+
+      await db.entryDao.createEntry(entry).then((value) {
+        if (_torchController.stateTorch && torchProvider.stateTorch) {
+          _torchController.getTorch();
+          _stateTorch = false;
+        }
+
+        entryProvider.setCurrentCount(_countercontroller.text);
+        entryProvider.setOldDate(_selectedDate!);
+
+        Navigator.pop(context, true);
+
+        _countercontroller.clear();
+        _selectedDate = DateTime.now();
+      });
+    }
+  }
+
+  _showBottomModel(
+    EntryCardProvider entryProvider,
+    TorchProvider torchProvider,
+  ) {
     _torchController.setStateTorch(torchProvider.getStateIsTorchOn);
 
     bool isTorchOn = _torchController.stateTorch;
@@ -153,21 +174,44 @@ class AddEntry {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () async {
-                                  await _torchController.getTorch();
-                                  setState(() {
-                                    isTorchOn = !isTorchOn;
-                                    torchProvider.setIsTorchOn(isTorchOn);
-                                  });
-                                },
-                                icon: isTorchOn
-                                    ? const Icon(
-                                        Icons.flashlight_on,
-                                      )
-                                    : const Icon(
-                                        Icons.flashlight_off,
-                                      ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(
+                                        () {
+                                          _isReset = !_isReset;
+                                        },
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.restart_alt,
+                                      color: _isReset
+                                          ? Theme.of(context).primaryColorLight
+                                          : null,
+                                    ),
+                                    tooltip: 'Zähler zurücksetzen',
+                                  ),
+                                  IconButton(
+                                    onPressed: () async {
+                                      bool torch =
+                                          await _torchController.getTorch();
+                                      setState(() {
+                                        if (torch) {
+                                          isTorchOn = !isTorchOn;
+                                          torchProvider.setIsTorchOn(isTorchOn);
+                                        }
+                                      });
+                                    },
+                                    icon: isTorchOn
+                                        ? const Icon(
+                                            Icons.flashlight_on,
+                                          )
+                                        : const Icon(
+                                            Icons.flashlight_off,
+                                          ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -182,7 +226,7 @@ class AddEntry {
                                   ? DateFormat('dd.MM.yyyy')
                                       .format(_selectedDate!)
                                   : '',
-                            onTap: () => _showDatePicker(context),
+                            onTap: () => _showDatePicker(),
                             decoration: const InputDecoration(
                                 icon: Icon(Icons.date_range),
                                 label: Text('Datum')),
@@ -193,10 +237,12 @@ class AddEntry {
                           TextFormField(
                             keyboardType: TextInputType.number,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if ((value == null || value.isEmpty) &&
+                                  !_isReset) {
                                 return 'Bitte geben sie den Zählerstand an!';
                               }
-                              if (int.parse(value) < 0) {
+                              if (value == null ||
+                                  (value.isNotEmpty && int.parse(value) < 0)) {
                                 return 'Bitte gebe eine positive Zahl an!';
                               }
                               return null;
@@ -214,8 +260,8 @@ class AddEntry {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () => _saveEntry(
-                                    context, torchProvider, entryProvider),
+                                onPressed: () =>
+                                    _saveEntry(torchProvider, entryProvider),
                                 icon: const Icon(Icons.check),
                                 label: const Text('Speichern'),
                               ),
@@ -235,6 +281,29 @@ class AddEntry {
       if (_torchController.stateTorch && _stateTorch) {
         _torchController.getTorch();
       }
+
+      _resetFields();
     });
+  }
+
+  _resetFields() {
+    _isReset = false;
+    _selectedDate = DateTime.now();
+    _countercontroller.clear();
+    _stateTorch = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final torchProvider = Provider.of<TorchProvider>(context);
+
+    return IconButton(
+      onPressed: () {
+        _showBottomModel(entryProvider, torchProvider);
+      },
+      icon: const Icon(Icons.add),
+      tooltip: 'Eintrag erstellen',
+    );
   }
 }
