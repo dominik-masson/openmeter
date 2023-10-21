@@ -15,6 +15,7 @@ import '../../widgets/details_meter/cost_card.dart';
 import '../../widgets/details_meter/entry_card.dart';
 import '../../widgets/details_meter/charts/usage_bar_chart.dart';
 import '../../widgets/tags/horizontal_tags_list.dart';
+import '../../widgets/utils/selected_items_bar.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
@@ -23,11 +24,10 @@ class DetailsSingleMeter extends StatefulWidget {
   final bool hasTags;
 
   const DetailsSingleMeter(
-      {Key? key,
+      {super.key,
       required this.meter,
       required this.room,
-      required this.hasTags})
-      : super(key: key);
+      required this.hasTags});
 
   @override
   State<DetailsSingleMeter> createState() => _DetailsSingleMeterState();
@@ -63,17 +63,13 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          SelectableText(
             _meter.note,
-            style: const TextStyle(
-              fontSize: 18,
-            ),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           Text(
             _roomName,
-            style: const TextStyle(
-              fontSize: 18,
-            ),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
       ),
@@ -114,71 +110,110 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           Navigator.of(context).pop(_room);
           return true;
         },
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Zählernummer
-              _meterInformationWidget(),
-              const Divider(),
-              if (widget.hasTags)
-                HorizontalTagsList(
-                  meterId: _meter.id,
-                  setTags: (tags) => getTags(tags),
-                  setHasTags: null,
-                ),
-              EntryCard(meter: widget.meter),
-              const SizedBox(
-                height: 10,
-              ),
-              Column(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    height: 340,
-                    child: PageView(
-                      onPageChanged: (value) {
-                        setState(() {
-                          _activeChartWidget = value;
-                        });
-                      },
-                      children: [
-                        if (!chartProvider.getLineChart)
-                          UsageBarChart(
-                            meter: _meter,
-                          ),
-                        if (chartProvider.getLineChart)
-                          UsageLineChart(meter: _meter),
-                        CountLineChart(
-                          meter: _meter,
+                  // Zählernummer
+                  _meterInformationWidget(),
+                  const Divider(),
+                  if (widget.hasTags)
+                    HorizontalTagsList(
+                      meterId: _meter.id,
+                      setTags: (tags) => getTags(tags),
+                      setHasTags: null,
+                    ),
+                  EntryCard(meter: widget.meter),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        height: 340,
+                        child: PageView(
+                          onPageChanged: (value) {
+                            setState(() {
+                              _activeChartWidget = value;
+                            });
+                          },
+                          children: [
+                            if (!chartProvider.getLineChart)
+                              UsageBarChart(
+                                meter: _meter,
+                              ),
+                            if (chartProvider.getLineChart)
+                              UsageLineChart(meter: _meter),
+                            CountLineChart(
+                              meter: _meter,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      AnimatedSmoothIndicator(
+                        activeIndex: _activeChartWidget,
+                        count: 2,
+                        effect: WormEffect(
+                          activeDotColor: Theme.of(context).primaryColor,
+                          dotHeight: 10,
+                          dotWidth: 10,
+                        ),
+                      ),
+                    ],
                   ),
-                  AnimatedSmoothIndicator(
-                    activeIndex: _activeChartWidget,
-                    count: 2,
-                    effect: WormEffect(
-                      activeDotColor: Theme.of(context).primaryColorLight,
-                      dotHeight: 10,
-                      dotWidth: 10,
-                    ),
-                  ),
+
+                  CostBar(meter: _meter),
                 ],
               ),
-
-              CostBar(meter: _meter),
-            ],
-          ),
+            ),
+            if (hasSelectedEntries) _selectedBottomBar(entryProvider),
+          ],
         ),
       ),
     );
   }
 
+  _selectedBottomBar(EntryCardProvider entryProvider) {
+    final buttonStyle = ButtonStyle(
+      foregroundColor: MaterialStateProperty.all(
+        Theme.of(context).textTheme.bodyLarge!.color,
+      ),
+    );
+
+    final buttons = [
+      TextButton(
+        onPressed: () {
+          entryProvider.deleteAllSelectedEntries(context);
+          Provider.of<DatabaseSettingsProvider>(context, listen: false)
+              .setHasUpdate(true);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_outline,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Löschen'),
+          ],
+        ),
+      ),
+    ];
+
+    return SelectedItemsBar(buttons: buttons);
+  }
+
   AppBar _unselectedAppBar(EntryCardProvider entryProvider, MeterData meter) {
     return AppBar(
-      title: Text(_meterName),
+      title: SelectableText(_meterName),
       leading: BackButton(
         onPressed: () {
           Navigator.of(context).pop(_room);
@@ -231,17 +266,6 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           entryProvider.removeAllSelectedEntries();
         },
       ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            entryProvider.deleteAllSelectedEntries(context);
-            Provider.of<DatabaseSettingsProvider>(context, listen: false)
-                .setHasUpdate(true);
-          },
-          icon: const Icon(Icons.delete),
-          tooltip: 'Einträge löschen',
-        ),
-      ],
     );
   }
 }

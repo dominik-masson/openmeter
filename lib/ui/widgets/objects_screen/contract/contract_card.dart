@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:openmeter/core/enums/font_size_value.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/model/contract_dto.dart';
@@ -9,6 +10,7 @@ import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
 import '../../../../core/provider/room_provider.dart';
+import '../../../../core/provider/theme_changer.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import '../../../../utils/meter_typ.dart';
 import '../../../screens/contract/details_contract.dart';
@@ -41,11 +43,11 @@ class _ContractCardState extends State<ContractCard> {
               children: [
                 Text(
                   provider.name,
-                  style: const TextStyle(fontSize: 15),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const Text(
+                Text(
                   'Anbieter',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelMedium,
                 ),
               ],
             ),
@@ -53,11 +55,11 @@ class _ContractCardState extends State<ContractCard> {
               children: [
                 Text(
                   provider.contractNumber,
-                  style: const TextStyle(fontSize: 15),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const Text(
+                Text(
                   'Vertragsnummer',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelMedium,
                 ),
               ],
             ),
@@ -72,8 +74,10 @@ class _ContractCardState extends State<ContractCard> {
     final provider = Provider.of<ContractProvider>(context);
     final roomProvider = Provider.of<RoomProvider>(context);
     final detailsProvider = Provider.of<DetailsContractProvider>(context);
+    final themeProvider = Provider.of<ThemeChanger>(context);
 
     bool hasSelected = provider.getHasSelectedItems;
+    bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
 
     ContractDto contract = widget.contractDto;
 
@@ -124,10 +128,10 @@ class _ContractCardState extends State<ContractCard> {
       },
       child: Container(
         padding: const EdgeInsets.only(left: 8, right: 8),
-        height: 175,
+        height: isLargeText ? 200 : 180,
         child: Card(
           color: (contract.isSelected != null && contract.isSelected!)
-              ? Colors.grey.withOpacity(0.5)
+              ? Theme.of(context).highlightColor
               : null,
           child: Padding(
             padding: const EdgeInsets.all(12.0),
@@ -144,7 +148,7 @@ class _ContractCardState extends State<ContractCard> {
                     ),
                     Text(
                       meterTyps[contract.meterTyp]['anbieter'],
-                      style: const TextStyle(fontSize: 16),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const Spacer(),
                     if (isCanceled)
@@ -171,11 +175,11 @@ class _ContractCardState extends State<ContractCard> {
                         Text(
                           formatSimpleCurrency
                               .format(contract.costs.basicPrice),
-                          style: const TextStyle(fontSize: 15),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Grundpreis',
-                          style: TextStyle(color: Colors.grey),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),
@@ -183,11 +187,11 @@ class _ContractCardState extends State<ContractCard> {
                       children: [
                         Text(
                           '${formatDecimal.format(contract.costs.energyPrice)} Cent/${_convertMeterUnit.getUnitString(contract.unit)}',
-                          style: const TextStyle(fontSize: 15),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Arbeitspreis',
-                          style: TextStyle(color: Colors.grey),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),
@@ -195,11 +199,11 @@ class _ContractCardState extends State<ContractCard> {
                       children: [
                         Text(
                           formatSimpleCurrency.format(contract.costs.discount),
-                          style: const TextStyle(fontSize: 15),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Abschlag',
-                          style: TextStyle(color: Colors.grey),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),

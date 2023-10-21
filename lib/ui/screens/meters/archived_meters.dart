@@ -6,6 +6,7 @@ import '../../../core/model/meter_with_room.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/meter_provider.dart';
 import '../../widgets/meter/meter_card_list.dart';
+import '../../widgets/utils/selected_items_bar.dart';
 
 class ArchivedMeters extends StatefulWidget {
   const ArchivedMeters({super.key});
@@ -40,17 +41,80 @@ class _ArchivedMetersState extends State<ArchivedMeters> {
               ),
             ),
       body: WillPopScope(
-          onWillPop: () async {
-            if (hasSelectedItems) {
-              meterProvider.removeAllSelectedMeters();
-              return false;
-            } else {
-              Navigator.of(context).pushReplacementNamed('/');
-              return true;
-            }
-          },
-          child: MeterCardList(stream: stream, isHomescreen: false)),
+        onWillPop: () async {
+          if (hasSelectedItems) {
+            meterProvider.removeAllSelectedMeters();
+            return false;
+          } else {
+            Navigator.of(context).pushReplacementNamed('/');
+            return true;
+          }
+        },
+        child: Stack(
+          children: [
+            MeterCardList(stream: stream, isHomescreen: false),
+            if (hasSelectedItems)
+              _selectedItems(meterProvider, db, autoBackup),
+          ],
+        ),
+      ),
     );
+  }
+
+  _selectedItems(
+    MeterProvider meterProvider,
+    LocalDatabase db,
+    DatabaseSettingsProvider backup,
+  ) {
+    final buttonStyle = ButtonStyle(
+      foregroundColor: MaterialStateProperty.all(
+        Theme.of(context).textTheme.bodyLarge!.color,
+      ),
+    );
+
+    final buttons = [
+      TextButton(
+        onPressed: () {
+          backup.setHasUpdate(true);
+          meterProvider.updateStateArchived(db, false);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.unarchive_outlined,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Wiederherstellen'),
+          ],
+        ),
+      ),
+      TextButton(
+        onPressed: () {
+          meterProvider.deleteSelectedMeters(db);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_outline,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Löschen'),
+          ],
+        ),
+      ),
+    ];
+
+    return SelectedItemsBar(buttons: buttons);
   }
 
   AppBar _selectedAppBar(MeterProvider meterProvider, LocalDatabase db,
@@ -61,21 +125,6 @@ class _ArchivedMetersState extends State<ArchivedMeters> {
         icon: const Icon(Icons.close),
         onPressed: () => meterProvider.removeAllSelectedMeters(),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.unarchive),
-          onPressed: () {
-            backup.setHasUpdate(true);
-            meterProvider.updateStateArchived(db, false);
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            meterProvider.deleteSelectedMeters(db);
-          },
-        ),
-      ],
     );
   }
 }

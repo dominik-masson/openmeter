@@ -12,7 +12,7 @@ import 'no_entry.dart';
 class CountLineChart extends StatefulWidget {
   final MeterData meter;
 
-  const CountLineChart({Key? key, required this.meter}) : super(key: key);
+  const CountLineChart({super.key, required this.meter});
 
   @override
   State<CountLineChart> createState() => _CountLineChartState();
@@ -35,14 +35,14 @@ class _CountLineChartState extends State<CountLineChart> {
       LineChartBarData(
         spots: spots,
         isCurved: true,
-        color: Theme.of(context).primaryColorLight,
+        color: Theme.of(context).primaryColor,
         barWidth: 4,
         shadow: const Shadow(
           blurRadius: 0.2,
         ),
         belowBarData: BarAreaData(
           show: true,
-          color: Theme.of(context).primaryColorLight.withOpacity(0.2),
+          color: Theme.of(context).primaryColor.withOpacity(0.2),
         ),
       ),
     ];
@@ -185,9 +185,8 @@ class _CountLineChartState extends State<CountLineChart> {
 
         if (_twelveMonths && entries.length > 12) {
           // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries = entries
-              .getRange(entries.length - 12, entries.length)
-              .toList();
+          finalEntries =
+              entries.getRange(entries.length - 12, entries.length).toList();
         } else {
           finalEntries = entries;
         }
@@ -224,12 +223,12 @@ class _CountLineChartState extends State<CountLineChart> {
                         },
                         child: Text(
                           'letzte 12 Monate',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _twelveMonths
-                                ? Theme.of(context).primaryColorLight
-                                : Colors.grey,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall!.copyWith(
+                                    color: _twelveMonths
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
                         ),
                       ),
                     ],
@@ -247,9 +246,7 @@ class _CountLineChartState extends State<CountLineChart> {
                     child: _convertMeterUnit.getUnitWidget(
                       count: '',
                       unit: widget.meter.unit,
-                      textStyle: const TextStyle(
-                        fontSize: 12,
-                      ),
+                      textStyle: Theme.of(context).textTheme.bodySmall!,
                     ),
                   ),
                 if (!isEmpty) _mainChart(finalEntries),

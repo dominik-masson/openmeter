@@ -30,24 +30,21 @@ class CostCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             height: 500,
             width: double.infinity,
-            child: const SingleChildScrollView(
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 5,
                   ),
                   Text(
                     'Vergleichsdaten erstellen',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 15,
                   ),
-                  AddCosts(),
+                  const AddCosts(),
                 ],
               ),
             ),
@@ -64,8 +61,6 @@ class CostCard extends StatelessWidget {
     final formatDecimal =
         NumberFormat.decimalPatternDigits(locale: local, decimalDigits: 2);
 
-    const TextStyle textStyle = TextStyle(fontSize: 16);
-
     return SizedBox(
       width: double.infinity,
       child: Card(
@@ -77,12 +72,9 @@ class CostCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Kostenübersicht',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   IconButton(
                     onPressed: () => _openBottomSheet(context),
@@ -100,11 +92,11 @@ class CostCard extends StatelessWidget {
                 children: [
                   TableRow(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           'Grundpreis',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Padding(
@@ -112,79 +104,79 @@ class CostCard extends StatelessWidget {
                         child: Text(
                           formatSimpleCurrency
                               .format(contract.costs.basicPrice),
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     ],
                   ),
                   TableRow(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           'Arbeitspreis',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           '${formatDecimal.format(contract.costs.energyPrice)} Cent/${_convertMeterUnit.getUnitString(contract.unit)}',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     ],
                   ),
                   TableRow(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           'Abschlag',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           formatSimpleCurrency.format(contract.costs.discount),
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     ],
                   ),
                   TableRow(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           'Bonus',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           formatSimpleCurrency.format(contract.costs.bonus),
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     ],
                   ),
                   TableRow(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           'Notiz',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Text(
                           contract.note ?? '',
-                          style: textStyle,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                     ],

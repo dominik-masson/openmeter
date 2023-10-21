@@ -55,12 +55,15 @@ class _ActiveReminderState extends State<ActiveReminder> {
         const Divider(
           thickness: 0.5,
         ),
-        const Text(
+        Text(
           'Wiederholung',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         ListTile(
-          title: Text(_lableRepeatTyp),
+          title: Text(
+            _lableRepeatTyp,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle:
               const Text('Wähle zwischen täglich, wöchentlich und monatlich'),
           leading: const FaIcon(FontAwesomeIcons.rotate),

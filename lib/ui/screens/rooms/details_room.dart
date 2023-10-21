@@ -16,7 +16,7 @@ import '../../widgets/objects_screen/room/add_meter_to_room.dart';
 class DetailsRoom extends StatefulWidget {
   final RoomDto roomData;
 
-  const DetailsRoom({Key? key, required this.roomData}) : super(key: key);
+  const DetailsRoom({super.key, required this.roomData});
 
   @override
   State<DetailsRoom> createState() => _DetailsRoomState();
@@ -135,25 +135,27 @@ class _DetailsRoomState extends State<DetailsRoom> {
                       icon: const Icon(Icons.abc),
                       enabled: _update,
                       labelStyle: _update
-                          ? TextStyle(
-                              color: Theme.of(context)
-                                  .inputDecorationTheme
-                                  .focusColor)
-                          : TextStyle(color: Theme.of(context).indicatorColor),
+                          ? Theme.of(context).textTheme.bodyLarge
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyLarge!
+                              .copyWith(color: Colors.grey),
                     ),
-                    style: TextStyle(color: Theme.of(context).indicatorColor),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(
                     height: 30,
                   ),
                   Text(
                     '${_currentRoom.sumMeter ?? 0} Zähler',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   ListTile(
                     leading: const Icon(Icons.add),
-                    title: const Text('Neue Zähler zuordnen'),
+                    title: Text(
+                      'Neue Zähler zuordnen',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     dense: true,
                     onTap: () {
                       Navigator.of(context)
@@ -372,9 +374,11 @@ class _DetailsRoomState extends State<DetailsRoom> {
             ),
             icon: const Icon(Icons.bedroom_parent_outlined),
             labelStyle: _update
-                ? TextStyle(
-                    color: Theme.of(context).inputDecorationTheme.focusColor)
-                : TextStyle(color: Theme.of(context).indicatorColor),
+                ? Theme.of(context).textTheme.bodyLarge
+                : Theme.of(context)
+                    .textTheme
+                    .bodyLarge!
+                    .copyWith(color: Colors.grey),
             border: InputBorder.none,
           ),
           items: roomTyps.map((e) {

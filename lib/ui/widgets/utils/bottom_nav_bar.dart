@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/design_provider.dart';
 import '../../../core/provider/meter_provider.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../../core/services/database_settings_helper.dart';
@@ -15,7 +16,7 @@ import '../../screens/homescreen.dart';
 import '../../screens/objects.dart';
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({Key? key}) : super(key: key);
+  const BottomNavBar({super.key});
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
@@ -71,13 +72,25 @@ class _BottomNavBarState extends State<BottomNavBar>
     final roomProvider = Provider.of<RoomProvider>(context);
     final meterProvider = Provider.of<MeterProvider>(context);
     final contractProvider = Provider.of<ContractProvider>(context);
+    final designProvider = Provider.of<DesignProvider>(context);
+
+    bool compactNavBar = designProvider.getStateCompactNavBar;
+
+    bool hasSelectedItems = false;
+
+    if(meterProvider.getStateHasSelectedMeters || roomProvider.getStateHasSelected || contractProvider.getHasSelectedItems){
+      hasSelectedItems = true;
+    }
 
     return Scaffold(
       body: _screen[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Theme.of(context).bottomAppBarTheme.color,
-        currentIndex: _currentIndex,
-        onTap: (value) {
+      bottomNavigationBar: hasSelectedItems ? null : NavigationBar(
+        height: MediaQuery.of(context).size.height * 0.09,
+        labelBehavior: compactNavBar
+            ? NavigationDestinationLabelBehavior.alwaysHide
+            : NavigationDestinationLabelBehavior.alwaysShow,
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (value) {
           if (roomProvider.getStateHasSelected) {
             roomProvider.removeAllSelected();
           }
@@ -92,11 +105,15 @@ class _BottomNavBarState extends State<BottomNavBar>
             _currentIndex = value;
           });
         },
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(CustomIcons.voltmeter), label: 'Zähler'),
-          // BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Statistik'),
-          BottomNavigationBarItem(icon: Icon(Icons.widgets), label: 'Objekte'),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(CustomIcons.voltmeter),
+            label: 'Zähler',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.widgets),
+            label: 'Objekte',
+          ),
         ],
       ),
     );

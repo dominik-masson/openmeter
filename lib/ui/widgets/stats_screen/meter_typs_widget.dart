@@ -5,7 +5,7 @@ import '../../../core/database/local_database.dart';
 import '../../../core/provider/stats_provider.dart';
 
 class MeterTypsWidget extends StatefulWidget {
-  const MeterTypsWidget({Key? key}) : super(key: key);
+  const MeterTypsWidget({super.key});
 
   @override
   State<MeterTypsWidget> createState() => _MeterTypsWidgetState();

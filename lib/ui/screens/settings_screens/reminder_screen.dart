@@ -4,10 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../core/provider/reminder_provider.dart';
 import '../../widgets/reminder_screen/active_reminder.dart';
 
-
-
 class ReminderScreen extends StatefulWidget {
-  const ReminderScreen({Key? key}) : super(key: key);
+  const ReminderScreen({super.key});
 
   @override
   State<ReminderScreen> createState() => _ReminderScreenState();
@@ -65,7 +63,15 @@ class _ReminderScreenState extends State<ReminderScreen> {
               height: 10,
             ),
             SwitchListTile(
-              title: _active ? const Text('An') : const Text('Aus'),
+              title: _active
+                  ? Text(
+                      'An',
+                      style: Theme.of(context).textTheme.headlineLarge,
+                    )
+                  : Text(
+                      'Aus',
+                      style: Theme.of(context).textTheme.headlineLarge,
+                    ),
               subtitle: _active
                   ? null
                   : const Text(
@@ -73,7 +79,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
               contentPadding: const EdgeInsets.all(0),
               value: _active,
               onChanged: (value) async {
-               await _handleSwitchState(value, reminderProvider);
+                await _handleSwitchState(value, reminderProvider);
               },
             ),
             if (_active) const ActiveReminder(),

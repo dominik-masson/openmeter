@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/provider/torch_provider.dart';
 
 class ActiveTorch extends StatefulWidget {
-  const ActiveTorch({Key? key}) : super(key: key);
+  const ActiveTorch({super.key});
 
   @override
   State<ActiveTorch> createState() => _ActiveTorchState();
@@ -20,7 +20,10 @@ class _ActiveTorchState extends State<ActiveTorch> {
     _activeTorch = provider.stateTorch;
 
     return SwitchListTile(
-      title: const Text('Taschenlampe'),
+      title: Text(
+        'Taschenlampe',
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
       subtitle: const Text(
           'Die Taschenlampe wird bei der Ablesung automatisch eingeschaltet.'),
       secondary: _activeTorch == false

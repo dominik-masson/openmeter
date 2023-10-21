@@ -25,7 +25,6 @@ class ProviderCard extends StatefulWidget {
 class _ProviderCardState extends State<ProviderCard> {
   final DateFormat _dateFormat = DateFormat('dd.MM.yyyy');
 
-  final TextStyle textStyle = const TextStyle(fontSize: 16);
   ProviderDto? currentProvider;
 
   bool hasCanceled = false;
@@ -82,14 +81,14 @@ class _ProviderCardState extends State<ProviderCard> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Anbieter',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: SelectableText(
                 currentProvider!.name,
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -100,14 +99,14 @@ class _ProviderCardState extends State<ProviderCard> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Nummer',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: SelectableText(
                 currentProvider!.contractNumber,
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -118,14 +117,14 @@ class _ProviderCardState extends State<ProviderCard> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Beginn',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 _dateFormat.format(currentProvider!.validFrom),
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -136,14 +135,14 @@ class _ProviderCardState extends State<ProviderCard> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Ende',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 _dateFormat.format(currentProvider!.validUntil),
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -155,14 +154,14 @@ class _ProviderCardState extends State<ProviderCard> {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text(
                   'Verlängerung',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text(
                   '${currentProvider!.renewal} Monate',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ],
@@ -174,14 +173,14 @@ class _ProviderCardState extends State<ProviderCard> {
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text(
                   'Kündigungsfrist',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Text(
                   '${currentProvider!.notice} Monate',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ],
@@ -192,7 +191,7 @@ class _ProviderCardState extends State<ProviderCard> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Gekündigt am',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             SizedBox(
@@ -202,7 +201,8 @@ class _ProviderCardState extends State<ProviderCard> {
                 style: ButtonStyle(
                   padding: MaterialStateProperty.all(EdgeInsets.zero),
                   alignment: Alignment.centerLeft,
-                  textStyle: MaterialStateProperty.all(textStyle),
+                  textStyle: MaterialStateProperty.all(
+                      Theme.of(context).textTheme.bodyMedium),
                   foregroundColor: MaterialStateProperty.all(
                     currentProvider!.canceled ?? false
                         ? Theme.of(context).textTheme.titleLarge!.color
@@ -225,18 +225,18 @@ class _ProviderCardState extends State<ProviderCard> {
       children: [
         Text(
           'Es wurde noch kein Vertrag für diesen ${meterTyps[widget.contract.meterTyp]['anbieter']} angelegt.',
-          style: textStyle.copyWith(
-            color: Colors.grey,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Colors.grey,
+              ),
           textAlign: TextAlign.center,
         ),
         TextButton(
           onPressed: () => _openBottomSheet(),
           style: ButtonStyle(
             textStyle: MaterialStateProperty.all(
-              textStyle.copyWith(
-                color: Colors.grey,
-              ),
+              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Colors.grey,
+                  ),
             ),
             foregroundColor: MaterialStateProperty.all(Colors.grey),
           ),
@@ -277,12 +277,9 @@ class _ProviderCardState extends State<ProviderCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Vertragsübersicht',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   IconButton(
                     onPressed: () => _openBottomSheet(),

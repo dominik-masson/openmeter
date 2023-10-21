@@ -51,12 +51,6 @@ class AddTags {
           uuid: drift.Value(const Uuid().v1()));
 
       await db.tagsDao.createTag(tag).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tag wird erstellt!'),
-          ),
-        );
-
         Provider.of<DatabaseSettingsProvider>(context, listen: false)
             .setHasUpdate(true);
 
@@ -70,7 +64,6 @@ class AddTags {
 
   getAddTags(BuildContext context) {
     return showModalBottomSheet(
-      backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
@@ -156,17 +149,13 @@ class AddTags {
                         const SizedBox(
                           height: 30,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () => _saveTag(context),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Speichern'),
-                            ),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: FloatingActionButton.extended(
+                            onPressed: () => _saveTag(context),
+                            label: const Text('Speichern'),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),

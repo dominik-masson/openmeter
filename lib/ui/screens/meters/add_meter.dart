@@ -23,8 +23,7 @@ class AddScreen extends StatefulWidget {
   final List<Tag>? tags;
 
   const AddScreen(
-      {Key? key, required this.meter, required this.room, this.tags})
-      : super(key: key);
+      {super.key, required this.meter, required this.room, this.tags});
 
   @override
   State<AddScreen> createState() => _AddScreenState();
@@ -155,11 +154,6 @@ class _AddScreenState extends State<AddScreen> {
     }
 
     await db.meterDao.updateMeter(meterData).then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-          'Zähler wird aktualisiert!',
-        ),
-      ));
       Provider.of<MeterProvider>(context, listen: false)
           .setStateHasUpdate(true);
       Navigator.of(context).pop([meterData, _room, true]);
@@ -201,11 +195,6 @@ class _AddScreenState extends State<AddScreen> {
     );
 
     await db.entryDao.createEntry(entry).then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-          'Zähler wird erstellt!',
-        ),
-      ));
       Navigator.of(context).pop();
     });
   }

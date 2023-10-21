@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/enums/font_size_value.dart';
 import '../../../../core/model/contract_dto.dart';
 
 import '../../../../core/provider/contract_provider.dart';
 
+import '../../../../core/provider/theme_changer.dart';
 import 'contract_card.dart';
 
 class ContractGridView extends StatefulWidget {
-  const ContractGridView({Key? key}) : super(key: key);
+  const ContractGridView({super.key});
 
   @override
   State<ContractGridView> createState() => _ContractGridViewState();
@@ -26,6 +28,7 @@ class _ContractGridViewState extends State<ContractGridView> {
     final db = Provider.of<LocalDatabase>(context);
 
     final contractProvider = Provider.of<ContractProvider>(context);
+    final themeProvider = Provider.of<ThemeChanger>(context);
 
     return StreamBuilder(
       stream: db.contractDao.watchAllContracts(false),
@@ -59,10 +62,30 @@ class _ContractGridViewState extends State<ContractGridView> {
           }
         }
 
+        bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large
+            ? true
+            : false;
+
+        double height = 180;
+
+        if (first.length == 1 && second.isEmpty) {
+          if (isLargeText) {
+            height = 190;
+          } else {
+            height = 180;
+          }
+        } else {
+          if (isLargeText) {
+            height = 400;
+          } else {
+            height = 370;
+          }
+        }
+
         return Column(
           children: [
             SizedBox(
-              height: first.length == 1 && second.isEmpty ? 180 : 360,
+              height: height,
               child: PageView.builder(
                 controller: _pageController,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -96,7 +119,7 @@ class _ContractGridViewState extends State<ContractGridView> {
               activeIndex: _pageIndex,
               count: first.length,
               effect: WormEffect(
-                activeDotColor: Theme.of(context).primaryColorLight,
+                activeDotColor: Theme.of(context).primaryColor,
                 dotHeight: 10,
                 dotWidth: 10,
               ),

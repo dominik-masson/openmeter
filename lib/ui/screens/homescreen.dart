@@ -7,10 +7,11 @@ import '../../core/provider/meter_provider.dart';
 
 import '../widgets/meter/meter_card_list.dart';
 import '../widgets/meter/sort_meter_cards.dart';
+import '../widgets/utils/selected_items_bar.dart';
 import 'meters/add_meter.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -39,10 +40,93 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return true;
         },
-        child: MeterCardList(
-            stream: db.meterDao.watchAllMeterWithRooms(false),
-            isHomescreen: true),
+        child: Stack(
+          children: [
+            MeterCardList(
+                stream: db.meterDao.watchAllMeterWithRooms(false),
+                isHomescreen: true),
+            if (hasSelectedItems)
+              _selectedItems(meterProvider, db, autoBackup),
+          ],
+        ),
       ),
+    );
+  }
+
+  _selectedItems(
+    MeterProvider meterProvider,
+    LocalDatabase db,
+    DatabaseSettingsProvider backup,
+  ) {
+    final buttonStyle = ButtonStyle(
+      foregroundColor: MaterialStateProperty.all(
+        Theme.of(context).textTheme.bodyLarge!.color,
+      ),
+    );
+
+    final buttons = [
+      TextButton(
+        onPressed: () {
+          meterProvider.resetSelectedMeters(db);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.restart_alt,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Zurücksetzen'),
+          ],
+        ),
+      ),
+      TextButton(
+        onPressed: () {
+          backup.setHasUpdate(true);
+          meterProvider.updateStateArchived(db, true);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.archive_outlined,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Archivieren'),
+          ],
+        ),
+      ),
+      TextButton(
+        onPressed: () {
+          meterProvider.deleteSelectedMeters(db);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_outline,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Löschen'),
+          ],
+        ),
+      ),
+    ];
+
+    return SelectedItemsBar(
+      buttons: buttons,
     );
   }
 
@@ -54,30 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.close),
         onPressed: () => meterProvider.removeAllSelectedMeters(),
       ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            meterProvider.resetSelectedMeters(db);
-          },
-          icon: const Icon(Icons.restart_alt),
-          tooltip: 'Zähler zurücksetzen',
-        ),
-        IconButton(
-          tooltip: 'Zähler archivieren',
-          icon: const Icon(Icons.archive),
-          onPressed: () {
-            backup.setHasUpdate(true);
-            meterProvider.updateStateArchived(db, true);
-          },
-        ),
-        IconButton(
-          tooltip: 'Zähler löschen',
-          icon: const Icon(Icons.delete),
-          onPressed: () {
-            meterProvider.deleteSelectedMeters(db);
-          },
-        ),
-      ],
     );
   }
 

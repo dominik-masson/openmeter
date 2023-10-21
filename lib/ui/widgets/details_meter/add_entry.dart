@@ -84,7 +84,7 @@ class _AddEntryState extends State<AddEntry> {
       if (_isReset) {
         int count = 0;
 
-        if(_countercontroller.text.isNotEmpty){
+        if (_countercontroller.text.isNotEmpty) {
           count = int.parse(_countercontroller.text);
         }
 
@@ -141,7 +141,6 @@ class _AddEntryState extends State<AddEntry> {
     }
 
     return showModalBottomSheet(
-      backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
@@ -167,12 +166,9 @@ class _AddEntryState extends State<AddEntry> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Neuer Zählerstand',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.headlineMedium,
                               ),
                               Row(
                                 children: [
@@ -187,7 +183,7 @@ class _AddEntryState extends State<AddEntry> {
                                     icon: Icon(
                                       Icons.restart_alt,
                                       color: _isReset
-                                          ? Theme.of(context).primaryColorLight
+                                          ? Theme.of(context).primaryColor
                                           : null,
                                     ),
                                     tooltip: 'Zähler zurücksetzen',
@@ -255,18 +251,14 @@ class _AddEntryState extends State<AddEntry> {
                           const SizedBox(
                             height: 30,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _saveEntry(torchProvider, entryProvider),
-                                icon: const Icon(Icons.check),
-                                label: const Text('Speichern'),
-                              ),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: FloatingActionButton.extended(
+                              onPressed: () =>
+                                  _saveEntry(torchProvider, entryProvider),
+                              label: const Text('Speichern'),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),

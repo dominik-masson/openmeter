@@ -9,6 +9,7 @@ import '../../../core/provider/database_settings_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../widgets/objects_screen/contract/contract_card.dart';
 import '../../widgets/utils/empty_archiv.dart';
+import '../../widgets/utils/selected_items_bar.dart';
 
 class ArchiveContract extends StatefulWidget {
   const ArchiveContract({super.key});
@@ -40,42 +41,50 @@ class _ArchiveContractState extends State<ArchiveContract> {
 
           return true;
         },
-        child: StreamBuilder(
-          stream: db.contractDao.watchAllContracts(true),
-          builder: (context, snapshot) {
-            final List<ContractData>? items = snapshot.data;
+        child: Stack(
+          children: [
+            StreamBuilder(
+              stream: db.contractDao.watchAllContracts(true),
+              builder: (context, snapshot) {
+                final List<ContractData>? items = snapshot.data;
 
-            if (items != null &&
-                items.length != contractProvider.getArchivedContractsLength) {
-              contractProvider.convertData(
-                  data: items, db: db, isArchived: true);
-            }
-
-            final List<ContractDto> contracts =
-                contractProvider.getArchivedContracts;
-
-            if (contracts.isEmpty &&
-                snapshot.connectionState == ConnectionState.active) {
-              return const EmptyArchiv(
-                  titel: 'Es wurden noch keine Verträge archiviert.');
-            }
-
-            return ListView.builder(
-              itemCount: contracts.length,
-              itemBuilder: (context, index) {
-                final contract = contracts.elementAt(index);
-
-                if (hasSelectedItems) {
-                  return ContractCard(
-                    contractDto: contract,
-                  );
-                } else {
-                  return _slideCard(
-                      provider: contractProvider, contract: contract, db: db);
+                if (items != null &&
+                    items.length !=
+                        contractProvider.getArchivedContractsLength) {
+                  contractProvider.convertData(
+                      data: items, db: db, isArchived: true);
                 }
+
+                final List<ContractDto> contracts =
+                    contractProvider.getArchivedContracts;
+
+                if (contracts.isEmpty &&
+                    snapshot.connectionState == ConnectionState.active) {
+                  return const EmptyArchiv(
+                      titel: 'Es wurden noch keine Verträge archiviert.');
+                }
+
+                return ListView.builder(
+                  itemCount: contracts.length,
+                  itemBuilder: (context, index) {
+                    final contract = contracts.elementAt(index);
+
+                    if (hasSelectedItems) {
+                      return ContractCard(
+                        contractDto: contract,
+                      );
+                    } else {
+                      return _slideCard(
+                          provider: contractProvider,
+                          contract: contract,
+                          db: db);
+                    }
+                  },
+                );
               },
-            );
-          },
+            ),
+            if (hasSelectedItems) _selectedItemsBar(db),
+          ],
         ),
       ),
     );
@@ -130,10 +139,69 @@ class _ArchiveContractState extends State<ArchiveContract> {
     );
   }
 
-  _selectedAppBar(LocalDatabase db) {
+  _selectedItemsBar(LocalDatabase db) {
     final contractProvider = Provider.of<ContractProvider>(context);
     final backupProvider =
         Provider.of<DatabaseSettingsProvider>(context, listen: false);
+
+    final buttonStyle = ButtonStyle(
+      foregroundColor: MaterialStateProperty.all(
+        Theme.of(context).textTheme.bodyLarge!.color,
+      ),
+    );
+
+    final buttons = [
+      TextButton(
+        onPressed: () async {
+          await contractProvider.unarchiveSelectedContracts(db);
+          contractProvider.removeAllSelectedItems();
+
+          if (mounted) {
+            backupProvider.setHasUpdate(true);
+          }
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.unarchive_outlined,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Wiederherstellen'),
+          ],
+        ),
+      ),
+      TextButton(
+        onPressed: () {
+          contractProvider.deleteAllSelectedContracts(db, true);
+          backupProvider.setHasUpdate(true);
+        },
+        style: buttonStyle,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_outline,
+              size: 28,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text('Löschen'),
+          ],
+        ),
+      ),
+    ];
+
+    return SelectedItemsBar(buttons: buttons);
+  }
+
+  _selectedAppBar(LocalDatabase db) {
+    final contractProvider = Provider.of<ContractProvider>(context);
 
     int count = contractProvider.getSelectedItemsLength;
 
@@ -143,28 +211,6 @@ class _ArchiveContractState extends State<ArchiveContract> {
         icon: const Icon(Icons.close),
         onPressed: () => contractProvider.removeAllSelectedItems(),
       ),
-      actions: [
-        IconButton(
-          onPressed: () async {
-            await contractProvider.unarchiveSelectedContracts(db);
-            contractProvider.removeAllSelectedItems();
-
-            if (mounted) {
-              backupProvider.setHasUpdate(true);
-            }
-          },
-          icon: const Icon(Icons.unarchive),
-          tooltip: 'Archivieren',
-        ),
-        IconButton(
-          onPressed: () {
-            contractProvider.deleteAllSelectedContracts(db, true);
-            backupProvider.setHasUpdate(true);
-          },
-          icon: const Icon(Icons.delete),
-          tooltip: 'Löschen',
-        ),
-      ],
     );
   }
 }

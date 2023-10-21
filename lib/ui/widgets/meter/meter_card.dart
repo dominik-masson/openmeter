@@ -70,11 +70,12 @@ class _MeterCardState extends State<MeterCard> {
               children: [
                 Text(
                   widget.meter.number,
-                  style: const TextStyle(fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const Text(
+                Text(
                   "Zählernummer",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
             ),
@@ -83,11 +84,11 @@ class _MeterCardState extends State<MeterCard> {
                 ConvertMeterUnit().getUnitWidget(
                   count: widget.count,
                   unit: widget.meter.unit,
-                  textStyle: const TextStyle(fontSize: 16),
+                  textStyle: Theme.of(context).textTheme.bodyMedium!,
                 ),
-                const Text(
+                Text(
                   "Zählerstand",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
             ),
@@ -95,7 +96,10 @@ class _MeterCardState extends State<MeterCard> {
               children: [
                 Text(
                   widget.meter.note.toString(),
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall!
+                      .copyWith(fontSize: 14),
                 ),
               ],
             )
@@ -223,8 +227,9 @@ class _MeterCardState extends State<MeterCard> {
         padding: const EdgeInsets.only(left: 4.0, right: 4),
         child: Card(
           elevation: 3,
-          color:
-              widget.isSelected == true ? Colors.grey.withOpacity(0.5) : null,
+          color: widget.isSelected == true
+              ? Theme.of(context).highlightColor
+              : null,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -243,14 +248,14 @@ class _MeterCardState extends State<MeterCard> {
                         ),
                         Text(
                           widget.meter.typ,
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ],
                     ),
                     if (sortProvider.getSort == 'meter')
                       Text(
                         roomName,
-                        style: const TextStyle(fontSize: 16),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],
                 ),
@@ -271,6 +276,7 @@ class _MeterCardState extends State<MeterCard> {
                 ),
                 Text(
                   'zuletzt geändert: $dateText',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),

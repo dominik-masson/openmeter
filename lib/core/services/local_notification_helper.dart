@@ -48,7 +48,7 @@ class LocalNotificationHelper {
       _localNotification
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestPermission();
+          ?.requestNotificationsPermission();
     }
   }
 

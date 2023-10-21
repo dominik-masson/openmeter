@@ -11,8 +11,8 @@ import '../../widgets/tags/tag_chip.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TagsScreen> createState() => _TagsScreenState();
@@ -29,16 +29,16 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 
   Widget _noTags() {
-    return const Padding(
-      padding: EdgeInsets.all(8.0),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
       child: Center(
         child: Column(
           children: [
             Text(
               'Es sind keine Tags vorhanden!',
-              style: TextStyle(fontSize: 16),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            Text(
+            const Text(
               'Drücke jetzt auf das + um einen neuen Tag zu erstellen!',
               style: TextStyle(color: Colors.grey),
             ),
@@ -51,7 +51,8 @@ class _TagsScreenState extends State<TagsScreen> {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
-    final smallProvider = Provider.of<SmallFeatureProvider>(context, listen: false);
+    final smallProvider =
+        Provider.of<SmallFeatureProvider>(context, listen: false);
 
     _showTags = smallProvider.getShowTags;
 
@@ -84,48 +85,6 @@ class _TagsScreenState extends State<TagsScreen> {
               const SizedBox(
                 height: 50,
               ),
-              const Text(
-                'Aktuelle Tags:',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              StreamBuilder(
-                stream: db.tagsDao.watchAllTags(),
-                builder: (context, snapshot) {
-                  final List<Tag> tags = snapshot.data ?? [];
-
-                  if (tags.isEmpty) {
-                    return _noTags();
-                  }
-
-                  return SizedBox(
-                    height: 250,
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: MediaQuery.of(context).size.width /
-                            (MediaQuery.of(context).size.height / 4),
-                      ),
-                      shrinkWrap: true,
-                      itemCount: tags.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: TagChip(
-                            tag: TagDto.fromData(tags[index]),
-                            state: TagChipState.delete,
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(
-                height: 30,
-              ),
               SwitchListTile(
                 title: const Text('Tags anzeigen'),
                 subtitle: const Text(
@@ -150,16 +109,40 @@ class _TagsScreenState extends State<TagsScreen> {
               const SizedBox(
                 height: 30,
               ),
-              // const Text(
-              //   'Informationen:',
-              //   style: TextStyle(
-              //     fontSize: 18,
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              // ),
-              // const Text(
-              //     'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
-              //     'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
+              Text(
+                'Aktuelle Tags:',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              StreamBuilder(
+                stream: db.tagsDao.watchAllTags(),
+                builder: (context, snapshot) {
+                  final List<Tag> tags = snapshot.data ?? [];
+
+                  if (tags.isEmpty) {
+                    return _noTags();
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: MediaQuery.of(context).size.width /
+                          (MediaQuery.of(context).size.height / 4),
+                    ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: TagChip(
+                          tag: TagDto.fromData(tags[index]),
+                          state: TagChipState.delete,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ],
           ),
         ),

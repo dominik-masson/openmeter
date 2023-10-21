@@ -58,20 +58,23 @@ class _WeekTileState extends State<WeekTile> {
   @override
   Widget build(BuildContext context) {
     final reminderProvider = Provider.of<ReminderProvider>(context);
-    
-    if(reminderProvider.weekDay != 0){
+
+    if (reminderProvider.weekDay != 0) {
       _selectedWeek = weekDays.elementAt(reminderProvider.weekDay);
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Wochentag',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         ListTile(
-          title: Text(_selectedWeek),
+          title: Text(
+            _selectedWeek,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: const Text('Wähle den Wochentag der Benachrichtigung.'),
           leading: const FaIcon(FontAwesomeIcons.calendarDay),
           onTap: () => _weekDaysDialog(context, reminderProvider),

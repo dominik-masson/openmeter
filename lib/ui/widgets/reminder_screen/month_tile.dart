@@ -52,19 +52,22 @@ class _MonthTileState extends State<MonthTile> {
   Widget build(BuildContext context) {
     final reminderProvider = Provider.of<ReminderProvider>(context);
 
-    if(reminderProvider.monthDay != 0){
+    if (reminderProvider.monthDay != 0) {
       _selectedDay = reminderProvider.monthDay;
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tag im Monat',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         ListTile(
-          title: Text('$_selectedDay'),
+          title: Text(
+            '$_selectedDay',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: const Text('Wähle den Tag des Monats der Benachrichtigung'),
           leading: const FaIcon(FontAwesomeIcons.solidCalendarDays),
           onTap: () => _monthDaysDialog(context, reminderProvider),

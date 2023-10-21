@@ -3,15 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/enums/font_size_value.dart';
 import '../../../../core/model/room_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/room_provider.dart';
+import '../../../../core/provider/theme_changer.dart';
 import '../../../screens/rooms/details_room.dart';
 import '../../../../utils/meter_typ.dart';
 import '../../meter/meter_circle_avatar.dart';
 
 class RoomCard extends StatefulWidget {
-  const RoomCard({Key? key}) : super(key: key);
+  const RoomCard({super.key});
 
   @override
   State<RoomCard> createState() => _RoomCardState();
@@ -26,6 +28,7 @@ class _RoomCardState extends State<RoomCard> {
     final data = Provider.of<LocalDatabase>(context);
     final roomProvider = Provider.of<RoomProvider>(context);
     final contractProvider = Provider.of<ContractProvider>(context);
+    final themeProvider = Provider.of<ThemeChanger>(context);
 
     return StreamBuilder(
       stream: data.roomDao.watchAllRooms(),
@@ -33,10 +36,10 @@ class _RoomCardState extends State<RoomCard> {
         final List<RoomData> item = snapshot.data ?? [];
 
         if (item.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               'Es wurden noch keine Zimmer erstellt. \n Drücke jetzt auf das Plus um ein Zimmer zu erstellen.',
-              style: TextStyle(color: Colors.grey),
+              style: Theme.of(context).textTheme.labelSmall,
               textAlign: TextAlign.center,
             ),
           );
@@ -49,10 +52,30 @@ class _RoomCardState extends State<RoomCard> {
         final second = roomProvider.getSecondRooms;
         final first = roomProvider.getFirstRooms;
 
+        bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large
+            ? true
+            : false;
+
+        double height = 180;
+
+        if (first.length == 1 && second.isEmpty) {
+          if (isLargeText) {
+            height = 180;
+          } else {
+            height = 170;
+          }
+        } else {
+          if (isLargeText) {
+            height = 390;
+          } else {
+            height = 350;
+          }
+        }
+
         return Column(
           children: [
             SizedBox(
-              height: first.length == 1 && second.isEmpty ? 170 : 320,
+              height: height,
               child: PageView.builder(
                 controller: _pageController,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -77,6 +100,7 @@ class _RoomCardState extends State<RoomCard> {
                         data: data,
                         provider: roomProvider,
                         contractProvider: contractProvider,
+                        isLargeText: isLargeText,
                       ),
                       if (room2 != null)
                         _roomCard(
@@ -84,6 +108,7 @@ class _RoomCardState extends State<RoomCard> {
                           data: data,
                           provider: roomProvider,
                           contractProvider: contractProvider,
+                          isLargeText: isLargeText,
                         ),
                     ],
                   );
@@ -94,7 +119,7 @@ class _RoomCardState extends State<RoomCard> {
               activeIndex: _pageIndex,
               count: first.length,
               effect: WormEffect(
-                activeDotColor: Theme.of(context).primaryColorLight,
+                activeDotColor: Theme.of(context).primaryColor,
                 dotHeight: 10,
                 dotWidth: 10,
               ),
@@ -110,7 +135,10 @@ class _RoomCardState extends State<RoomCard> {
       future: db.roomDao.getNumberCounts(room.uuid),
       builder: (context, snapshot) {
         room.sumMeter = snapshot.data;
-        return Text('${room.sumMeter} Zähler');
+        return Text(
+          '${room.sumMeter} Zähler',
+          style: Theme.of(context).textTheme.bodyMedium,
+        );
       },
     );
   }
@@ -159,7 +187,8 @@ class _RoomCardState extends State<RoomCard> {
       {required RoomDto room,
       required LocalDatabase data,
       required RoomProvider provider,
-      required ContractProvider contractProvider}) {
+      required ContractProvider contractProvider,
+      required bool isLargeText}) {
     return GestureDetector(
       onLongPress: () {
         if (contractProvider.getHasSelectedItems == false) {
@@ -187,9 +216,9 @@ class _RoomCardState extends State<RoomCard> {
       },
       child: Container(
         padding: const EdgeInsets.only(left: 8, right: 8),
-        height: 158,
+        height: isLargeText ? 190 : 170,
         child: Card(
-          color: room.isSelected! ? Colors.grey.withOpacity(0.5) : null,
+          color: room.isSelected! ? Theme.of(context).highlightColor : null,
           child: Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Column(
@@ -203,13 +232,11 @@ class _RoomCardState extends State<RoomCard> {
                       children: [
                         Text(
                           room.typ,
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Zimmertyp',
-                          style: TextStyle(
-                            color: Colors.grey,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),
@@ -217,13 +244,11 @@ class _RoomCardState extends State<RoomCard> {
                       children: [
                         Text(
                           room.name,
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Zimmername',
-                          style: TextStyle(
-                            color: Colors.grey,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),

@@ -66,11 +66,6 @@ class AddRoom {
       );
 
       await db.roomDao.createRoom(room).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'Raum wird erstellt!',
-          ),
-        ));
         Navigator.of(context).pop();
         _roomTyp = 'Sonstiges';
         _nameController.clear();
@@ -122,17 +117,13 @@ class AddRoom {
                     const SizedBox(
                       height: 30,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _saveRoom(context),
-                          icon: const Icon(Icons.check),
-                          label: const Text('Speichern'),
-                        ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: FloatingActionButton.extended(
+                        onPressed: () => _saveRoom(context),
+                        label: const Text('Speichern'),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

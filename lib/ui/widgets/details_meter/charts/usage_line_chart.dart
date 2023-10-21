@@ -13,7 +13,7 @@ import 'no_entry.dart';
 class UsageLineChart extends StatefulWidget {
   final MeterData meter;
 
-  const UsageLineChart({Key? key, required this.meter}) : super(key: key);
+  const UsageLineChart({super.key, required this.meter});
 
   @override
   State<UsageLineChart> createState() => _UsageLineChartState();
@@ -41,14 +41,14 @@ class _UsageLineChartState extends State<UsageLineChart> {
       LineChartBarData(
         spots: spots,
         isCurved: true,
-        color: Theme.of(context).primaryColorLight,
+        color: Theme.of(context).primaryColor,
         barWidth: 4,
         shadow: const Shadow(
           blurRadius: 0.2,
         ),
         belowBarData: BarAreaData(
           show: true,
-          color: Theme.of(context).primaryColorLight.withOpacity(0.2),
+          color: Theme.of(context).primaryColor.withOpacity(0.2),
         ),
       )
     ];
@@ -193,9 +193,8 @@ class _UsageLineChartState extends State<UsageLineChart> {
 
         if (_twelveMonths && entries.length > 12) {
           // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries = entries
-              .getRange(entries.length - 12, entries.length)
-              .toList();
+          finalEntries =
+              entries.getRange(entries.length - 12, entries.length).toList();
         } else {
           finalEntries = entries;
         }
@@ -232,12 +231,14 @@ class _UsageLineChartState extends State<UsageLineChart> {
                             },
                             child: Text(
                               'letzte 12 Monate',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _twelveMonths
-                                    ? Theme.of(context).primaryColorLight
-                                    : Colors.grey,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall!
+                                  .copyWith(
+                                    color: _twelveMonths
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
                             ),
                           ),
                           IconButton(
@@ -252,7 +253,6 @@ class _UsageLineChartState extends State<UsageLineChart> {
                           ),
                         ],
                       ),
-
                     ],
                   ),
                 ),
@@ -265,9 +265,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
                     child: _convertMeterUnit.getUnitWidget(
                       count: '',
                       unit: widget.meter.unit,
-                      textStyle: const TextStyle(
-                        fontSize: 12,
-                      ),
+                      textStyle: Theme.of(context).textTheme.bodySmall!,
                     ),
                   ),
                 if (!isEmpty) _lastMonths(finalEntries),

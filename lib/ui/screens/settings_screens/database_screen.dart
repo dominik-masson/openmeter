@@ -10,7 +10,7 @@ import '../../../core/services/database_settings_helper.dart';
 import '../../widgets/settings_screen/database_stats.dart';
 
 class DatabaseExportImport extends StatefulWidget {
-  const DatabaseExportImport({Key? key}) : super(key: key);
+  const DatabaseExportImport({super.key});
 
   @override
   State<DatabaseExportImport> createState() => _DatabaseExportImportState();
@@ -57,8 +57,17 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       clearBackupFiles: false,
     );
 
-    if (success == false) {
+    if (success) {
       provider.setHasUpdate(true);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Datenbank wurde erfolgreich exportiert!',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
     }
   }
 
@@ -127,9 +136,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.cloud_upload),
-                  title: const Text(
+                  title: Text(
                     'Daten exportieren',
-                    style: TextStyle(fontSize: 18),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   subtitle: const Text(
                     'Erstelle und speichere ein Backup deiner Daten.',
@@ -141,9 +150,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.cloud_download),
-                  title: const Text(
+                  title: Text(
                     'Daten importieren',
-                    style: TextStyle(fontSize: 18),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   subtitle: const Text(
                     'Importiere deine gespeicherten Daten.',
@@ -155,9 +164,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.replay),
-                  title: const Text(
+                  title: Text(
                     'Daten zurücksetzen',
-                    style: TextStyle(fontSize: 18),
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   subtitle: const Text(
                     'Lösche alle gespeicherten Daten.',
@@ -189,6 +198,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       return ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Es muss zuerst ein Backup Ordner ausgewählt werden!'),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -197,9 +207,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       children: [
         // toggle backup state
         SwitchListTile(
-          title: const Text(
+          title: Text(
             'Automatisches Backup',
-            style: TextStyle(fontSize: 18),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: const Text(
               'Erstellt automatisch ein Backup der Datenbank sobald die App geschlossen wird.'),
@@ -219,9 +229,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
         // Get backup directory
         ListTile(
           leading: const Icon(Icons.drive_folder_upload),
-          title: const Text(
+          title: Text(
             'Ordner für Datensicherung wählen',
-            style: TextStyle(fontSize: 18),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: autoBackupDirectory.isEmpty
               ? const Text('Es wurde noch kein Verzeichnis ausgewählt')
@@ -229,9 +239,9 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
           onTap: () => _databaseHelper.selectAutoBackupPath(provider),
         ),
         SwitchListTile(
-          title: const Text(
+          title: Text(
             'Alte Backups löschen',
-            style: TextStyle(fontSize: 18),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: const Text(
               'Es werden alle Backup Dateien gelöscht, bis auf die neusten zwei.'),

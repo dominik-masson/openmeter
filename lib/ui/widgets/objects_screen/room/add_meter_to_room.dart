@@ -146,7 +146,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
         _selectedItemsWithoutExists.contains(meterId)) {
       return Icon(
         Icons.check_circle,
-        color: Theme.of(context).primaryColorLight,
+        color: Theme.of(context).primaryColor,
       );
     }
 
@@ -190,16 +190,11 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
                   children: [
                     Text(
                       data.meter.number,
-                      style: const TextStyle(
-                        fontSize: 16,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const Text(
+                    Text(
                       'Zählernummer',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                      style: Theme.of(context).textTheme.labelMedium,
                     ),
                   ],
                 ),
@@ -214,16 +209,11 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
                         Text(
                           data.meter.note,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        const Text(
+                        Text(
                           'Notiz',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ],
                     ),
@@ -234,10 +224,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
             if (isInARoom)
               Text(
                 'Bereits im ${roomData?.name}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.normal,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
           ],
         ),
@@ -290,34 +277,27 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
   }
 
   Widget _searchWidget() {
-    return Container(
-      padding: const EdgeInsets.only(left: 20, right: 20),
-      height: 50,
-      child: TextField(
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8),
+      child: SearchBar(
         controller: _searchController,
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(20),
-            ),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Theme.of(context).cardColor,
-          hintText: 'Nummer oder Typ suchen',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: _searchText.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchText = '';
-                    });
-                  },
-                  icon: const Icon(Icons.clear),
-                )
-              : null,
+        padding: const MaterialStatePropertyAll<EdgeInsets>(
+          EdgeInsets.symmetric(horizontal: 16.0),
         ),
+        leading: const Icon(Icons.search),
+        trailing: [
+          if (_searchText.isNotEmpty)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _searchController.clear();
+                  _searchText = '';
+                });
+              },
+              icon: const Icon(Icons.clear),
+            )
+        ],
+        hintText: 'Nummer oder Typ suchen',
         onChanged: (value) => setState(() {
           _searchText = value;
         }),

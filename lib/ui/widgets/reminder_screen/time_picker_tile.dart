@@ -69,12 +69,13 @@ class _TimePickerTileState extends State<TimePickerTile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+
+        Text(
           'Uhrzeit',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         ListTile(
-          title: Text(_lableTime),
+          title: Text(_lableTime, style: Theme.of(context).textTheme.bodyLarge,),
           subtitle: const Text('Wähle die Uhrzeit der Benachrichtigung.'),
           leading: const FaIcon(FontAwesomeIcons.clock),
           onTap: () => _timePicker(context, reminderProvider),

@@ -10,7 +10,7 @@ import '../tags/add_tags.dart';
 import '../tags/tag_chip.dart';
 
 class TagWidget extends StatefulWidget {
-  const TagWidget({Key? key}) : super(key: key);
+  const TagWidget({super.key});
 
   @override
   State<TagWidget> createState() => _TagWidgetState();

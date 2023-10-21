@@ -23,8 +23,7 @@ class MeterCardList extends StatefulWidget {
   final bool isHomescreen;
 
   const MeterCardList(
-      {Key? key, required this.stream, required this.isHomescreen})
-      : super(key: key);
+      {super.key, required this.stream, required this.isHomescreen});
 
   @override
   State<MeterCardList> createState() => _MeterCardListState();
@@ -131,8 +130,7 @@ class _MeterCardListState extends State<MeterCardList> {
                     padding: const EdgeInsets.only(top: 8.0, left: 2),
                     child: Text(
                       element,
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ),
                   shrinkWrap: true,
@@ -209,7 +207,14 @@ class _MeterCardListState extends State<MeterCardList> {
                     }
                     Navigator.of(context).pushReplacementNamed('archive');
                   },
-                  child: Text('Archivierte Zähler ($_archivLength)'),
+                  child: Text(
+                    'Archivierte Zähler ($_archivLength)',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
+              if (hasSelectedItems)
+                const SizedBox(
+                  height: 90,
                 ),
             ],
           );

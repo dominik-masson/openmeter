@@ -53,20 +53,21 @@ dependencies:
   intl: any
   grouped_list: ^5.1.2
   sticky_grouped_list: ^3.1.0
-  fl_chart: ^0.63.0
+  fl_chart: ^0.64.0
   permission_handler: ^11.0.0
   font_awesome_flutter: ^10.3.0
   wakelock_plus: ^1.1.1
   flutter_slidable: ^3.0.0
   uuid: ^4.0.0
+  dynamic_color: ^1.6.8
   # Chart
   smooth_page_indicator: ^1.0.1
   # Local Push Notification
-  flutter_local_notifications: ^15.1.0+1
+  flutter_local_notifications: ^16.1.0
   timezone: ^0.9.1
   # App Native Settings
   flutter_launcher_icons: ^0.13.1
-  rename: ^2.0.1
+  rename: ^3.0.1
   flutter_native_splash: ^2.2.16
   file_picker:
 
@@ -79,7 +80,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
   drift_dev: ^2.5.2
   build_runner: ^2.3.3
 
@@ -129,16 +130,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/icons/no_data.png
-    - assets/icons/no_data2.png
-    - assets/icons/meter.png
-    - assets/icons/no_meter.png
-    - assets/icons/no_meter2.png
-    - assets/icons/notifications_disable.png
-    - assets/icons/notifications_enable.png
-    - assets/icons/database_icon.png
-    - assets/icons/tag.png
-    - assets/icons/empty_archiv.png
+    - assets/icons/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

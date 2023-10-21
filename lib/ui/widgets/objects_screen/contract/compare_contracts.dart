@@ -25,8 +25,6 @@ class CompareContracts extends StatefulWidget {
 }
 
 class _CompareContractsState extends State<CompareContracts> {
-  final TextStyle textStyle = const TextStyle(fontSize: 16);
-
   late ContractDto contract;
 
   final String local = Platform.localeName;
@@ -50,7 +48,7 @@ class _CompareContractsState extends State<CompareContracts> {
             padding: EdgeInsets.only(bottom: 5, top: padding),
             child: Text(
               title,
-              style: textStyle,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ),
@@ -59,7 +57,7 @@ class _CompareContractsState extends State<CompareContracts> {
             padding: EdgeInsets.only(bottom: 5, top: padding),
             child: Text(
               formatSimpleCurrency.format(newValue),
-              style: textStyle,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ),
@@ -68,7 +66,7 @@ class _CompareContractsState extends State<CompareContracts> {
             padding: EdgeInsets.only(bottom: 5, top: padding),
             child: Text(
               formatSimpleCurrency.format(difference),
-              style: textStyle,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ),
@@ -99,7 +97,7 @@ class _CompareContractsState extends State<CompareContracts> {
                 padding: const EdgeInsets.only(bottom: 15),
                 child: Text(
                   'Verbrauch',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
@@ -108,7 +106,7 @@ class _CompareContractsState extends State<CompareContracts> {
                 padding: const EdgeInsets.only(bottom: 15),
                 child: Text(
                   '${compareContract.usage} ${_convertMeterUnit.getUnitString(_unit)}',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
@@ -132,14 +130,14 @@ class _CompareContractsState extends State<CompareContracts> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   'Neue Kosten',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
             TableCell(
               child: Text(
                 'Ersparnisse',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -156,7 +154,7 @@ class _CompareContractsState extends State<CompareContracts> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   'Arbeitspreis',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
@@ -165,14 +163,14 @@ class _CompareContractsState extends State<CompareContracts> {
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Text(
                   '${formatDecimal.format(costs.energyPrice)} Cent',
-                  style: textStyle,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
             ),
             TableCell(
               child: Text(
                 '${formatDecimal.format(compareValues.energyPrice)} Cent',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -279,6 +277,7 @@ class _CompareContractsState extends State<CompareContracts> {
                   content: Text(
                     'Neuer Vertrag wurde erstellt!',
                   ),
+                  behavior: SnackBarBehavior.floating,
                 ));
               }
             });
@@ -308,7 +307,7 @@ class _CompareContractsState extends State<CompareContracts> {
               ),
               Text(
                 'Neuer Vertrag',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
@@ -326,7 +325,7 @@ class _CompareContractsState extends State<CompareContracts> {
               ),
               Text(
                 'Zwischenspeichern',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
@@ -344,7 +343,7 @@ class _CompareContractsState extends State<CompareContracts> {
               ),
               Text(
                 'Bearbeiten',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
@@ -362,15 +361,15 @@ class _CompareContractsState extends State<CompareContracts> {
               ),
               Text(
                 'Löschen',
-                style: textStyle,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
         ),
       ],
-      icon: const Icon(
+      icon: Icon(
         Icons.more_horiz,
-        color: Colors.white70,
+        color: Theme.of(context).iconTheme.color!.withAlpha(175),
       ),
     );
   }
@@ -413,12 +412,9 @@ class _CompareContractsState extends State<CompareContracts> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                   Text(
                     'Kosten Vergleichen',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   _popupMenu(compareContract, provider, context),
                 ],

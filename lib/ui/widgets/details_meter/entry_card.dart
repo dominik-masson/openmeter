@@ -4,8 +4,10 @@ import 'package:openmeter/ui/widgets/details_meter/details_entry.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/font_size_value.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/theme_changer.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 
@@ -13,7 +15,7 @@ class EntryCard extends StatelessWidget {
   final MeterData meter;
   final DetailsEntry _detailsEntry = DetailsEntry();
 
-  EntryCard({Key? key, required this.meter}) : super(key: key);
+  EntryCard({super.key, required this.meter});
 
   _showDetails({
     required BuildContext context,
@@ -39,15 +41,19 @@ class EntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final entryProvider = Provider.of<EntryCardProvider>(context);
     final costProvider = Provider.of<CostProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeChanger>(context);
+
+    bool isLargeText =
+        themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Zählerstand',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
           StreamBuilder(
             stream: Provider.of<LocalDatabase>(context)
@@ -59,12 +65,15 @@ class EntryCard extends StatelessWidget {
               bool hasSelectedEntries = entryProvider.getHasSelectedEntries;
 
               if (entry == null || entry.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(8.0),
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: Center(
                     child: Text(
                       'Es wurden noch keine Messungen eingetragen!',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(color: Colors.grey),
                     ),
                   ),
                 );
@@ -77,8 +86,7 @@ class EntryCard extends StatelessWidget {
               Map<Entrie, bool> entries = entryProvider.getAllEntries;
 
               return SizedBox(
-                height: 120,
-                width: double.infinity,
+                height: isLargeText ? 150 : 130,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   primary: false,
@@ -113,16 +121,21 @@ class EntryCard extends StatelessWidget {
                         entryProvider.setSelectedEntry(item);
                       },
                       child: SizedBox(
-                        width: 240,
+                        width: isLargeText ? 300 : 240,
                         child: Card(
-                          color:
-                              isSelected ? Colors.grey.withOpacity(0.5) : null,
+                          color: isSelected
+                              ? Theme.of(context).highlightColor
+                              : null,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _showDateAndNote(item: item, hasNote: hasNote),
+                                _showDateAndNote(
+                                  item: item,
+                                  hasNote: hasNote,
+                                  context: context,
+                                ),
                                 const SizedBox(
                                   height: 5,
                                 ),
@@ -135,6 +148,7 @@ class EntryCard extends StatelessWidget {
                                   unit: unit,
                                   entryProvider: entryProvider,
                                   usage: usage,
+                                  context: context,
                                 ),
                               ],
                             ),
@@ -152,16 +166,19 @@ class EntryCard extends StatelessWidget {
     );
   }
 
-  Widget _showDateAndNote({required Entrie item, required bool hasNote}) {
+  Widget _showDateAndNote({
+    required Entrie item,
+    required bool hasNote,
+    required BuildContext context,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           DateFormat('dd.MM.yyyy').format(item.date),
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Colors.grey,
+              ),
         ),
         if (hasNote)
           const Icon(
@@ -177,6 +194,7 @@ class EntryCard extends StatelessWidget {
     required String unit,
     required int usage,
     required EntryCardProvider entryProvider,
+    required BuildContext context,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,11 +205,11 @@ class EntryCard extends StatelessWidget {
             ConvertMeterUnit().getUnitWidget(
               count: ConvertCount.convertCount(item.count),
               unit: unit,
-              textStyle: const TextStyle(fontSize: 16),
+              textStyle: Theme.of(context).textTheme.bodyMedium!,
             ),
-            const Text(
+            Text(
               'Zählerstand',
-              style: TextStyle(color: Colors.grey),
+              style: Theme.of(context).textTheme.labelSmall,
             ),
           ],
         ),
@@ -201,26 +219,25 @@ class EntryCard extends StatelessWidget {
               ConvertMeterUnit().getUnitWidget(
                 count: '+${ConvertCount.convertCount(usage)}',
                 unit: unit,
-                textStyle: TextStyle(
-                  fontSize: 16,
-                  color: entryProvider.getColors(item.count, usage),
-                ),
+                textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: entryProvider.getColors(item.count, usage),
+                    ),
               ),
               Text(
                 'innerhalb ${item.days} Tagen',
-                style: const TextStyle(color: Colors.grey),
+                style: Theme.of(context).textTheme.labelSmall,
               ),
             ],
           ),
         if (usage == -1 && !item.isReset)
-          const Text(
+          Text(
             'Erstablesung',
-            style: TextStyle(fontSize: 16),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         if (item.isReset)
-          const Text(
+          Text(
             'Zurückgesetzt',
-            style: TextStyle(fontSize: 16),
+            style: Theme.of(context).textTheme.bodyMedium!,
           ),
       ],
     );

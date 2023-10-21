@@ -57,6 +57,7 @@ class DatabaseSettingsHelper {
                   content: Text(
                     'Datenbank wurde erfolgreich zurückgesetzt!',
                   ),
+                  behavior: SnackBarBehavior.floating,
                 ));
                 Navigator.of(context).pop();
               });

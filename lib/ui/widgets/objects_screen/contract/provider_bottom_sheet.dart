@@ -30,62 +30,74 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
     required DetailsContractProvider provider,
     required ContractProvider contractProvider,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        ElevatedButton(
-          onPressed: () async {
-            if (_currentProvider != null) {
-              provider.setRemoveCanceledDateState(true, true);
+    return SingleChildScrollView(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () async {
+                if (_currentProvider != null) {
+                  provider.setRemoveCanceledDateState(true, true);
 
-              _currentProvider = await _helper.removeCanceledState(
-                  db: db, provider: _currentProvider!);
+                  _currentProvider = await _helper.removeCanceledState(
+                      db: db, provider: _currentProvider!);
 
-              contractProvider.updateProvider(
-                db: db,
-                provider: _currentProvider!,
-                contractId: widget.contract.id!,
-                isArchiv: false,
-              );
+                  contractProvider.updateProvider(
+                    db: db,
+                    provider: _currentProvider!,
+                    contractId: widget.contract.id!,
+                    isArchiv: false,
+                  );
 
-              _setAutoUpdateHasUpdate();
+                  _setAutoUpdateHasUpdate();
 
-              setState(() {
-                provider.setCurrentProvider(_currentProvider);
-              });
-            }
-          },
-          child: const Text('Kündigung entfernen'),
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            provider.setDeleteProviderState(true, true);
+                  setState(() {
+                    provider.setCurrentProvider(_currentProvider);
+                  });
+                }
+              },
+              child: const Text(
+                'Kündigung entfernen',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () async {
+                provider.setDeleteProviderState(true, true);
 
-            if (_currentProvider != null) {
-              await _helper.deleteProvider(
-                db: db,
-                provider: _currentProvider!,
-                contractProvider: contractProvider,
-                contractId: widget.contract.id!,
-              );
+                if (_currentProvider != null) {
+                  await _helper.deleteProvider(
+                    db: db,
+                    provider: _currentProvider!,
+                    contractProvider: contractProvider,
+                    contractId: widget.contract.id!,
+                  );
 
-              _setAutoUpdateHasUpdate();
+                  _setAutoUpdateHasUpdate();
 
-              setState(() {
-                provider.setCurrentProvider(null);
-              });
+                  setState(() {
+                    provider.setCurrentProvider(null);
+                  });
 
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            }
-          },
-          child: const Text('Details entfernen'),
-        ),
-      ],
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              },
+              child: const Text(
+                'Details entfernen',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -12,10 +12,10 @@ class TagChip extends StatelessWidget {
   final TagChipState state;
 
   const TagChip({
-    Key? key,
+    super.key,
     required this.tag,
     required this.state,
-  }) : super(key: key);
+  });
 
   Future _deleteDialog(BuildContext context, LocalDatabase db) {
     return showDialog(
@@ -72,6 +72,7 @@ class TagChip extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],
@@ -97,6 +98,7 @@ class TagChip extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ),
@@ -130,6 +132,7 @@ class TagChip extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
         ],

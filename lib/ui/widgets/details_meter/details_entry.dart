@@ -56,10 +56,7 @@ class DetailsEntry {
         ),
         TextFormField(
           controller: _noteController,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.normal,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: const InputDecoration(
             icon: Icon(Icons.notes),
             hintText: 'Füge eine Notiz hinzu',
@@ -95,17 +92,16 @@ class DetailsEntry {
                 convertMeterUnit.getUnitWidget(
                   count: '+${ConvertCount.convertCount(usage)}',
                   unit: unit,
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
                 Text(
                   'innerhalb ${entry.days} Tagen',
-                  style: const TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
@@ -113,7 +109,7 @@ class DetailsEntry {
               children: [
                 Text(
                   '${ConvertCount.convertDouble(usageCost)} €',
-                  style: const TextStyle(fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -133,17 +129,16 @@ class DetailsEntry {
                 convertMeterUnit.getUnitWidget(
                   count: _entryProvider.getDailyUsage(usage, entry.days),
                   unit: unit,
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
-                const Text(
+                Text(
                   'pro Tag',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
@@ -151,7 +146,7 @@ class DetailsEntry {
               children: [
                 Text(
                   costFormat.format(dailyCost),
-                  style: const TextStyle(fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -179,17 +174,16 @@ class DetailsEntry {
                 convertMeterUnit.getUnitWidget(
                   count: '+${ConvertCount.convertCount(usage)}',
                   unit: unit,
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
                 Text(
                   'innerhalb ${entry.days} Tagen',
-                  style: const TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
@@ -199,17 +193,16 @@ class DetailsEntry {
                 convertMeterUnit.getUnitWidget(
                   count: _entryProvider.getDailyUsage(usage, entry.days),
                   unit: unit,
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
-                const Text(
+                Text(
                   'pro Tag',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
@@ -219,12 +212,12 @@ class DetailsEntry {
         const SizedBox(
           height: 25,
         ),
-        const Text(
+        Text(
           'Für mehr Information füge einen Vertrag hinzu.',
-          style: TextStyle(
-            color: Colors.grey,
-            // fontSize: 14,
-          ),
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall!
+              .copyWith(color: Colors.grey),
           textAlign: TextAlign.center,
         ),
       ],
@@ -268,13 +261,7 @@ class DetailsEntry {
     return Column(
       children: [
         Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium!),
         ),
         if (_stateNote)
           _noteWidget(
@@ -329,12 +316,12 @@ class DetailsEntry {
                     children: [
                       Text(
                         DateFormat('dd.MM.yyyy').format(entry.date),
-                        style: const TextStyle(fontSize: 16),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       convertMeterUnit.getUnitWidget(
                         count: ConvertCount.convertCount(entry.count),
                         unit: unit,
-                        textStyle: const TextStyle(fontSize: 16),
+                        textStyle: Theme.of(context).textTheme.bodyMedium!,
                       ),
                     ],
                   ),
@@ -349,7 +336,8 @@ class DetailsEntry {
                   ),
                   if (usage == -1 && !_entry.isReset)
                     _extraInformation(context, 'Erstablesung'),
-                  if (_entry.isReset) _extraInformation(context, 'Zurückgesetzt'),
+                  if (_entry.isReset)
+                    _extraInformation(context, 'Zurückgesetzt'),
                   if (usage != -1)
                     _information(
                       context: context,
@@ -380,9 +368,11 @@ class DetailsEntry {
                     entryProvider.setStateNote(false);
                     Navigator.of(context).pop(true);
                   },
-                  child: const Text(
+                  child: Text(
                     'Okay',
-                    style: TextStyle(fontSize: 16),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).primaryColor,
+                        ),
                   ),
                 ),
               ],

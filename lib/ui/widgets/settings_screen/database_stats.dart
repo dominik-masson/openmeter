@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/font_size_value.dart';
 import '../../../core/model/database_stats_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/theme_changer.dart';
 import '../../../core/services/database_settings_helper.dart';
 
 class DatabaseStats extends StatefulWidget {
   final DatabaseSettingsHelper databaseSettingsHelper;
 
-  const DatabaseStats({Key? key, required this.databaseSettingsHelper})
-      : super(key: key);
+  const DatabaseStats({super.key, required this.databaseSettingsHelper});
 
   @override
   State<DatabaseStats> createState() => _DatabaseStatsState();
@@ -115,17 +116,13 @@ class _DatabaseStatsState extends State<DatabaseStats> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Speicherbelegung',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18),
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       Text(
                         _databaseSize,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineLarge,
                       ),
                     ],
                   ),
@@ -184,12 +181,19 @@ class _DatabaseStatsState extends State<DatabaseStats> {
         const SizedBox(
           width: 4,
         ),
-        Text(text),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
       ],
     );
   }
 
   _chart() {
+    final themeProvider = Provider.of<ThemeChanger>(context);
+
+    bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
+
     return Row(
       children: [
         Expanded(
@@ -206,7 +210,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
           ),
         ),
         Expanded(
-          flex: 1,
+          flex: isLargeText ? 2 : 1,
           child: ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

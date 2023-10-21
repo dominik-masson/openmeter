@@ -4,7 +4,7 @@ import 'package:openmeter/core/provider/stats_provider.dart';
 import 'package:provider/provider.dart';
 
 class StatsScreen extends StatefulWidget {
-  const StatsScreen({Key? key}) : super(key: key);
+  const StatsScreen({super.key});
 
   @override
   State<StatsScreen> createState() => _StatsScreenState();

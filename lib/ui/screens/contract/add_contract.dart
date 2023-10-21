@@ -22,7 +22,7 @@ import '../../widgets/objects_screen/contract/add_provider.dart';
 class AddContract extends StatefulWidget {
   final ContractDto? contract;
 
-  const AddContract({Key? key, required this.contract}) : super(key: key);
+  const AddContract({super.key, required this.contract});
 
   @override
   State<AddContract> createState() => _AddContractState();
@@ -322,7 +322,7 @@ class _AddContractState extends State<AddContract> {
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: _providerExpand
-              ? Theme.of(context).primaryColorLight
+              ? Theme.of(context).primaryColor
               : Theme.of(context).hintColor,
         ),
       ),

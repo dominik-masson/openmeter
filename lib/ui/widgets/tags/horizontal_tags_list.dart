@@ -37,7 +37,7 @@ class HorizontalTagsList extends StatelessWidget {
 
         return Container(
           alignment: Alignment.centerLeft,
-          height: 25,
+          height: 30,
           child: ListView.builder(
             shrinkWrap: true,
             scrollDirection: Axis.horizontal,

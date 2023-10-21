@@ -10,7 +10,7 @@ import '../../../core/provider/entry_card_provider.dart';
 class CostBar extends StatefulWidget {
   final MeterData meter;
 
-  const CostBar({Key? key, required this.meter}) : super(key: key);
+  const CostBar({super.key, required this.meter});
 
   @override
   State<CostBar> createState() => _CostBarState();
@@ -75,12 +75,13 @@ class _CostBarState extends State<CostBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Infos zu Werten'),
-        content: const Text(
+        title: Text(
+          'Infos zu Werten',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        content: Text(
           'Alle errechneten Werte sind nur grobe Schätzungen und spiegeln nicht zwangsweise die Realität wieder.',
-          style: TextStyle(
-            fontSize: 16,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
@@ -96,12 +97,13 @@ class _CostBarState extends State<CostBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Fehler beim Datum'),
-        content: const Text(
+        title: Text(
+          'Fehler beim Datum',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        content: Text(
           'Ein gewähltes Datum stimmt nicht mit den vorhandenen Einträgen überein. Bitte wähle ein neues Datum um die Werte zu berechnen!',
-          style: TextStyle(
-            fontSize: 16,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
@@ -188,12 +190,12 @@ class _CostBarState extends State<CostBar> {
             );
             costProvider.setSumMont(months);
 
-            if(entryData.length > 11) {
+            if (entryData.length > 11) {
               return _card(
-              context,
-              costProvider,
-            );
-            } else{
+                context,
+                costProvider,
+              );
+            } else {
               return Container();
             }
           },
@@ -214,9 +216,9 @@ class _CostBarState extends State<CostBar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Kostenübersicht',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
               Row(
                 children: [
@@ -254,7 +256,12 @@ class _CostBarState extends State<CostBar> {
                           },
                           child: Text(
                             DateFormat('dd.MM.yyyy').format(_firstDate!),
-                            style: const TextStyle(fontSize: 16),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  color: Theme.of(context).primaryColor,
+                                ),
                           ),
                         ),
                         const Icon(
@@ -267,7 +274,12 @@ class _CostBarState extends State<CostBar> {
                           },
                           child: Text(
                             DateFormat('dd.MM.yyyy').format(_lastDate!),
-                            style: const TextStyle(fontSize: 16),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  color: Theme.of(context).primaryColor,
+                                ),
                           ),
                         ),
                       ],
@@ -275,13 +287,13 @@ class _CostBarState extends State<CostBar> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Kosten',
-                          style: TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         Text(
                           '${costProvider.calcCost()}€',
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -291,13 +303,13 @@ class _CostBarState extends State<CostBar> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'bezahlt',
-                          style: TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         Text(
                           '${costProvider.calcPayedDiscount()}€',
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -311,11 +323,11 @@ class _CostBarState extends State<CostBar> {
                           costProvider.calcRest().isNegative
                               ? 'Nachzahlung'
                               : 'Rückzahlung',
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         Text(
                           '${costProvider.calcRest().toStringAsFixed(2)}€',
-                          style: const TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),

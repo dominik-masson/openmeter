@@ -13,7 +13,7 @@ import 'no_entry.dart';
 class UsageBarChart extends StatefulWidget {
   final MeterData meter;
 
-  const UsageBarChart({Key? key, required this.meter}) : super(key: key);
+  const UsageBarChart({super.key, required this.meter});
 
   @override
   State<UsageBarChart> createState() => _UsageBarChartState();
@@ -95,7 +95,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
           barRods: [
             BarChartRodData(
               toY: data.values.elementAt(i).toDouble(),
-              color: Theme.of(context).primaryColorLight,
+              color: Theme.of(context).primaryColor,
               width: 12,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(6),
@@ -185,9 +185,8 @@ class _UsageBarChartState extends State<UsageBarChart> {
 
         if (_twelveMonths && entries.length > 12) {
           // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries = entries
-              .getRange(entries.length - 12, entries.length)
-              .toList();
+          finalEntries =
+              entries.getRange(entries.length - 12, entries.length).toList();
         } else {
           finalEntries = entries;
         }
@@ -229,12 +228,14 @@ class _UsageBarChartState extends State<UsageBarChart> {
                             },
                             child: Text(
                               'letzte 12 Monate',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _twelveMonths
-                                    ? Theme.of(context).primaryColorLight
-                                    : Colors.grey,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall!
+                                  .copyWith(
+                                    color: _twelveMonths
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
                             ),
                           ),
                           IconButton(
@@ -258,9 +259,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
                     child: _convertMeterUnit.getUnitWidget(
                       count: '',
                       unit: widget.meter.unit,
-                      textStyle: const TextStyle(
-                        fontSize: 12,
-                      ),
+                      textStyle:Theme.of(context).textTheme.bodySmall!,
                     ),
                   ),
                 if (!isEmpty) _monthlyChart(sumMonths),
