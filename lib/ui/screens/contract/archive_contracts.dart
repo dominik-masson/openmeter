@@ -35,7 +35,7 @@ class _ArchiveContractState extends State<ArchiveContract> {
       body: WillPopScope(
         onWillPop: () async {
           if (contractProvider.getHasSelectedItems == true) {
-            contractProvider.removeAllSelectedItems();
+            contractProvider.removeAllSelectedItems(true);
             return false;
           }
 
@@ -154,7 +154,7 @@ class _ArchiveContractState extends State<ArchiveContract> {
       TextButton(
         onPressed: () async {
           await contractProvider.unarchiveSelectedContracts(db);
-          contractProvider.removeAllSelectedItems();
+          contractProvider.removeAllSelectedItems(true);
 
           if (mounted) {
             backupProvider.setHasUpdate(true);
@@ -209,7 +209,7 @@ class _ArchiveContractState extends State<ArchiveContract> {
       title: Text('$count ausgewählt'),
       leading: IconButton(
         icon: const Icon(Icons.close),
-        onPressed: () => contractProvider.removeAllSelectedItems(),
+        onPressed: () => contractProvider.removeAllSelectedItems(true),
       ),
     );
   }

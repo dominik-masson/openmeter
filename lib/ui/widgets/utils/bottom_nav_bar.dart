@@ -78,44 +78,48 @@ class _BottomNavBarState extends State<BottomNavBar>
 
     bool hasSelectedItems = false;
 
-    if(meterProvider.getStateHasSelectedMeters || roomProvider.getStateHasSelected || contractProvider.getHasSelectedItems){
+    if (meterProvider.getStateHasSelectedMeters ||
+        roomProvider.getStateHasSelected ||
+        contractProvider.getHasSelectedItems) {
       hasSelectedItems = true;
     }
 
     return Scaffold(
       body: _screen[_currentIndex],
-      bottomNavigationBar: hasSelectedItems ? null : NavigationBar(
-        height: MediaQuery.of(context).size.height * 0.09,
-        labelBehavior: compactNavBar
-            ? NavigationDestinationLabelBehavior.alwaysHide
-            : NavigationDestinationLabelBehavior.alwaysShow,
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (value) {
-          if (roomProvider.getStateHasSelected) {
-            roomProvider.removeAllSelected();
-          }
-          if (contractProvider.getHasSelectedItems) {
-            contractProvider.removeAllSelectedItems();
-          }
-          if (meterProvider.getStateHasSelectedMeters) {
-            meterProvider.removeAllSelectedMeters();
-          }
+      bottomNavigationBar: hasSelectedItems
+          ? null
+          : NavigationBar(
+              height: MediaQuery.of(context).size.height * 0.09,
+              labelBehavior: compactNavBar
+                  ? NavigationDestinationLabelBehavior.alwaysHide
+                  : NavigationDestinationLabelBehavior.alwaysShow,
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (value) {
+                if (roomProvider.getStateHasSelected) {
+                  roomProvider.removeAllSelected();
+                }
+                if (contractProvider.getHasSelectedItems) {
+                  contractProvider.removeAllSelectedItems(true);
+                }
+                if (meterProvider.getStateHasSelectedMeters) {
+                  meterProvider.removeAllSelectedMeters();
+                }
 
-          setState(() {
-            _currentIndex = value;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(CustomIcons.voltmeter),
-            label: 'Zähler',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.widgets),
-            label: 'Objekte',
-          ),
-        ],
-      ),
+                setState(() {
+                  _currentIndex = value;
+                });
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(CustomIcons.voltmeter),
+                  label: 'Zähler',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.widgets),
+                  label: 'Objekte',
+                ),
+              ],
+            ),
     );
   }
 }

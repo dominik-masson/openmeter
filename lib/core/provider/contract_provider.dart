@@ -230,7 +230,7 @@ class ContractProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  removeAllSelectedItems() {
+  removeAllSelectedItems(bool notify) {
     for (ContractDto data in _contracts) {
       if (data.isSelected! == true) {
         data.isSelected = false;
@@ -247,7 +247,9 @@ class ContractProvider extends ChangeNotifier {
     _selectedItemsLength = 0;
     splitContracts();
 
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   _deleteContracts(
@@ -340,7 +342,7 @@ class ContractProvider extends ChangeNotifier {
     final contract =
         _contracts.firstWhere((element) => element.isSelected == true);
 
-    removeAllSelectedItems();
+    removeAllSelectedItems(false);
 
     return contract;
   }

@@ -129,11 +129,15 @@ class _AddContractState extends State<AddContract> {
     }
 
     // Update Provider
-    if (_isUpdate && _providerDto != null) {
-      ProviderDto? provider =
-          await _providerHelper.updateProvider(db: db, provider: _providerDto!);
+    if (_isUpdate) {
+      if (_providerDto != null) {
+        ProviderDto? provider = await _providerHelper.updateProvider(
+            db: db, provider: _providerDto!);
 
-      return provider;
+        return provider;
+      } else {
+        return _contractDto?.provider;
+      }
     }
 
     return detailsProvider.getCurrentProvider;

@@ -45,7 +45,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
               IconButton(
                 onPressed: () {
                   if (contractProvider.getHasSelectedItems) {
-                    contractProvider.removeAllSelectedItems();
+                    contractProvider.removeAllSelectedItems(true);
                   }
                   Navigator.of(context).pushNamed('archive_contract');
                 },
@@ -89,7 +89,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           }
 
           if (contractProvider.getHasSelectedItems == true) {
-            contractProvider.removeAllSelectedItems();
+            contractProvider.removeAllSelectedItems(true);
             return false;
           }
 
@@ -220,7 +220,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       TextButton(
         onPressed: () async {
           await contractProvider.archiveAllSelectedContract(db);
-          contractProvider.removeAllSelectedItems();
+          contractProvider.removeAllSelectedItems(true);
 
           if (mounted) {
             Provider.of<DatabaseSettingsProvider>(context, listen: false)
@@ -284,7 +284,7 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           }
 
           if (contractProvider.getHasSelectedItems == true) {
-            contractProvider.removeAllSelectedItems();
+            contractProvider.removeAllSelectedItems(true);
           }
         },
       ),
