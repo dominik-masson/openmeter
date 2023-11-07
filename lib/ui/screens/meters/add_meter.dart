@@ -230,7 +230,7 @@ class _AddScreenState extends State<AddScreen> {
         actions: [
           IconButton(
             onPressed: () async {
-             await  _torchController.getTorch();
+              await _torchController.getTorch();
               setState(() {
                 isTorchOn = !isTorchOn;
               });
@@ -516,7 +516,10 @@ class _AddScreenState extends State<AddScreen> {
         }).toList(),
         onChanged: (value) {
           _meterTyp = value!;
-          _unitController.text = meterTyps[_meterTyp]['einheit'];
+
+          setState(() {
+            _unitController.text = meterTyps[_meterTyp]['einheit'];
+          });
         },
       ),
     );
