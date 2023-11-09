@@ -6,6 +6,7 @@ import 'package:openmeter/core/enums/font_size_value.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/model/contract_dto.dart';
+import '../../../../core/model/meter_typ.dart';
 import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
@@ -77,7 +78,8 @@ class _ContractCardState extends State<ContractCard> {
     final themeProvider = Provider.of<ThemeChanger>(context);
 
     bool hasSelected = provider.getHasSelectedItems;
-    bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
+    bool isLargeText =
+        themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
 
     ContractDto contract = widget.contractDto;
 
@@ -90,7 +92,10 @@ class _ContractCardState extends State<ContractCard> {
     final formatDecimal =
         NumberFormat.decimalPatternDigits(locale: local, decimalDigits: 2);
 
-    final avatarData = meterTyps[contract.meterTyp]['avatar'];
+    final meterTyp = meterTyps.firstWhere(
+        (element) => element.meterTyp == widget.contractDto.meterTyp);
+
+    final CustomAvatar avatarData = meterTyp.avatar;
 
     return GestureDetector(
       onLongPress: () {
@@ -140,14 +145,14 @@ class _ContractCardState extends State<ContractCard> {
                 Row(
                   children: [
                     MeterCircleAvatar(
-                      color: avatarData['color'],
-                      icon: avatarData['icon'],
+                      color: avatarData.color,
+                      icon: avatarData.icon,
                     ),
                     const SizedBox(
                       width: 20,
                     ),
                     Text(
-                      meterTyps[contract.meterTyp]['anbieter'],
+                      meterTyp.providerTitle,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const Spacer(),

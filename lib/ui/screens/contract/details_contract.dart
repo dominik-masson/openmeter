@@ -44,9 +44,12 @@ class _DetailsContractState extends State<DetailsContract> {
       _currentContract.provider = _currentProvider;
     }
 
+    final meterTyp = meterTyps
+        .firstWhere((element) => element.meterTyp == _currentContract.meterTyp);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(meterTyps[_currentContract.meterTyp]['anbieter']),
+        title: Text(meterTyp.providerTitle),
         actions: [
           IconButton(
             onPressed: () {

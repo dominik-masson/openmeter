@@ -221,10 +221,13 @@ class _ProviderCardState extends State<ProviderCard> {
   }
 
   _emptyProvider(DetailsContractProvider provider) {
+    final meterTyp = meterTyps
+        .firstWhere((element) => element.meterTyp == widget.contract.meterTyp);
+
     return Column(
       children: [
         Text(
-          'Es wurde noch kein Vertrag für diesen ${meterTyps[widget.contract.meterTyp]['anbieter']} angelegt.',
+          'Es wurde noch kein Vertrag für diesen ${meterTyp.providerTitle} angelegt.',
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 color: Colors.grey,
               ),

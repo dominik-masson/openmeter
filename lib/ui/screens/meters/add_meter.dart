@@ -424,8 +424,11 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   Widget _unitInput(BuildContext context) {
+    final meterTyp =
+        meterTyps.firstWhere((element) => element.meterTyp == _meterTyp);
+
     if (_unitController.text.isEmpty && _firstLoad == 0) {
-      _unitController.text = meterTyps[_meterTyp]['einheit'];
+      _unitController.text = meterTyp.unit;
     }
 
     return Row(
@@ -495,21 +498,21 @@ class _AddScreenState extends State<AddScreen> {
         ),
         isDense: false,
         value: _meterTyp,
-        items: meterTyps.entries.map((e) {
-          final Map avatarData = e.value['avatar'];
+        items: meterTyps.map((e) {
+          final avatarData = e.avatar;
           return DropdownMenuItem(
-            value: e.key,
+            value: e.meterTyp,
             child: Row(
               children: [
                 MeterCircleAvatar(
-                  color: avatarData['color'],
-                  icon: avatarData['icon'],
+                  color: avatarData.color,
+                  icon: avatarData.icon,
                   size: MediaQuery.of(context).size.width * 0.045,
                 ),
                 const SizedBox(
                   width: 20,
                 ),
-                Text(e.key),
+                Text(e.meterTyp),
               ],
             ),
           );
@@ -517,8 +520,11 @@ class _AddScreenState extends State<AddScreen> {
         onChanged: (value) {
           _meterTyp = value!;
 
+          final meterTyp =
+              meterTyps.firstWhere((element) => element.meterTyp == _meterTyp);
+
           setState(() {
-            _unitController.text = meterTyps[_meterTyp]['einheit'];
+            _unitController.text = meterTyp.unit;
           });
         },
       ),

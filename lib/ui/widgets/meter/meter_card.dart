@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/model/meter_dto.dart';
+import '../../../core/model/meter_typ.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
@@ -201,7 +202,9 @@ class _MeterCardState extends State<MeterCard> {
       dateText = DateFormat('dd.MM.yyyy').format(widget.date!);
     }
 
-    final Map avatarData = meterTyps[widget.meter.typ]['avatar'];
+    final CustomAvatar avatarData = meterTyps
+        .firstWhere((element) => element.meterTyp == widget.meter.typ)
+        .avatar;
 
     return GestureDetector(
       onTap: () {
@@ -240,8 +243,8 @@ class _MeterCardState extends State<MeterCard> {
                     Row(
                       children: [
                         MeterCircleAvatar(
-                          color: avatarData['color'],
-                          icon: avatarData['icon'],
+                          color: avatarData.color,
+                          icon: avatarData.icon,
                         ),
                         const SizedBox(
                           width: 10,

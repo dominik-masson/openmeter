@@ -161,13 +161,15 @@ class _RoomCardState extends State<RoomCard> {
             List<Widget> widget = [];
 
             for (var items in item) {
-              final avatarData = meterTyps[items]['avatar'];
+              final avatarData = meterTyps
+                  .firstWhere((element) => element.meterTyp == items)
+                  .avatar;
 
               widget.add(Row(
                 children: [
                   MeterCircleAvatar(
-                    color: avatarData['color'],
-                    icon: avatarData['icon'],
+                    color: avatarData.color,
+                    icon: avatarData.icon,
                   ),
                   const SizedBox(
                     width: 2.5,

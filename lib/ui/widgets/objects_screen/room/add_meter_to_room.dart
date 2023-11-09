@@ -154,7 +154,9 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
   }
 
   Widget _meterCardCompact(LocalDatabase db, MeterWithRoom data) {
-    final avatarData = meterTyps[data.meter.typ]['avatar'];
+    final avatarData = meterTyps
+        .firstWhere((element) => element.meterTyp == data.meter.typ)
+        .avatar;
 
     bool isInCurrentRoom = false;
     bool isInARoom = false;
@@ -176,8 +178,8 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
             ? null
             : () => _handleSelected(data.meter.id, isInARoom),
         leading: MeterCircleAvatar(
-          color: avatarData['color'],
-          icon: avatarData['icon'],
+          color: avatarData.color,
+          icon: avatarData.icon,
         ),
         trailing: _getSelectedIcon(
             isInCurrentRoom: isInCurrentRoom, meterId: data.meter.id),

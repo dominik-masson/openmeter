@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../../utils/meter_typ.dart';
 import '../../../core/model/contract_dto.dart';
+import '../../../core/model/meter_typ.dart';
 import '../../../core/model/provider_dto.dart';
 import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
@@ -73,8 +74,11 @@ class _AddContractState extends State<AddContract> {
   void _setController() {
     _contractDto = widget.contract;
 
+    final meterTyp =
+        meterTyps.firstWhere((element) => element.meterTyp == _meterTyp);
+
     if (_contractDto == null) {
-      _unitController.text = meterTyps[_meterTyp]['einheit'];
+      _unitController.text = meterTyp.unit;
       return;
     }
 
@@ -82,7 +86,7 @@ class _AddContractState extends State<AddContract> {
     final formatPattern =
         NumberFormat.decimalPatternDigits(locale: local, decimalDigits: 2);
 
-    _pageName = meterTyps[widget.contract!.meterTyp]['anbieter'];
+    _pageName = meterTyp.providerTitle;
     _isUpdate = true;
     _meterTyp = _contractDto!.meterTyp;
     _basicPrice.text = formatPattern.format(_contractDto!.costs.basicPrice);
@@ -237,8 +241,7 @@ class _AddContractState extends State<AddContract> {
     }
   }
 
-  Widget _dropdownMeterTyp(
-      BuildContext context, Map<String, dynamic> newMeterTyps) {
+  Widget _dropdownMeterTyp(BuildContext context, List<MeterTyp> newMeterTyps) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: DropdownButtonFormField(
@@ -255,21 +258,21 @@ class _AddContractState extends State<AddContract> {
           icon: Icon(Icons.gas_meter_outlined),
         ),
         isDense: false,
-        items: newMeterTyps.entries.map((e) {
-          final avatarData = e.value['avatar'];
+        items: newMeterTyps.map((element) {
+          final avatarData = element.avatar;
           return DropdownMenuItem(
-            value: e.key,
+            value: element.meterTyp,
             child: Row(
               children: [
                 MeterCircleAvatar(
-                  color: avatarData['color'],
-                  icon: avatarData['icon'],
+                  color: avatarData.color,
+                  icon: avatarData.icon,
                   size: MediaQuery.of(context).size.width * 0.045,
                 ),
                 const SizedBox(
                   width: 20,
                 ),
-                Text(e.key),
+                Text(element.meterTyp),
               ],
             ),
           );
@@ -353,16 +356,28 @@ class _AddContractState extends State<AddContract> {
     );
   }
 
-  Map<String, dynamic> _filterMeterTyps() {
-    Map<String, dynamic> result = {};
+  // Map<String, dynamic> _filterMeterTyps() {
+  //   Map<String, dynamic> result = {};
 
-    for (String key in meterTyps.keys) {
-      dynamic value = meterTyps[key];
+  //   for (String key in meterTyps.keys) {
+  //     dynamic value = meterTyps[key];
+  //
+  //     if (value['anbieter'] != '') {
+  //       result.addAll({
+  //         key: value,
+  //       });
+  //     }
+  //   }
+  //
+  //   return result;
+  // }
 
-      if (value['anbieter'] != '') {
-        result.addAll({
-          key: value,
-        });
+  List<MeterTyp> _filterMeterTyps() {
+    List<MeterTyp> result = [];
+
+    for (MeterTyp element in meterTyps) {
+      if (element.providerTitle.isNotEmpty) {
+        result.add(element);
       }
     }
 
@@ -419,7 +434,7 @@ class _AddContractState extends State<AddContract> {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> newMeterTyps = _filterMeterTyps();
+    final List<MeterTyp> newMeterTyps = _filterMeterTyps();
     final detailsProvider = Provider.of<DetailsContractProvider>(context);
 
     return Scaffold(
