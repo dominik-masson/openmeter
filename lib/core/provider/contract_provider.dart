@@ -270,9 +270,9 @@ class ContractProvider extends ChangeNotifier {
 
   deleteAllSelectedContracts(LocalDatabase db, bool isArchiv) async {
     if (isArchiv) {
-      _deleteContracts(currentList: _archivedContracts, db: db);
+      await _deleteContracts(currentList: _archivedContracts, db: db);
     } else {
-      _deleteContracts(currentList: _contracts, db: db);
+      await _deleteContracts(currentList: _contracts, db: db);
       splitContracts();
     }
 
