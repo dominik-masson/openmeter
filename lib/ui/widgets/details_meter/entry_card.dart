@@ -180,11 +180,23 @@ class EntryCard extends StatelessWidget {
                 color: Colors.grey,
               ),
         ),
-        if (hasNote)
-          const Icon(
-            Icons.note,
-            color: Colors.grey,
-          ),
+        Row(
+          children: [
+            if (hasNote)
+              const Icon(
+                Icons.note,
+                color: Colors.grey,
+              ),
+            const SizedBox(
+              width: 10,
+            ),
+            if (item.transmittedToProvider)
+              const Icon(
+                Icons.upload_file_rounded,
+                color: Colors.grey,
+              ),
+          ],
+        ),
       ],
     );
   }

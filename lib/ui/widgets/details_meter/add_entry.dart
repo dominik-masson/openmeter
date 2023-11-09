@@ -28,6 +28,7 @@ class _AddEntryState extends State<AddEntry> {
   final TorchController _torchController = TorchController();
   bool _stateTorch = false;
   bool _isReset = false;
+  bool _isTransmitted = false;
 
   @override
   void dispose() {
@@ -95,6 +96,7 @@ class _AddEntryState extends State<AddEntry> {
           usage: const drift.Value(-1),
           days: const drift.Value(-1),
           isReset: const drift.Value(true),
+          transmittedToProvider: drift.Value(_isTransmitted),
         );
       } else {
         entry = EntriesCompanion(
@@ -103,6 +105,7 @@ class _AddEntryState extends State<AddEntry> {
           count: drift.Value(int.parse(_countercontroller.text)),
           usage: drift.Value(_calcUsage(currentCount)),
           days: drift.Value(_calcDays(_selectedDate!, oldDate)),
+          transmittedToProvider: drift.Value(_isTransmitted),
         );
       }
 
@@ -154,8 +157,8 @@ class _AddEntryState extends State<AddEntry> {
             return Padding(
               padding: MediaQuery.of(context).viewInsets,
               child: Container(
-                height: 400,
-                padding: const EdgeInsets.all(25),
+                height: 450,
+                padding: const EdgeInsets.only(left: 25, right: 25),
                 child: Center(
                   child: Form(
                     key: _formKey,
@@ -168,7 +171,8 @@ class _AddEntryState extends State<AddEntry> {
                             children: [
                               Text(
                                 'Neuer Zählerstand',
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
                               ),
                               Row(
                                 children: [
@@ -249,6 +253,18 @@ class _AddEntryState extends State<AddEntry> {
                                 label: Text('Zählerstand')),
                           ),
                           const SizedBox(
+                            height: 20,
+                          ),
+                          SwitchListTile(
+                            value: _isTransmitted,
+                            onChanged: (value) {
+                              setState(
+                                () => _isTransmitted = value,
+                              );
+                            },
+                            title: const Text('An Anbieter gemeldet'),
+                          ),
+                          const SizedBox(
                             height: 30,
                           ),
                           Align(
@@ -283,6 +299,7 @@ class _AddEntryState extends State<AddEntry> {
     _selectedDate = DateTime.now();
     _countercontroller.clear();
     _stateTorch = false;
+    _isTransmitted = false;
   }
 
   @override

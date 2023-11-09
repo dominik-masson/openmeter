@@ -38,6 +38,8 @@ class DetailsEntry {
       meter: drift.Value(_entry.meter),
       date: drift.Value(_entry.date),
       note: drift.Value(_noteController.text),
+      transmittedToProvider: drift.Value(_entry.transmittedToProvider),
+      isReset: drift.Value(_entry.isReset),
     );
 
     await db.entryDao.updateEntry(newEntry);
@@ -64,6 +66,32 @@ class DetailsEntry {
           ),
         ),
       ],
+    );
+  }
+
+  _transmittedToProvider(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(top: 25),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.upload_file_rounded,
+            color: Colors.grey,
+          ),
+          const SizedBox(
+            width: 15,
+          ),
+          SizedBox(
+            width: 230,
+            child: Text(
+              'Dieser Wert wurde an den Anbieter übermittelt.',
+              overflow: TextOverflow.visible,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -152,6 +180,7 @@ class DetailsEntry {
             ),
           ],
         ),
+        if (entry.transmittedToProvider) _transmittedToProvider(context),
         if (_stateNote) _noteWidget(context),
       ],
     );
@@ -208,6 +237,7 @@ class DetailsEntry {
             ),
           ],
         ),
+        if (entry.transmittedToProvider) _transmittedToProvider(context),
         if (_stateNote) _noteWidget(context),
         const SizedBox(
           height: 25,
@@ -286,7 +316,8 @@ class DetailsEntry {
         date: entry.date,
         days: entry.days,
         note: entry.note,
-        isReset: entry.isReset);
+        isReset: entry.isReset,
+        transmittedToProvider: entry.transmittedToProvider);
 
     if (_entry.note == null || _entry.note!.isEmpty) {
       _stateNote = false;
@@ -325,19 +356,17 @@ class DetailsEntry {
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  const Divider(
-                    thickness: 1,
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
                   if (usage == -1 && !_entry.isReset)
                     _extraInformation(context, 'Erstablesung'),
                   if (_entry.isReset)
                     _extraInformation(context, 'Zurückgesetzt'),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  const Divider(),
+                  const SizedBox(
+                    height: 5,
+                  ),
                   if (usage != -1)
                     _information(
                       context: context,

@@ -51,9 +51,10 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
   List<GeneratedColumn> get $columns =>
       [id, typ, note, number, unit, isArchived];
   @override
-  String get aliasedName => _alias ?? 'meter';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'meter';
+  String get actualTableName => $name;
+  static const String $name = 'meter';
   @override
   VerificationContext validateIntegrity(Insertable<MeterData> instance,
       {bool isInserting = false}) {
@@ -382,13 +383,33 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_reset" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _transmittedToProviderMeta =
+      const VerificationMeta('transmittedToProvider');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, meter, count, usage, date, days, note, isReset];
+  late final GeneratedColumn<bool> transmittedToProvider =
+      GeneratedColumn<bool>('transmitted_to_provider', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("transmitted_to_provider" IN (0, 1))'),
+          defaultValue: const Constant(false));
   @override
-  String get aliasedName => _alias ?? 'entries';
+  List<GeneratedColumn> get $columns => [
+        id,
+        meter,
+        count,
+        usage,
+        date,
+        days,
+        note,
+        isReset,
+        transmittedToProvider
+      ];
   @override
-  String get actualTableName => 'entries';
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entries';
   @override
   VerificationContext validateIntegrity(Insertable<Entrie> instance,
       {bool isInserting = false}) {
@@ -435,6 +456,12 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
       context.handle(_isResetMeta,
           isReset.isAcceptableOrUnknown(data['is_reset']!, _isResetMeta));
     }
+    if (data.containsKey('transmitted_to_provider')) {
+      context.handle(
+          _transmittedToProviderMeta,
+          transmittedToProvider.isAcceptableOrUnknown(
+              data['transmitted_to_provider']!, _transmittedToProviderMeta));
+    }
     return context;
   }
 
@@ -460,6 +487,9 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
       isReset: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_reset'])!,
+      transmittedToProvider: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}transmitted_to_provider'])!,
     );
   }
 
@@ -478,6 +508,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
   final int days;
   final String? note;
   final bool isReset;
+  final bool transmittedToProvider;
   const Entrie(
       {required this.id,
       required this.meter,
@@ -486,7 +517,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       required this.date,
       required this.days,
       this.note,
-      required this.isReset});
+      required this.isReset,
+      required this.transmittedToProvider});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -500,6 +532,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       map['note'] = Variable<String>(note);
     }
     map['is_reset'] = Variable<bool>(isReset);
+    map['transmitted_to_provider'] = Variable<bool>(transmittedToProvider);
     return map;
   }
 
@@ -513,6 +546,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       days: Value(days),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isReset: Value(isReset),
+      transmittedToProvider: Value(transmittedToProvider),
     );
   }
 
@@ -528,6 +562,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       days: serializer.fromJson<int>(json['days']),
       note: serializer.fromJson<String?>(json['note']),
       isReset: serializer.fromJson<bool>(json['isReset']),
+      transmittedToProvider:
+          serializer.fromJson<bool>(json['transmittedToProvider']),
     );
   }
   @override
@@ -542,6 +578,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       'days': serializer.toJson<int>(days),
       'note': serializer.toJson<String?>(note),
       'isReset': serializer.toJson<bool>(isReset),
+      'transmittedToProvider': serializer.toJson<bool>(transmittedToProvider),
     };
   }
 
@@ -553,7 +590,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           DateTime? date,
           int? days,
           Value<String?> note = const Value.absent(),
-          bool? isReset}) =>
+          bool? isReset,
+          bool? transmittedToProvider}) =>
       Entrie(
         id: id ?? this.id,
         meter: meter ?? this.meter,
@@ -563,6 +601,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
         days: days ?? this.days,
         note: note.present ? note.value : this.note,
         isReset: isReset ?? this.isReset,
+        transmittedToProvider:
+            transmittedToProvider ?? this.transmittedToProvider,
       );
   @override
   String toString() {
@@ -574,14 +614,15 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           ..write('date: $date, ')
           ..write('days: $days, ')
           ..write('note: $note, ')
-          ..write('isReset: $isReset')
+          ..write('isReset: $isReset, ')
+          ..write('transmittedToProvider: $transmittedToProvider')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, meter, count, usage, date, days, note, isReset);
+  int get hashCode => Object.hash(id, meter, count, usage, date, days, note,
+      isReset, transmittedToProvider);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -593,7 +634,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           other.date == this.date &&
           other.days == this.days &&
           other.note == this.note &&
-          other.isReset == this.isReset);
+          other.isReset == this.isReset &&
+          other.transmittedToProvider == this.transmittedToProvider);
 }
 
 class EntriesCompanion extends UpdateCompanion<Entrie> {
@@ -605,6 +647,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
   final Value<int> days;
   final Value<String?> note;
   final Value<bool> isReset;
+  final Value<bool> transmittedToProvider;
   const EntriesCompanion({
     this.id = const Value.absent(),
     this.meter = const Value.absent(),
@@ -614,6 +657,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     this.days = const Value.absent(),
     this.note = const Value.absent(),
     this.isReset = const Value.absent(),
+    this.transmittedToProvider = const Value.absent(),
   });
   EntriesCompanion.insert({
     this.id = const Value.absent(),
@@ -624,6 +668,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     required int days,
     this.note = const Value.absent(),
     this.isReset = const Value.absent(),
+    this.transmittedToProvider = const Value.absent(),
   })  : meter = Value(meter),
         count = Value(count),
         usage = Value(usage),
@@ -638,6 +683,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     Expression<int>? days,
     Expression<String>? note,
     Expression<bool>? isReset,
+    Expression<bool>? transmittedToProvider,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -648,6 +694,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       if (days != null) 'days': days,
       if (note != null) 'note': note,
       if (isReset != null) 'is_reset': isReset,
+      if (transmittedToProvider != null)
+        'transmitted_to_provider': transmittedToProvider,
     });
   }
 
@@ -659,7 +707,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       Value<DateTime>? date,
       Value<int>? days,
       Value<String?>? note,
-      Value<bool>? isReset}) {
+      Value<bool>? isReset,
+      Value<bool>? transmittedToProvider}) {
     return EntriesCompanion(
       id: id ?? this.id,
       meter: meter ?? this.meter,
@@ -669,6 +718,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       days: days ?? this.days,
       note: note ?? this.note,
       isReset: isReset ?? this.isReset,
+      transmittedToProvider:
+          transmittedToProvider ?? this.transmittedToProvider,
     );
   }
 
@@ -699,6 +750,10 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     if (isReset.present) {
       map['is_reset'] = Variable<bool>(isReset.value);
     }
+    if (transmittedToProvider.present) {
+      map['transmitted_to_provider'] =
+          Variable<bool>(transmittedToProvider.value);
+    }
     return map;
   }
 
@@ -712,7 +767,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
           ..write('date: $date, ')
           ..write('days: $days, ')
           ..write('note: $note, ')
-          ..write('isReset: $isReset')
+          ..write('isReset: $isReset, ')
+          ..write('transmittedToProvider: $transmittedToProvider')
           ..write(')'))
         .toString();
   }
@@ -750,9 +806,10 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
   @override
   List<GeneratedColumn> get $columns => [id, uuid, name, typ];
   @override
-  String get aliasedName => _alias ?? 'room';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room';
+  String get actualTableName => $name;
+  static const String $name = 'room';
   @override
   VerificationContext validateIntegrity(Insertable<RoomData> instance,
       {bool isInserting = false}) {
@@ -984,9 +1041,10 @@ class $MeterInRoomTable extends MeterInRoom
   @override
   List<GeneratedColumn> get $columns => [meterId, roomId];
   @override
-  String get aliasedName => _alias ?? 'meter_in_room';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'meter_in_room';
+  String get actualTableName => $name;
+  static const String $name = 'meter_in_room';
   @override
   VerificationContext validateIntegrity(Insertable<MeterInRoomData> instance,
       {bool isInserting = false}) {
@@ -1224,9 +1282,10 @@ class $ProviderTable extends Provider
         canceledDate
       ];
   @override
-  String get aliasedName => _alias ?? 'provider';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'provider';
+  String get actualTableName => $name;
+  static const String $name = 'provider';
   @override
   VerificationContext validateIntegrity(Insertable<ProviderData> instance,
       {bool isInserting = false}) {
@@ -1687,9 +1746,10 @@ class $ContractTable extends Contract
         isArchived
       ];
   @override
-  String get aliasedName => _alias ?? 'contract';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'contract';
+  String get actualTableName => $name;
+  static const String $name = 'contract';
   @override
   VerificationContext validateIntegrity(Insertable<ContractData> instance,
       {bool isInserting = false}) {
@@ -2119,9 +2179,10 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
   @override
   List<GeneratedColumn> get $columns => [id, uuid, name, color];
   @override
-  String get aliasedName => _alias ?? 'tags';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'tags';
+  String get actualTableName => $name;
+  static const String $name = 'tags';
   @override
   VerificationContext validateIntegrity(Insertable<Tag> instance,
       {bool isInserting = false}) {
@@ -2352,9 +2413,10 @@ class $MeterWithTagsTable extends MeterWithTags
   @override
   List<GeneratedColumn> get $columns => [meterId, tagId];
   @override
-  String get aliasedName => _alias ?? 'meter_with_tags';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'meter_with_tags';
+  String get actualTableName => $name;
+  static const String $name = 'meter_with_tags';
   @override
   VerificationContext validateIntegrity(Insertable<MeterWithTag> instance,
       {bool isInserting = false}) {
@@ -2565,9 +2627,10 @@ class $CostCompareTable extends CostCompare
   List<GeneratedColumn> get $columns =>
       [id, basicPrice, energyPrice, bonus, usage, parentId];
   @override
-  String get aliasedName => _alias ?? 'cost_compare';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'cost_compare';
+  String get actualTableName => $name;
+  static const String $name = 'cost_compare';
   @override
   VerificationContext validateIntegrity(Insertable<CostCompareData> instance,
       {bool isInserting = false}) {
