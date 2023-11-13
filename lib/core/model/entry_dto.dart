@@ -7,6 +7,7 @@ class EntryDto {
   String? note;
   DateTime date;
   bool transmittedToProvider;
+  bool isReset;
 
   EntryDto.fromData(Entrie entry)
       : count = entry.count,
@@ -14,7 +15,8 @@ class EntryDto {
         days = entry.days,
         note = entry.note,
         date = entry.date,
-        transmittedToProvider = entry.transmittedToProvider;
+        transmittedToProvider = entry.transmittedToProvider,
+        isReset = entry.isReset;
 
   EntryDto.fromJson(Map<String, dynamic> json)
       : count = json['count'],
@@ -22,7 +24,8 @@ class EntryDto {
         days = json['days'],
         note = json['note'],
         date = DateTime.parse(json['date']),
-        transmittedToProvider = json['transmittedToProvider'];
+        transmittedToProvider = json['transmittedToProvider'],
+        isReset = json['isReset'];
 
   static Map<String, dynamic> entriesToJson(Entrie entry) {
     return {
@@ -32,6 +35,7 @@ class EntryDto {
       'note': entry.note,
       'date': entry.date.toString(),
       'transmittedToProvider': entry.transmittedToProvider,
+      'isReset': entry.isReset,
     };
   }
 }

@@ -74,7 +74,9 @@ class DatabaseExportImportHelper {
       'days': entry.days,
       'usage': entry.usage,
       'note': entry.note,
-      'date': entry.date.toString()
+      'date': entry.date.toString(),
+      'transmittedToProvider': entry.transmittedToProvider,
+      'isReset': entry.isReset,
     };
   }
 
@@ -304,7 +306,9 @@ class DatabaseExportImportHelper {
             days: drift.Value(entry.days),
             date: drift.Value(entry.date),
             count: drift.Value(entry.count),
-            usage: drift.Value(entry.usage));
+            usage: drift.Value(entry.usage),
+            transmittedToProvider: drift.Value(entry.transmittedToProvider),
+            isReset: drift.Value(entry.isReset));
 
         await db.entryDao.createEntry(entriesCompanion);
       }
