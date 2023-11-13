@@ -129,6 +129,31 @@ class _AddEntryState extends State<AddEntry> {
     }
   }
 
+  _switchTiles(Function setState) {
+    return Column(
+      children: [
+        SwitchListTile(
+          value: _isTransmitted,
+          onChanged: (value) {
+            setState(
+              () => _isTransmitted = value,
+            );
+          },
+          title: const Text('An Anbieter gemeldet'),
+        ),
+        SwitchListTile(
+          value: _isReset,
+          onChanged: (value) {
+            setState(
+              () => _isReset = value,
+            );
+          },
+          title: const Text('Zähler zurücksetzen'),
+        ),
+      ],
+    );
+  }
+
   _showBottomModel(
     EntryCardProvider entryProvider,
     TorchProvider torchProvider,
@@ -157,7 +182,7 @@ class _AddEntryState extends State<AddEntry> {
             return Padding(
               padding: MediaQuery.of(context).viewInsets,
               child: Container(
-                height: 450,
+                height: 480,
                 padding: const EdgeInsets.only(left: 25, right: 25),
                 child: Center(
                   child: Form(
@@ -176,22 +201,6 @@ class _AddEntryState extends State<AddEntry> {
                               ),
                               Row(
                                 children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(
-                                        () {
-                                          _isReset = !_isReset;
-                                        },
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.restart_alt,
-                                      color: _isReset
-                                          ? Theme.of(context).primaryColor
-                                          : null,
-                                    ),
-                                    tooltip: 'Zähler zurücksetzen',
-                                  ),
                                   IconButton(
                                     onPressed: () async {
                                       bool torch =
@@ -216,7 +225,7 @@ class _AddEntryState extends State<AddEntry> {
                             ],
                           ),
                           const SizedBox(
-                            height: 20,
+                            height: 15,
                           ),
                           TextFormField(
                             readOnly: true,
@@ -255,15 +264,8 @@ class _AddEntryState extends State<AddEntry> {
                           const SizedBox(
                             height: 20,
                           ),
-                          SwitchListTile(
-                            value: _isTransmitted,
-                            onChanged: (value) {
-                              setState(
-                                () => _isTransmitted = value,
-                              );
-                            },
-                            title: const Text('An Anbieter gemeldet'),
-                          ),
+                          const Divider(),
+                          _switchTiles(setState),
                           const SizedBox(
                             height: 30,
                           ),

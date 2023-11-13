@@ -68,7 +68,6 @@ class EntryCardProvider extends ChangeNotifier {
   }
 
   _updateFirstEntry(LocalDatabase db) async {
-  print(_entries);
     final firstEntry = _entries.keys.last;
 
     await db.entryDao.updateEntry(EntriesCompanion(
@@ -145,7 +144,7 @@ class EntryCardProvider extends ChangeNotifier {
   }
 
   getColors(int count, int usage) {
-    if (usage == -1) {
+    if (usage <= 0) {
       return;
     }
 
