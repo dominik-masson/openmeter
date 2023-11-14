@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../core/database/local_database.dart';
 
+import '../../../core/model/meter_dto.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/chart_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
@@ -19,7 +22,7 @@ import '../../widgets/utils/selected_items_bar.dart';
 import 'add_meter.dart';
 
 class DetailsSingleMeter extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
   final RoomDto? room;
   final bool hasTags;
 
@@ -36,7 +39,7 @@ class DetailsSingleMeter extends StatefulWidget {
 class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   String _meterName = '';
   String _roomName = '';
-  late MeterData _meter;
+  late MeterDto _meter;
   late RoomDto? _room;
 
   int _activeChartWidget = 0;
@@ -77,7 +80,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   }
 
   Future _getTagsById(LocalDatabase db) async {
-    _tags = await db.tagsDao.getTagsForMeter(_meter.id);
+    _tags = await db.tagsDao.getTagsForMeter(_meter.id!);
     setState(() {
       _updateTags = false;
     });
@@ -94,6 +97,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     if (_updateTags == true) {
       _getTagsById(db);
     }
+
+    _meter.hasEntry = entryProvider.getHasEntries;
 
     return Scaffold(
       appBar: hasSelectedEntries
@@ -122,7 +127,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                   const Divider(),
                   if (widget.hasTags)
                     HorizontalTagsList(
-                      meterId: _meter.id,
+                      meterId: _meter.id!,
                       setTags: (tags) => getTags(tags),
                       setHasTags: null,
                     ),
@@ -130,43 +135,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        height: 340,
-                        child: PageView(
-                          onPageChanged: (value) {
-                            setState(() {
-                              _activeChartWidget = value;
-                            });
-                          },
-                          children: [
-                            if (!chartProvider.getLineChart)
-                              UsageBarChart(
-                                meter: _meter,
-                              ),
-                            if (chartProvider.getLineChart)
-                              UsageLineChart(meter: _meter),
-                            CountLineChart(
-                              meter: _meter,
-                            ),
-                          ],
-                        ),
-                      ),
-                      AnimatedSmoothIndicator(
-                        activeIndex: _activeChartWidget,
-                        count: 2,
-                        effect: WormEffect(
-                          activeDotColor: Theme.of(context).primaryColor,
-                          dotHeight: 10,
-                          dotWidth: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  CostBar(meter: _meter),
+                  if (_meter.hasEntry) _detailsWidgets(chartProvider),
                 ],
               ),
             ),
@@ -174,6 +143,52 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _detailsWidgets(ChartProvider chartProvider) {
+    return Column(
+      children: [
+        _diagramWidgets(chartProvider),
+        CostBar(meter: _meter),
+      ],
+    );
+  }
+
+  Widget _diagramWidgets(ChartProvider chartProvider) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          height: 340,
+          child: PageView(
+            onPageChanged: (value) {
+              setState(() {
+                _activeChartWidget = value;
+              });
+            },
+            children: [
+              if (!chartProvider.getLineChart)
+                UsageBarChart(
+                  meter: _meter,
+                ),
+              if (chartProvider.getLineChart) UsageLineChart(meter: _meter),
+              CountLineChart(
+                meter: _meter,
+              ),
+            ],
+          ),
+        ),
+        AnimatedSmoothIndicator(
+          activeIndex: _activeChartWidget,
+          count: 2,
+          effect: WormEffect(
+            activeDotColor: Theme.of(context).primaryColor,
+            dotHeight: 10,
+            dotWidth: 10,
+          ),
+        ),
+      ],
     );
   }
 
@@ -211,7 +226,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     return SelectedItemsBar(buttons: buttons);
   }
 
-  AppBar _unselectedAppBar(EntryCardProvider entryProvider, MeterData meter) {
+  AppBar _unselectedAppBar(EntryCardProvider entryProvider, MeterDto meter) {
     return AppBar(
       title: SelectableText(_meterName),
       leading: BackButton(
@@ -227,7 +242,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AddScreen(
-                    meter: _meter,
+                    meter: _meter.toMeterData(),
                     room: _room,
                     tags: _tags,
                   ),
@@ -236,7 +251,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
                 return;
               }
 
-              _meter = value[0] as MeterData;
+              _meter = value[0] as MeterDto;
               _room = value[1] as RoomDto?;
               _updateTags = value[2] as bool;
 

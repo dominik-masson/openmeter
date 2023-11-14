@@ -20,7 +20,7 @@ import '../tags/horizontal_tags_list.dart';
 import 'meter_circle_avatar.dart';
 
 class MeterCard extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
   final RoomDto? room;
   final DateTime? date;
   final String count;
@@ -47,9 +47,13 @@ class _MeterCardState extends State<MeterCard> {
   RoomDto? room;
   bool hasTags = false;
 
+  late MeterData _meterData;
+
   @override
   void initState() {
     room = widget.room;
+
+    _meterData = widget.meter.toMeterData();
     super.initState();
   }
 
@@ -82,11 +86,18 @@ class _MeterCardState extends State<MeterCard> {
             ),
             Column(
               children: [
-                ConvertMeterUnit().getUnitWidget(
-                  count: widget.count,
-                  unit: widget.meter.unit,
-                  textStyle: Theme.of(context).textTheme.bodyMedium!,
-                ),
+                if (widget.count != 'none')
+                  ConvertMeterUnit().getUnitWidget(
+                    count: widget.count,
+                    unit: widget.meter.unit,
+                    textStyle: Theme.of(context).textTheme.bodyMedium!,
+                  ),
+                if (widget.count == 'none')
+                  Text(
+                    "Kein Eintrag",
+                    style: Theme.of(context).textTheme.bodyMedium!,
+                    textAlign: TextAlign.center,
+                  ),
                 Text(
                   "Zählerstand",
                   style: Theme.of(context).textTheme.labelSmall,
@@ -116,10 +127,11 @@ class _MeterCardState extends State<MeterCard> {
     required EntryCardProvider entryProvider,
   }) {
     if (hasSelectedItems == true) {
-      meterProvider.toggleSelectedMeter(widget.meter);
+      meterProvider.toggleSelectedMeter(_meterData);
     } else {
       entryProvider.setCurrentCount(widget.count);
       entryProvider.setOldDate(widget.date ?? DateTime.now());
+      entryProvider.setHasEntries(widget.meter.hasEntry);
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) {
@@ -146,12 +158,14 @@ class _MeterCardState extends State<MeterCard> {
     required EntryCardProvider entryProvider,
   }) {
     if (roomProvider.getHasSelectedMeters) {
-      roomProvider.toggleSelectedMeters(MeterDto.fromData(widget.meter));
+      roomProvider.toggleSelectedMeters(MeterDto.fromData(_meterData, false));
     } else {
       entryProvider.setCurrentCount(widget.count);
       entryProvider.setOldDate(widget.date ?? DateTime.now());
 
       room = roomProvider.getCurrentRoom;
+
+      entryProvider.setHasEntries(widget.meter.hasEntry);
 
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -271,7 +285,7 @@ class _MeterCardState extends State<MeterCard> {
                 ),
                 if (smallProvider.getShowTags)
                   HorizontalTagsList(
-                    meterId: widget.meter.id,
+                    meterId: widget.meter.id!,
                     setHasTags: (p0) => setHasTags(p0),
                   ),
                 const SizedBox(

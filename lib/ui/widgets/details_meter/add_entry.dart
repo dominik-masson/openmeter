@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/entry_dto.dart';
+import '../../../core/model/meter_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/torch_provider.dart';
@@ -11,7 +13,7 @@ import '../../../core/services/torch_controller.dart';
 import '../../../utils/convert_count.dart';
 
 class AddEntry extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
 
   const AddEntry({super.key, required this.meter});
 
@@ -76,41 +78,64 @@ class _AddEntryState extends State<AddEntry> {
       TorchProvider torchProvider, EntryCardProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
-    String currentCount = entryProvider.getCurrentCount;
-    DateTime oldDate = entryProvider.getOldDate;
+    EntryDto? newestEntry = entryProvider.getNewestEntry;
+
+    String currentCount = 'none';
+    DateTime? oldDate;
+
+    if (newestEntry != null) {
+      currentCount = newestEntry.count.toString();
+      oldDate = newestEntry.date;
+    }
 
     if (_formKey.currentState!.validate()) {
       late EntriesCompanion entry;
 
-      if (_isReset) {
-        int count = 0;
+      if (oldDate != null && _selectedDate!.isBefore(oldDate)) {
+        int count = int.parse(_countercontroller.text);
+        String usageCount = '0';
+        DateTime date = DateTime.now();
 
-        if (_countercontroller.text.isNotEmpty) {
-          count = int.parse(_countercontroller.text);
+        final prevEntry = entryProvider.getPrevEntry(_selectedDate!);
+
+        if (prevEntry != null) {
+          usageCount = prevEntry.count.toString();
+          date = prevEntry.date;
+        } else {
+          usageCount = 'none';
+          date = _selectedDate!;
         }
 
         entry = EntriesCompanion(
-          meter: drift.Value(widget.meter.id),
+          meter: drift.Value(widget.meter.id!),
           date: drift.Value(_selectedDate!),
           count: drift.Value(count),
-          usage: const drift.Value(-1),
-          days: const drift.Value(-1),
-          isReset: const drift.Value(true),
+          usage: drift.Value(_isReset ? -1 : _calcUsage(usageCount)),
+          days: drift.Value(_isReset ? -1 : _calcDays(_selectedDate!, date)),
+          isReset: drift.Value(_isReset),
           transmittedToProvider: drift.Value(_isTransmitted),
         );
+
+        await entryProvider.saveNewMiddleEntry(
+            EntryDto.fromEntriesCompanion(entry), db);
       } else {
         entry = EntriesCompanion(
-          meter: drift.Value(widget.meter.id),
+          meter: drift.Value(widget.meter.id!),
           date: drift.Value(_selectedDate!),
-          count: drift.Value(int.parse(_countercontroller.text)),
-          usage: drift.Value(_calcUsage(currentCount)),
-          days: drift.Value(_calcDays(_selectedDate!, oldDate)),
+          count: drift.Value(_countercontroller.text.isEmpty
+              ? 0
+              : int.parse(_countercontroller.text)),
+          usage: drift.Value(_isReset ? -1 : _calcUsage(currentCount)),
+          days: drift.Value(_isReset || oldDate == null
+              ? -1
+              : _calcDays(_selectedDate!, oldDate)),
+          isReset: drift.Value(_isReset),
           transmittedToProvider: drift.Value(_isTransmitted),
         );
-      }
 
-      Provider.of<DatabaseSettingsProvider>(context, listen: false)
-          .setHasUpdate(true);
+        entryProvider.setCurrentCount(_countercontroller.text);
+        entryProvider.setOldDate(_selectedDate!);
+      }
 
       await db.entryDao.createEntry(entry).then((value) {
         if (_torchController.stateTorch && torchProvider.stateTorch) {
@@ -118,8 +143,10 @@ class _AddEntryState extends State<AddEntry> {
           _stateTorch = false;
         }
 
-        entryProvider.setCurrentCount(_countercontroller.text);
-        entryProvider.setOldDate(_selectedDate!);
+        Provider.of<DatabaseSettingsProvider>(context, listen: false)
+            .setHasUpdate(true);
+
+        entryProvider.setHasEntries(true);
 
         Navigator.pop(context, true);
 

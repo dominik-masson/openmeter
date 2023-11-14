@@ -4,11 +4,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/meter_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 
 class CostBar extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
 
   const CostBar({super.key, required this.meter});
 
@@ -151,7 +152,7 @@ class _CostBarState extends State<CostBar> {
     final months = _calcDifferenceMont();
 
     return FutureBuilder(
-      future: db.entryDao.getLastEntry(widget.meter.id),
+      future: db.entryDao.getLastEntry(widget.meter.id!),
       builder: (context, snapshot) {
         final entryData = snapshot.data;
 

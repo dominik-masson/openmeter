@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/meter_dto.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
@@ -156,7 +157,8 @@ class _AddScreenState extends State<AddScreen> {
     await db.meterDao.updateMeter(meterData).then((value) {
       Provider.of<MeterProvider>(context, listen: false)
           .setStateHasUpdate(true);
-      Navigator.of(context).pop([meterData, _room, true]);
+      Navigator.of(context)
+          .pop([MeterDto.fromData(meterData, true), _room, true]);
     });
   }
 

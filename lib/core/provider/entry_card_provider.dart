@@ -1,12 +1,18 @@
+import 'package:collection/collection.dart';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
+import '../model/entry_dto.dart';
+import '../services/entry_serivce.dart';
 
 class EntryCardProvider extends ChangeNotifier {
-  final Map<Entrie, bool> _entries = {};
+  final EntryService entryService = EntryService();
+
+  List<EntryDto> _entries = [];
   int _selectedEntriesLength = 0;
 
   bool _hasSelectedEntries = false;
@@ -15,6 +21,7 @@ class EntryCardProvider extends ChangeNotifier {
   bool _contractData = false;
   bool _setStateNote = false;
   String _unit = '';
+  bool _hasEntries = true;
 
   String get getCurrentCount => _count;
 
@@ -28,7 +35,7 @@ class EntryCardProvider extends ChangeNotifier {
 
   int get getSelectedEntriesLength => _selectedEntriesLength;
 
-  Map<Entrie, bool> get getAllEntries => _entries;
+  List<EntryDto> get getAllEntries => _entries;
 
   String get getMeterUnit => _unit;
 
@@ -37,27 +44,31 @@ class EntryCardProvider extends ChangeNotifier {
   }
 
   void setAllEntries(List<Entrie> entry) {
-    _entries.removeWhere((key, value) => value == false || value == true);
-
-    for (Entrie item in entry) {
-      _entries.addAll({item: false});
-    }
+    _entries = entry.map((element) => EntryDto.fromData(element)).toList();
   }
 
   void setSelectedEntriesLength(int value) {
     _selectedEntriesLength = value;
   }
 
-  void setSelectedEntry(Entrie entry) {
-    _entries.update(entry, (value) => value = !value);
+  void setSelectedEntry(EntryDto entry) {
+    int index = _entries.indexWhere((element) => element.id! == entry.id);
+
+    if (index >= 0) {
+      _entries.elementAt(index).isSelected =
+          !_entries.elementAt(index).isSelected;
+    }
+
     _hasSelectedEntries = true;
 
     int count = 0;
-    _entries.forEach((key, value) {
-      if (value == true) {
-        count += 1;
+
+    for (EntryDto entry in _entries) {
+      if (entry.isSelected) {
+        count++;
       }
-    });
+    }
+
     _selectedEntriesLength = count;
 
     if (_selectedEntriesLength == 0) {
@@ -68,38 +79,63 @@ class EntryCardProvider extends ChangeNotifier {
   }
 
   _updateFirstEntry(LocalDatabase db) async {
-    final firstEntry = _entries.keys.last;
+    final firstEntry = _entries.lastOrNull;
 
-    await db.entryDao.updateEntry(EntriesCompanion(
-      note: Value(firstEntry.note),
-      usage: const Value(-1),
-      count: Value(firstEntry.count),
-      date: Value(firstEntry.date),
-      days: Value(firstEntry.days),
-      id: Value(firstEntry.id),
-      meter: Value(firstEntry.meter),
-    ));
+    if (firstEntry != null) {
+      await db.entryDao.replaceEntry(EntriesCompanion(
+        note: Value(firstEntry.note),
+        usage: const Value(-1),
+        count: Value(firstEntry.count),
+        date: Value(firstEntry.date),
+        days: Value(firstEntry.days),
+        id: Value(firstEntry.id!),
+        meter: Value(firstEntry.meterId!),
+      ));
+    }
   }
 
   void deleteAllSelectedEntries(BuildContext context) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
-    Entrie newLastEntry = _entries.keys.elementAt(1);
+    EntryDto newLastEntry = _entries.first;
 
     setCurrentCount(newLastEntry.count.toString());
     setOldDate(newLastEntry.date);
 
-    _entries.forEach((key, value) {
-      if (value == true) {
-        db.entryDao.deleteEntry(key.id);
+    for (EntryDto entry in _entries) {
+      if (entry.isSelected) {
+        db.entryDao.deleteEntry(entry.id!);
       }
-    });
+    }
 
-    _entries.removeWhere((key, value) => value == true);
+    int firstSelectedIndex =
+        _entries.indexWhere((element) => element.isSelected);
+
+    int lastSelectedIndex =
+        _entries.lastIndexWhere((element) => element.isSelected);
+
+    if (firstSelectedIndex > 0 && (lastSelectedIndex + 1) < _entries.length) {
+      EntryDto newEntry = _entries.elementAt(firstSelectedIndex - 1);
+      EntryDto lastEntry = _entries.elementAt(lastSelectedIndex + 1);
+
+      await entryService.updateNewEntryUsage(
+        nextEntry: newEntry,
+        prevEntry: lastEntry,
+        db: db,
+      );
+    }
+
+    _entries.removeWhere((element) => element.isSelected);
 
     _hasSelectedEntries = false;
 
     await _updateFirstEntry(db);
+
+    if (_entries.isNotEmpty) {
+      _hasEntries = true;
+    } else {
+      _hasEntries = false;
+    }
 
     notifyListeners();
   }
@@ -107,9 +143,9 @@ class EntryCardProvider extends ChangeNotifier {
   void removeAllSelectedEntries() {
     _hasSelectedEntries = false;
 
-    _entries.forEach((key, value) {
-      if (value == true) value = false;
-    });
+    for (var element in _entries) {
+      element.isSelected = false;
+    }
 
     notifyListeners();
   }
@@ -135,7 +171,7 @@ class EntryCardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  int getUsage(Entrie entry) {
+  int getUsage(EntryDto entry) {
     if (entry.usage == entry.count && entry.days == 0) {
       return -1;
     }
@@ -163,5 +199,28 @@ class EntryCardProvider extends ChangeNotifier {
     double div = usage / days;
 
     return ConvertCount.convertDouble(div);
+  }
+
+  saveNewMiddleEntry(EntryDto newEntry, LocalDatabase db) async {
+    EntryDto nextEntry =
+        _entries.lastWhere((element) => element.date.isAfter(newEntry.date));
+
+    await entryService.updateNewEntryUsage(
+        nextEntry: nextEntry, prevEntry: newEntry, db: db);
+  }
+
+  EntryDto? getPrevEntry(DateTime newDate) {
+    return _entries.firstWhereOrNull(
+      (element) => element.date.isBefore(newDate),
+    );
+  }
+
+  EntryDto? get getNewestEntry => _entries.firstOrNull;
+
+  bool get getHasEntries => _hasEntries;
+
+  void setHasEntries(bool value) {
+    _hasEntries = value;
+    notifyListeners();
   }
 }

@@ -60,6 +60,7 @@ dependencies:
   flutter_slidable: ^3.0.0
   uuid: ^4.0.0
   dynamic_color: ^1.6.8
+  collection: any
   # Chart
   smooth_page_indicator: ^1.0.1
   # Local Push Notification

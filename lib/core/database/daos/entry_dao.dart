@@ -21,8 +21,13 @@ class EntryDao extends DatabaseAccessor<LocalDatabase> with _$EntryDaoMixin {
         .go();
   }
 
-  Future<bool> updateEntry(EntriesCompanion newEntry) async {
+  Future<bool> replaceEntry(EntriesCompanion newEntry) async {
     return await update(db.entries).replace(newEntry);
+  }
+
+  Future<int> updateEntry(int id, EntriesCompanion entry) async {
+    return await (update(db.entries)..where((tbl) => tbl.id.equals(id)))
+        .write(entry);
   }
 
   Future<List<Entrie>> getLastEntry(int meterId) async {

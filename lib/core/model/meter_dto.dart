@@ -10,8 +10,9 @@ class MeterDto {
   bool isArchived;
   List<dynamic>? tags;
   bool isSelected;
+  bool hasEntry = false;
 
-  MeterDto.fromData(MeterData data)
+  MeterDto.fromData(MeterData data, this.hasEntry)
       : typ = data.typ,
         number = data.number,
         unit = data.unit,

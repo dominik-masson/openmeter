@@ -6,6 +6,7 @@ import 'package:grouped_list/grouped_list.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/current_screen.dart';
+import '../../../core/model/meter_dto.dart';
 import '../../../core/model/meter_with_room.dart';
 
 import '../../../core/model/room_dto.dart';
@@ -148,17 +149,14 @@ class _MeterCardListState extends State<MeterCardList> {
 
                         final DateTime? date;
                         final String count;
-                        final Entrie entry;
 
                         if (entryList == null) {
                           date = null;
                           count = 'none';
                         } else {
-                          entry = entryList;
+                          date = entryList.date;
 
-                          date = entry.date;
-
-                          count = ConvertCount.convertCount(entry.count);
+                          count = ConvertCount.convertCount(entryList.count);
                         }
 
                         return GestureDetector(
@@ -168,7 +166,8 @@ class _MeterCardListState extends State<MeterCardList> {
                           child: hasSelectedItems == true
                               ? _cardWithoutSlide(
                                   db: db,
-                                  meterItem: meterItem,
+                                  meterItem: MeterDto.fromData(meterItem,
+                                      entryList == null ? false : true),
                                   room: room,
                                   date: date,
                                   count: count,
@@ -180,7 +179,8 @@ class _MeterCardListState extends State<MeterCardList> {
                               : _cardWithSlide(
                                   meterProvider: meterProvider,
                                   db: db,
-                                  meterItem: meterItem,
+                                  meterItem: MeterDto.fromData(meterItem,
+                                      entryList == null ? false : true),
                                   room: room,
                                   date: date,
                                   count: count,
@@ -223,7 +223,7 @@ class _MeterCardListState extends State<MeterCardList> {
 
   Widget _cardWithSlide({
     required LocalDatabase db,
-    required MeterData meterItem,
+    required MeterDto meterItem,
     required RoomDto? room,
     required DateTime? date,
     required String count,
@@ -242,7 +242,7 @@ class _MeterCardListState extends State<MeterCardList> {
         children: [
           SlidableAction(
             onPressed: (context) {
-              meterProvider.deleteSingleMeter(db, meterItem.id, room);
+              meterProvider.deleteSingleMeter(db, meterItem.id!, room);
 
               databaseSettingsProvider.setHasUpdate(true);
             },
@@ -258,7 +258,7 @@ class _MeterCardListState extends State<MeterCardList> {
         children: [
           SlidableAction(
             onPressed: (context) async {
-              await db.meterDao.updateArchived(meterItem.id, isHomescreen);
+              await db.meterDao.updateArchived(meterItem.id!, isHomescreen);
               meterProvider.setArchivMetersLength(_archivLength + 1);
               databaseSettingsProvider.setHasUpdate(true);
             },
@@ -283,7 +283,7 @@ class _MeterCardListState extends State<MeterCardList> {
 
   Widget _cardWithoutSlide({
     required LocalDatabase db,
-    required MeterData meterItem,
+    required MeterDto meterItem,
     required RoomDto? room,
     required DateTime? date,
     required String count,

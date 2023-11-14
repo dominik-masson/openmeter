@@ -333,7 +333,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
         ],
       ),
       child: MeterCard(
-        meter: data.toMeterData(),
+        meter: data,
         room: _currentRoom,
         date: date,
         count: count,
@@ -349,7 +349,7 @@ class _DetailsRoomState extends State<DetailsRoom> {
     required String count,
   }) {
     return MeterCard(
-      meter: data.toMeterData(),
+      meter: data,
       room: _currentRoom,
       date: date,
       count: count,

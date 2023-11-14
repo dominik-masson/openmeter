@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/services/chart_helper.dart';
 import '../../../../utils/convert_count.dart';
@@ -11,7 +12,7 @@ import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
 class UsageBarChart extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
 
   const UsageBarChart({super.key, required this.meter});
 
@@ -173,7 +174,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
     bool isEmpty = false;
 
     return StreamBuilder(
-      stream: db.entryDao.watchAllEntries(widget.meter.id),
+      stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
         final List<Entrie>? entries = snapshot.data;
         Map<int, int> sumMonths = {};
@@ -259,7 +260,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
                     child: _convertMeterUnit.getUnitWidget(
                       count: '',
                       unit: widget.meter.unit,
-                      textStyle:Theme.of(context).textTheme.bodySmall!,
+                      textStyle: Theme.of(context).textTheme.bodySmall!,
                     ),
                   ),
                 if (!isEmpty) _monthlyChart(sumMonths),

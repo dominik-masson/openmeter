@@ -84,7 +84,7 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
       ..orderBy([OrderingTerm.asc(meter.number)]);
 
     return await query
-        .map((r) => MeterDto.fromData(r.readTable(db.meter)))
+        .map((r) => MeterDto.fromData(r.readTable(db.meter), false))
         .get();
   }
 

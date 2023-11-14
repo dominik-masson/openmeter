@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/entry_dto.dart';
 import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
@@ -42,7 +43,7 @@ class DetailsEntry {
       isReset: drift.Value(_entry.isReset),
     );
 
-    await db.entryDao.updateEntry(newEntry);
+    await db.entryDao.replaceEntry(newEntry);
 
     if (context.mounted) {
       Provider.of<DatabaseSettingsProvider>(context, listen: false)
@@ -99,7 +100,7 @@ class DetailsEntry {
     required BuildContext context,
     required int usage,
     required String unit,
-    required Entrie entry,
+    required EntryDto entry,
     required CostProvider costProvider,
   }) {
     double usageCost = costProvider.calcUsage(usage);
@@ -189,7 +190,7 @@ class DetailsEntry {
   _noContractWidget({
     required BuildContext context,
     required int usage,
-    required Entrie entry,
+    required EntryDto entry,
     required String unit,
   }) {
     return Column(
@@ -258,7 +259,7 @@ class DetailsEntry {
     required BuildContext context,
     required int usage,
     required String unit,
-    required Entrie entry,
+    required EntryDto entry,
     required EntryCardProvider entryProvider,
     required CostProvider costProvider,
     required Function setState,
@@ -303,14 +304,14 @@ class DetailsEntry {
 
   getDetailsAlert({
     required BuildContext context,
-    required Entrie entry,
+    required EntryDto entry,
     required int usage,
     required EntryCardProvider entryProvider,
     required CostProvider costProvider,
   }) {
     _entry = Entrie(
-        id: entry.id,
-        meter: entry.meter,
+        id: entry.id!,
+        meter: entry.meterId!,
         count: entry.count,
         usage: entry.usage,
         date: entry.date,
