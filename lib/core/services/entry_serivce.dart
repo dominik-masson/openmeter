@@ -8,12 +8,14 @@ class EntryService {
       {required EntryDto nextEntry,
       required EntryDto prevEntry,
       required LocalDatabase db}) async {
-    int usage = nextEntry.count - prevEntry.count;
-    int days = nextEntry.date.difference(prevEntry.date).inDays;
+    if (!nextEntry.isReset && !nextEntry.transmittedToProvider) {
+      int usage = nextEntry.count - prevEntry.count;
+      int days = nextEntry.date.difference(prevEntry.date).inDays;
 
-    EntriesCompanion newEntry =
-        EntriesCompanion(usage: Value(usage), days: Value(days));
+      EntriesCompanion newEntry =
+          EntriesCompanion(usage: Value(usage), days: Value(days));
 
-    await db.entryDao.updateEntry(nextEntry.id!, newEntry);
+      await db.entryDao.updateEntry(nextEntry.id!, newEntry);
+    }
   }
 }

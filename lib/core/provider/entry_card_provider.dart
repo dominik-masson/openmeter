@@ -90,6 +90,8 @@ class EntryCardProvider extends ChangeNotifier {
         days: Value(firstEntry.days),
         id: Value(firstEntry.id!),
         meter: Value(firstEntry.meterId!),
+        isReset: Value(firstEntry.isReset),
+        transmittedToProvider: Value(firstEntry.transmittedToProvider),
       ));
     }
   }
