@@ -292,7 +292,7 @@ class DetailsEntry {
     return Column(
       children: [
         Center(
-          child: Text(text, style: Theme.of(context).textTheme.bodyMedium!),
+          child: Text(text, style: Theme.of(context).textTheme.labelLarge!),
         ),
         if (_stateNote)
           _noteWidget(
@@ -357,14 +357,17 @@ class DetailsEntry {
                       ),
                     ],
                   ),
-                  if (usage == -1 && !_entry.isReset)
-                    _extraInformation(context, 'Erstablesung'),
-                  if (_entry.isReset)
-                    _extraInformation(context, 'Zurückgesetzt'),
                   const SizedBox(
                     height: 5,
                   ),
                   const Divider(),
+                  if (usage == -1 && !_entry.isReset)
+                    _extraInformation(context, 'Erstablesung'),
+                  if (_entry.isReset)
+                    _extraInformation(
+                        context, 'Dieser Zähler wurde Zurückgesetzt.'),
+                  if (_entry.transmittedToProvider && _entry.isReset)
+                    _transmittedToProvider(context),
                   const SizedBox(
                     height: 5,
                   ),
