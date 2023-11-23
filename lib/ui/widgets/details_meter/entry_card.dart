@@ -243,7 +243,7 @@ class EntryCard extends StatelessWidget {
               ),
             ],
           ),
-        if (usage == -1 && !item.isReset)
+        if (usage == -1 && (!item.isReset || !item.transmittedToProvider))
           Text(
             'Erstablesung',
             style: Theme.of(context).textTheme.bodyMedium,

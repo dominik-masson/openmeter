@@ -8,7 +8,7 @@ class EntryService {
       {required EntryDto nextEntry,
       required EntryDto prevEntry,
       required LocalDatabase db}) async {
-    if (!nextEntry.isReset && !nextEntry.transmittedToProvider) {
+    if (!nextEntry.isReset) {
       int usage = nextEntry.count - prevEntry.count;
       int days = nextEntry.date.difference(prevEntry.date).inDays;
 

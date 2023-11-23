@@ -361,12 +361,14 @@ class DetailsEntry {
                     height: 5,
                   ),
                   const Divider(),
-                  if (usage == -1 && !_entry.isReset)
+                  if (usage == -1 &&
+                      (!_entry.isReset || !_entry.transmittedToProvider))
                     _extraInformation(context, 'Erstablesung'),
                   if (_entry.isReset)
                     _extraInformation(
                         context, 'Dieser Zähler wurde Zurückgesetzt.'),
-                  if (_entry.transmittedToProvider && _entry.isReset)
+                  if (_entry.transmittedToProvider &&
+                      (_entry.isReset || usage == -1))
                     _transmittedToProvider(context),
                   const SizedBox(
                     height: 5,
