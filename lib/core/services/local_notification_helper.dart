@@ -43,12 +43,17 @@ class LocalNotificationHelper {
     request notification permission
      for android 13 and higher
    */
-  void requestPermission() {
+  Future<void> requestPermission() async {
     if (Platform.isAndroid) {
-      _localNotification
+      await _localNotification
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
+
+      await _localNotification
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestExactAlarmsPermission();
     }
   }
 
@@ -108,7 +113,8 @@ class LocalNotificationHelper {
       scheduleDate = scheduleDate.add(const Duration(days: 1));
     }
 
-    log('Set weekly schedule date: $scheduleDate', name: LogNames.readingReminder);
+    log('Set weekly schedule date: $scheduleDate',
+        name: LogNames.readingReminder);
 
     return scheduleDate;
   }
@@ -134,7 +140,8 @@ class LocalNotificationHelper {
       scheduleDate = scheduleDate.add(const Duration(days: 1));
     }
 
-    log('Set monthly schedule date: $scheduleDate', name: LogNames.readingReminder);
+    log('Set monthly schedule date: $scheduleDate',
+        name: LogNames.readingReminder);
 
     return scheduleDate;
   }

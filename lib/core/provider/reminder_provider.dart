@@ -95,14 +95,14 @@ class ReminderProvider extends ChangeNotifier {
     _localNotificationHelper.testNotification();
   }
 
-  void setActive(bool state) {
+  void setActive(bool state) async {
     _isActive = state;
     _prefs.setBool(keyActive, _isActive);
 
     if (!_firstReminderOn) {
       _prefs.setBool(keyFirstOn, true);
       _firstReminderOn = true;
-      _localNotificationHelper.requestPermission();
+      await _localNotificationHelper.requestPermission();
     }
 
     if (!_isActive) {
