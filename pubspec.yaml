@@ -40,37 +40,42 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   # Localdatabase
-  drift: ^2.10.0
-  sqlite3_flutter_libs: ^0.5.0
+  drift: ^2.13.2
+  sqlite3_flutter_libs: ^0.5.18
   sqlite3: ^2.0.0
   path_provider: ^2.0.0
   path: ^1.8.2
   shared_preferences: ^2.0.15
-  provider: ^6.0.4
+  provider: ^6.1.1
   rxdart: ^0.27.7
   async: ^2.11.0
   #
   intl: any
   grouped_list: ^5.1.2
   sticky_grouped_list: ^3.1.0
-  fl_chart: ^0.64.0
-  permission_handler: ^11.0.0
+  fl_chart: ^0.65.0
+  permission_handler: ^11.1.0
   font_awesome_flutter: ^10.3.0
-  wakelock_plus: ^1.1.1
-  flutter_slidable: ^3.0.0
-  uuid: ^4.0.0
+  wakelock_plus: ^1.1.4
+  flutter_slidable: ^3.0.1
+  uuid: ^4.2.1
   dynamic_color: ^1.6.8
   collection: any
+  image_picker: ^1.0.4
+  # share and save image
+  share_plus: ^7.2.1
+  image_gallery_saver: ^2.0.3
+  archive: ^3.4.9
   # Chart
   smooth_page_indicator: ^1.0.1
   # Local Push Notification
-  flutter_local_notifications: ^16.1.0
+  flutter_local_notifications: ^16.2.0
   timezone: ^0.9.1
   # App Native Settings
   flutter_launcher_icons: ^0.13.1
   rename: ^3.0.1
-  flutter_native_splash: ^2.2.16
-  file_picker:
+  flutter_native_splash: ^2.3.6
+  file_picker: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -81,9 +86,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
-  drift_dev: ^2.5.2
-  build_runner: ^2.3.3
+  flutter_lints: ^3.0.1
+  drift_dev: ^2.13.2
+  build_runner: ^2.4.7
 
 # to run: flutter pub run flutter_launcher_icons
 flutter_icons:

@@ -13,6 +13,9 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   int _itemCount = 0;
   bool _hasReset = false;
   bool _clearBackupFiles = false;
+  String _databaseSize = '0 KB';
+  String _imageSize = '0 KB';
+  String _fullSize = '0 KB';
 
   late SharedPreferences _prefs;
   final keyAutoBackupDir = 'auto-backup-dir';
@@ -20,6 +23,9 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   final keyStatsItems = 'database-stats';
   final keyStatsItemCounts = 'database-item-counts';
   final keyClearBackupFiles = 'auto-backup-clear-state';
+  final keyDatabaseFullSize = 'database-stats-full-size';
+  final keyDatabaseSize = 'database-stats-database-size';
+  final keyImageSize = 'database-stats-image-size';
 
   DatabaseSettingsProvider() {
     _loadFromPrefs();
@@ -43,6 +49,10 @@ class DatabaseSettingsProvider extends ChangeNotifier {
     _itemCount = _prefs.getInt(keyStatsItemCounts) ?? 0;
 
     _clearBackupFiles = _prefs.getBool(keyClearBackupFiles) ?? false;
+
+    _databaseSize = _prefs.getString(keyDatabaseSize) ?? '0 KB';
+    _fullSize = _prefs.getString(keyDatabaseFullSize) ?? '0 KB';
+    _imageSize = _prefs.getString(keyImageSize) ?? '0 KB';
 
     notifyListeners();
   }
@@ -104,9 +114,8 @@ class DatabaseSettingsProvider extends ChangeNotifier {
     _prefs.setInt(keyStatsItemCounts, _itemCount);
   }
 
-  void resetStats(){
-
-    _itemStats = [0, 0, 0, 0, 0];
+  void resetStats() {
+    _itemStats = [0, 0, 0, 0, 0, 0];
     _itemCount = 0;
 
     setStateHasReset(true);
@@ -114,11 +123,32 @@ class DatabaseSettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setClearBackupFilesState(bool value){
+  void setClearBackupFilesState(bool value) {
     _clearBackupFiles = value;
 
     _prefs.setBool(keyClearBackupFiles, value);
   }
 
   bool get getClearBackupFilesState => _clearBackupFiles;
+
+  void saveDatabaseStats(
+      {required String dbSize,
+      required String imageSize,
+      required String fullSize}) {
+    _imageSize = imageSize;
+    _fullSize = fullSize;
+    _databaseSize = dbSize;
+
+    _prefs.setString(keyDatabaseFullSize, fullSize);
+    _prefs.setString(keyImageSize, imageSize);
+    _prefs.setString(keyDatabaseSize, dbSize);
+
+    notifyListeners();
+  }
+
+  String get imageSize => _imageSize;
+
+  String get statsSize => _fullSize;
+
+  String get databaseSize => _databaseSize;
 }

@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
@@ -23,8 +24,11 @@ class _DatabaseStatsState extends State<DatabaseStats> {
 
   bool _firstInit = true;
   int _itemCounts = 0;
-  String _databaseSize = '0 KB';
-  List<double> _itemValues = [0.0, 0.0, 0.0, 0.0, 0.0];
+  String _fullSize = '0 KB';
+  String _dbSize = '0 KB';
+  String _imageSize = '0 KB';
+  List<double> _itemValues = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+  bool _isLargeText = false;
 
   final List<Color> _itemColors = const [
     Color(0xffC26DBC),
@@ -32,6 +36,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     Color(0xff189AB4),
     Color(0xff025492),
     Color(0xffF67B50),
+    Color(0xffF4B183),
   ];
 
   final List<String> _itemNames = const [
@@ -39,11 +44,20 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     'Einträge',
     'Räume',
     'Verträge',
-    'Tags'
+    'Tags',
+    'Bilder'
   ];
 
-  _getDatabaseSize(DatabaseSettingsHelper databaseHelper) async {
-    _databaseSize = await databaseHelper.getDatabaseSize();
+  _getDatabaseSize(DatabaseSettingsHelper databaseHelper,
+      DatabaseSettingsProvider provider) async {
+    String fullSize = await databaseHelper.getFullSize();
+    String dbSize = await databaseHelper.getDatabaseSize();
+    String imageSize = await databaseHelper.getImagesSize();
+
+    if (fullSize != _fullSize || _dbSize != dbSize || _imageSize != imageSize) {
+      provider.saveDatabaseStats(
+          dbSize: dbSize, imageSize: imageSize, fullSize: fullSize);
+    }
 
     if (_firstInit == true) {
       setState(() {});
@@ -62,11 +76,12 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   }
 
   _calcItemCounts() {
-    _itemCounts = _databaseStatsDto!.sumMeters! +
-        _databaseStatsDto!.sumEntries! +
-        _databaseStatsDto!.sumTags! +
-        _databaseStatsDto!.sumContracts! +
-        _databaseStatsDto!.sumRooms!;
+    _itemCounts = _databaseStatsDto!.sumMeters +
+        _databaseStatsDto!.sumEntries +
+        _databaseStatsDto!.sumTags +
+        _databaseStatsDto!.sumContracts +
+        _databaseStatsDto!.sumRooms +
+        _databaseStatsDto!.sumImages;
   }
 
   @override
@@ -76,7 +91,16 @@ class _DatabaseStatsState extends State<DatabaseStats> {
 
     DatabaseSettingsHelper databaseHelper = widget.databaseSettingsHelper;
 
-    _getDatabaseSize(databaseHelper);
+    final themeProvider = Provider.of<ThemeChanger>(context);
+
+    _isLargeText =
+        themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
+
+    _imageSize = provider.imageSize;
+    _dbSize = provider.databaseSize;
+    _fullSize = provider.statsSize;
+
+    _getDatabaseSize(databaseHelper, provider);
     _getDatabaseStats(db, databaseHelper);
 
     return FutureBuilder(
@@ -103,14 +127,12 @@ class _DatabaseStatsState extends State<DatabaseStats> {
         }
 
         return Container(
-          height: 225,
           width: double.infinity,
           padding: const EdgeInsets.all(8),
           child: Card(
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
-                // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,11 +142,11 @@ class _DatabaseStatsState extends State<DatabaseStats> {
                         'Speicherbelegung',
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
-                      Text(
-                        _databaseSize,
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
+                      _memoryUsage(),
                     ],
+                  ),
+                  const SizedBox(
+                    height: 15,
                   ),
                   _chart(),
                 ],
@@ -136,6 +158,57 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     );
   }
 
+  _memoryUsage() {
+    return Column(
+      children: [
+        Text(
+          _fullSize,
+          style: Theme.of(context).textTheme.headlineLarge,
+        ),
+        const SizedBox(
+          height: 2,
+        ),
+        Row(
+          children: [
+            Row(
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.database,
+                  size: 12,
+                ),
+                const SizedBox(
+                  width: 3,
+                ),
+                Text(
+                  _dbSize,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const SizedBox(
+              width: 15,
+            ),
+            Row(
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.image,
+                  size: 12,
+                ),
+                const SizedBox(
+                  width: 3,
+                ),
+                Text(
+                  _imageSize,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   List<PieChartSectionData> _sections() {
     List<PieChartSectionData> result = [];
 
@@ -143,7 +216,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
       return result;
     }
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
       if (_itemValues.elementAt(i).isNaN) {
         result.add(
           PieChartSectionData(
@@ -190,10 +263,6 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   }
 
   _chart() {
-    final themeProvider = Provider.of<ThemeChanger>(context);
-
-    bool isLargeText = themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
-
     return Row(
       children: [
         Expanded(
@@ -204,13 +273,13 @@ class _DatabaseStatsState extends State<DatabaseStats> {
               PieChartData(
                 sections: _sections(),
                 sectionsSpace: 0,
-                centerSpaceRadius: 15,
+                centerSpaceRadius: 25,
               ),
             ),
           ),
         ),
         Expanded(
-          flex: isLargeText ? 2 : 1,
+          flex: _isLargeText ? 2 : 1,
           child: ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

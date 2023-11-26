@@ -47,8 +47,10 @@ class ThemeChanger extends ChangeNotifier {
     _nightMode = _pref.getBool(keyNight) ?? false;
     _useDynamicColor = _pref.getBool(keyDynamicColor) ?? false;
 
-    _fontSizeValue = FontSizeValue.values
-        .firstWhere((element) => element.name == _pref.getString(keyFontSize));
+    _fontSizeValue = FontSizeValue.values.firstWhere(
+      (element) => element.name == _pref.getString(keyFontSize),
+      orElse: () => FontSizeValue.normal,
+    );
     _getFontSizeByValue();
 
     notifyListeners();

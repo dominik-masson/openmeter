@@ -8,9 +8,11 @@ import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
 import '../model/entry_dto.dart';
 import '../services/entry_serivce.dart';
+import '../services/meter_image_helper.dart';
 
 class EntryCardProvider extends ChangeNotifier {
   final EntryService entryService = EntryService();
+  final MeterImageHelper _meterImageHelper = MeterImageHelper();
 
   List<EntryDto> _entries = [];
   int _selectedEntriesLength = 0;
@@ -107,6 +109,10 @@ class EntryCardProvider extends ChangeNotifier {
     for (EntryDto entry in _entries) {
       if (entry.isSelected) {
         db.entryDao.deleteEntry(entry.id!);
+
+        if (entry.imagePath != null) {
+          await _meterImageHelper.deleteImage(entry.imagePath!);
+        }
       }
     }
 
@@ -170,7 +176,7 @@ class EntryCardProvider extends ChangeNotifier {
 
   void setStateNote(bool value) {
     _setStateNote = value;
-    notifyListeners();
+    // notifyListeners();
   }
 
   int getUsage(EntryDto entry) {

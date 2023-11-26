@@ -10,7 +10,7 @@ final List<MeterTyp> meterTyps = [
     providerTitle: 'Stromanbieter',
     avatar: CustomAvatar(
       color: Colors.green,
-      icon: CustomIcons.power_plug,
+      icon: CustomIcons.powerplug,
     ),
   ),
   MeterTyp(
@@ -19,7 +19,7 @@ final List<MeterTyp> meterTyps = [
     providerTitle: '',
     avatar: CustomAvatar(
       color: Colors.orange,
-      icon: CustomIcons.power_plug,
+      icon: CustomIcons.powerplug,
     ),
   ),
   MeterTyp(
@@ -64,7 +64,7 @@ final List<MeterTyp> meterTyps = [
     providerTitle: 'Heizungsgebühren',
     avatar: CustomAvatar(
       color: Colors.blueGrey,
-      icon: CustomIcons.flamme,
+      icon: CustomIcons.fire,
     ),
   ),
 ];

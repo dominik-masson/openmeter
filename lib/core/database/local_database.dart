@@ -22,7 +22,7 @@ import 'tables/tags.dart';
 
 part 'local_database.g.dart';
 
-// create => flutter pub run build_runner build
+// create => dart run
 
 @DriftDatabase(tables: [
   Meter,
@@ -46,7 +46,7 @@ class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -69,6 +69,9 @@ class LocalDatabase extends _$LocalDatabase {
           }
           if (from < 6) {
             await m.addColumn(entries, entries.transmittedToProvider);
+          }
+          if (from < 7) {
+            await m.addColumn(entries, entries.imagePath);
           }
         },
       );

@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:openmeter/core/services/meter_image_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -20,7 +21,12 @@ import '../provider/room_provider.dart';
 import 'database_export_import.dart';
 
 class DatabaseSettingsHelper {
+  final MeterImageHelper _meterImageHelper = MeterImageHelper();
+
   late final BuildContext context;
+
+  int _databaseSize = 0;
+  int _imagesSize = 0;
 
   DatabaseSettingsHelper(BuildContext buildContext) {
     context = buildContext;
@@ -39,7 +45,9 @@ class DatabaseSettingsHelper {
             child: const Text('Abbrechen'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await _meterImageHelper.deleteFolder();
+
               db.deleteDB().then((value) {
                 final meterProvider =
                     Provider.of<MeterProvider>(context, listen: false);
@@ -133,22 +141,48 @@ class DatabaseSettingsHelper {
     }
   }
 
-  Future<String> getDatabaseSize() async {
+  String _formatSize(int size) {
+    if (size < 1024 * 1024) {
+      String sizeString = (size / 1024).toStringAsFixed(2);
+
+      if (sizeString.endsWith('.00')) {
+        sizeString = sizeString.substring(0, sizeString.indexOf('.'));
+      }
+
+      return '$sizeString KB';
+    } else if (size < 1024 * 1024 * 1024) {
+      String sizeString = (size / 1024 / 1024).toStringAsFixed(2);
+
+      if (sizeString.endsWith('.00')) {
+        sizeString = sizeString.substring(0, sizeString.indexOf('.'));
+      }
+
+      return '$sizeString MB';
+    } else {
+      return '0 KB';
+    }
+  }
+
+  Future<String> getFullSize() async {
     final directory = await getApplicationDocumentsDirectory();
     String dbPath = p.join(directory.path, 'meter.db');
 
     final file = File(dbPath);
 
-    int size = await file.length();
+    _databaseSize = await file.length();
+    _imagesSize = await _meterImageHelper.getFolderSize();
 
-    switch (size.bitLength) {
-      case 16:
-        return '${(size / 1024).ceil()} KB';
-      case 21:
-        return '${(size / 1024 / 1024).ceil()} MB';
-      default:
-        return '0 KB';
-    }
+    int fullSize = _databaseSize + _imagesSize;
+
+    return _formatSize(fullSize);
+  }
+
+  Future<String> getDatabaseSize() async {
+    return _formatSize(_databaseSize);
+  }
+
+  Future<String> getImagesSize() async {
+    return _formatSize(_imagesSize);
   }
 
   Future<DatabaseStatsDto> getDatabaseStats(LocalDatabase db) async {
@@ -157,6 +191,7 @@ class DatabaseSettingsHelper {
     final int? sumContracts = await db.contractDao.getTableLength();
     final int? sumRooms = await db.roomDao.getTableLength();
     final int? sumTags = await db.tagsDao.getTableLength();
+    final int sumImages = await _meterImageHelper.getFolderLength();
 
     return DatabaseStatsDto(
       sumContracts: sumContracts ?? 0,
@@ -164,6 +199,7 @@ class DatabaseSettingsHelper {
       sumMeters: sumMeters ?? 0,
       sumRooms: sumRooms ?? 0,
       sumTags: sumTags ?? 0,
+      sumImages: sumImages,
     );
   }
 
@@ -171,18 +207,20 @@ class DatabaseSettingsHelper {
       {required int totalSum, required DatabaseStatsDto databaseStatsDto}) {
     List<double> result = [];
 
-    double percentMeter = databaseStatsDto.sumMeters! / totalSum;
-    double percentEntries = databaseStatsDto.sumEntries! / totalSum;
-    double percentRooms = databaseStatsDto.sumRooms! / totalSum;
-    double percentTags = databaseStatsDto.sumTags! / totalSum;
-    double percentContracts = databaseStatsDto.sumContracts! / totalSum;
+    double percentMeter = databaseStatsDto.sumMeters / totalSum;
+    double percentEntries = databaseStatsDto.sumEntries / totalSum;
+    double percentRooms = databaseStatsDto.sumRooms / totalSum;
+    double percentTags = databaseStatsDto.sumTags / totalSum;
+    double percentContracts = databaseStatsDto.sumContracts / totalSum;
+    double percentImages = databaseStatsDto.sumImages / totalSum;
 
     result.addAll([
       percentMeter,
       percentEntries,
       percentRooms,
       percentContracts,
-      percentTags
+      percentTags,
+      percentImages
     ]);
 
     return result;

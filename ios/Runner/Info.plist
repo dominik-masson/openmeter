@@ -49,5 +49,13 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSPhotoLibraryUsageDescription</key>
+        <string>Select an image on which a meter reading can be seen. </string>
+        <key>NSCameraUsageDescription </key>
+        <string>Create and save images of a meter reading.</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <false/>
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>Save self-taken pictures of your meter reading in the gallery.</string>
 	</dict>
 </plist>

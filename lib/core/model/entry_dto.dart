@@ -11,6 +11,7 @@ class EntryDto {
   bool transmittedToProvider;
   bool isReset;
   bool isSelected = false;
+  String? imagePath;
 
   EntryDto.fromData(Entrie entry)
       : count = entry.count,
@@ -21,7 +22,8 @@ class EntryDto {
         transmittedToProvider = entry.transmittedToProvider,
         isReset = entry.isReset,
         id = entry.id,
-        meterId = entry.meter;
+        meterId = entry.meter,
+        imagePath = entry.imagePath;
 
   EntryDto.fromJson(Map<String, dynamic> json)
       : count = json['count'],
@@ -30,7 +32,8 @@ class EntryDto {
         note = json['note'],
         date = DateTime.parse(json['date']),
         transmittedToProvider = json['transmittedToProvider'],
-        isReset = json['isReset'];
+        isReset = json['isReset'],
+        imagePath = json['imagePath'];
 
   static Map<String, dynamic> entriesToJson(Entrie entry) {
     return {
@@ -41,6 +44,7 @@ class EntryDto {
       'date': entry.date.toString(),
       'transmittedToProvider': entry.transmittedToProvider,
       'isReset': entry.isReset,
+      'imagePath': entry.imagePath
     };
   }
 
@@ -50,5 +54,6 @@ class EntryDto {
         usage = companion.usage.value,
         days = companion.days.value,
         isReset = companion.isReset.value,
-        transmittedToProvider = companion.transmittedToProvider.value;
+        transmittedToProvider = companion.transmittedToProvider.value,
+        imagePath = companion.imagePath.value;
 }

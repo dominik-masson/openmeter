@@ -196,7 +196,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
       child: DraggableScrollableSheet(
         initialChildSize: widget.createProvider ? 0.8 : 0.25,
         minChildSize: 0.2,
-        maxChildSize: 0.9,
+        maxChildSize: 0.85,
         builder: (context, scrollController) {
           return Container(
             padding: const EdgeInsets.all(8),

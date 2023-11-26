@@ -12,6 +12,7 @@
             android:label="OpenMeter"
             android:name="${applicationName}"
             android:icon="@mipmap/ic_launcher"
+            android:requestLegacyExternalStorage="true"
     >
         <!-- Local Notifications -->
         <receiver android:exported="false"
@@ -59,6 +60,6 @@
                 android:name="flutterEmbedding"
                 android:value="2"/>
 
-        android:requestLegacyExternalStorage="true"
+
     </application>
 </manifest>

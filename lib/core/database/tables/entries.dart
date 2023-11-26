@@ -14,4 +14,5 @@ class Entries extends Table {
   BoolColumn get isReset => boolean().withDefault(const Constant(false))();
   BoolColumn get transmittedToProvider =>
       boolean().withDefault(const Constant(false))();
+  TextColumn get imagePath => text().nullable()();
 }

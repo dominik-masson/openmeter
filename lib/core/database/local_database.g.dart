@@ -393,6 +393,12 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("transmitted_to_provider" IN (0, 1))'),
           defaultValue: const Constant(false));
+  static const VerificationMeta _imagePathMeta =
+      const VerificationMeta('imagePath');
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+      'image_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -403,7 +409,8 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
         days,
         note,
         isReset,
-        transmittedToProvider
+        transmittedToProvider,
+        imagePath
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -462,6 +469,10 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           transmittedToProvider.isAcceptableOrUnknown(
               data['transmitted_to_provider']!, _transmittedToProviderMeta));
     }
+    if (data.containsKey('image_path')) {
+      context.handle(_imagePathMeta,
+          imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta));
+    }
     return context;
   }
 
@@ -490,6 +501,8 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
       transmittedToProvider: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}transmitted_to_provider'])!,
+      imagePath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_path']),
     );
   }
 
@@ -509,6 +522,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
   final String? note;
   final bool isReset;
   final bool transmittedToProvider;
+  final String? imagePath;
   const Entrie(
       {required this.id,
       required this.meter,
@@ -518,7 +532,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       required this.days,
       this.note,
       required this.isReset,
-      required this.transmittedToProvider});
+      required this.transmittedToProvider,
+      this.imagePath});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -533,6 +548,9 @@ class Entrie extends DataClass implements Insertable<Entrie> {
     }
     map['is_reset'] = Variable<bool>(isReset);
     map['transmitted_to_provider'] = Variable<bool>(transmittedToProvider);
+    if (!nullToAbsent || imagePath != null) {
+      map['image_path'] = Variable<String>(imagePath);
+    }
     return map;
   }
 
@@ -547,6 +565,9 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isReset: Value(isReset),
       transmittedToProvider: Value(transmittedToProvider),
+      imagePath: imagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imagePath),
     );
   }
 
@@ -564,6 +585,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       isReset: serializer.fromJson<bool>(json['isReset']),
       transmittedToProvider:
           serializer.fromJson<bool>(json['transmittedToProvider']),
+      imagePath: serializer.fromJson<String?>(json['imagePath']),
     );
   }
   @override
@@ -579,6 +601,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       'note': serializer.toJson<String?>(note),
       'isReset': serializer.toJson<bool>(isReset),
       'transmittedToProvider': serializer.toJson<bool>(transmittedToProvider),
+      'imagePath': serializer.toJson<String?>(imagePath),
     };
   }
 
@@ -591,7 +614,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           int? days,
           Value<String?> note = const Value.absent(),
           bool? isReset,
-          bool? transmittedToProvider}) =>
+          bool? transmittedToProvider,
+          Value<String?> imagePath = const Value.absent()}) =>
       Entrie(
         id: id ?? this.id,
         meter: meter ?? this.meter,
@@ -603,6 +627,7 @@ class Entrie extends DataClass implements Insertable<Entrie> {
         isReset: isReset ?? this.isReset,
         transmittedToProvider:
             transmittedToProvider ?? this.transmittedToProvider,
+        imagePath: imagePath.present ? imagePath.value : this.imagePath,
       );
   @override
   String toString() {
@@ -615,14 +640,15 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           ..write('days: $days, ')
           ..write('note: $note, ')
           ..write('isReset: $isReset, ')
-          ..write('transmittedToProvider: $transmittedToProvider')
+          ..write('transmittedToProvider: $transmittedToProvider, ')
+          ..write('imagePath: $imagePath')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, meter, count, usage, date, days, note,
-      isReset, transmittedToProvider);
+      isReset, transmittedToProvider, imagePath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -635,7 +661,8 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           other.days == this.days &&
           other.note == this.note &&
           other.isReset == this.isReset &&
-          other.transmittedToProvider == this.transmittedToProvider);
+          other.transmittedToProvider == this.transmittedToProvider &&
+          other.imagePath == this.imagePath);
 }
 
 class EntriesCompanion extends UpdateCompanion<Entrie> {
@@ -648,6 +675,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
   final Value<String?> note;
   final Value<bool> isReset;
   final Value<bool> transmittedToProvider;
+  final Value<String?> imagePath;
   const EntriesCompanion({
     this.id = const Value.absent(),
     this.meter = const Value.absent(),
@@ -658,6 +686,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     this.note = const Value.absent(),
     this.isReset = const Value.absent(),
     this.transmittedToProvider = const Value.absent(),
+    this.imagePath = const Value.absent(),
   });
   EntriesCompanion.insert({
     this.id = const Value.absent(),
@@ -669,6 +698,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     this.note = const Value.absent(),
     this.isReset = const Value.absent(),
     this.transmittedToProvider = const Value.absent(),
+    this.imagePath = const Value.absent(),
   })  : meter = Value(meter),
         count = Value(count),
         usage = Value(usage),
@@ -684,6 +714,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     Expression<String>? note,
     Expression<bool>? isReset,
     Expression<bool>? transmittedToProvider,
+    Expression<String>? imagePath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -696,6 +727,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       if (isReset != null) 'is_reset': isReset,
       if (transmittedToProvider != null)
         'transmitted_to_provider': transmittedToProvider,
+      if (imagePath != null) 'image_path': imagePath,
     });
   }
 
@@ -708,7 +740,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       Value<int>? days,
       Value<String?>? note,
       Value<bool>? isReset,
-      Value<bool>? transmittedToProvider}) {
+      Value<bool>? transmittedToProvider,
+      Value<String?>? imagePath}) {
     return EntriesCompanion(
       id: id ?? this.id,
       meter: meter ?? this.meter,
@@ -720,6 +753,7 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       isReset: isReset ?? this.isReset,
       transmittedToProvider:
           transmittedToProvider ?? this.transmittedToProvider,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 
@@ -754,6 +788,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       map['transmitted_to_provider'] =
           Variable<bool>(transmittedToProvider.value);
     }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
     return map;
   }
 
@@ -768,7 +805,8 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
           ..write('days: $days, ')
           ..write('note: $note, ')
           ..write('isReset: $isReset, ')
-          ..write('transmittedToProvider: $transmittedToProvider')
+          ..write('transmittedToProvider: $transmittedToProvider, ')
+          ..write('imagePath: $imagePath')
           ..write(')'))
         .toString();
   }

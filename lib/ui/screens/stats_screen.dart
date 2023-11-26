@@ -31,8 +31,6 @@ class _StatsScreenState extends State<StatsScreen> {
     if (first) {
       _loadData(db, statsProvider);
     }
-    // db.meterDao.getAllMeterTyps().then((value) => print(value));
-    print(meterTyps);
 
     return Scaffold(
       appBar: AppBar(

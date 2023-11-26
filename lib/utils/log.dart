@@ -4,7 +4,7 @@ class LogLevels {
   static const int errorLevel = 1000;
 }
 
-class LogNames{
+class LogNames {
   static const String appLifecycle = 'AppLifecycleState';
   static const String readingReminder = 'MeterReadingReminder';
   static const String roomProvider = 'Room Provider';
@@ -14,4 +14,5 @@ class LogNames{
   static const String databaseExportImport = 'Database Export Import';
   static const String databaseSettingsProvider = 'Database Settings Provider';
   static const String compareCostHelper = 'Compare Cost Helper';
+  static const String meterImageHelper = 'Meter Image Helper';
 }

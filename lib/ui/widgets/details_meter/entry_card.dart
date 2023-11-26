@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:openmeter/ui/widgets/details_meter/details_entry.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
@@ -12,12 +11,12 @@ import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/theme_changer.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
+import 'details_entry.dart';
 
 class EntryCard extends StatelessWidget {
   final MeterDto meter;
-  final DetailsEntry _detailsEntry = DetailsEntry();
 
-  EntryCard({super.key, required this.meter});
+  const EntryCard({super.key, required this.meter});
 
   _showDetails({
     required BuildContext context,
@@ -26,17 +25,10 @@ class EntryCard extends StatelessWidget {
     required EntryCardProvider entryProvider,
     required CostProvider costProvider,
   }) async {
-    var value = await _detailsEntry.getDetailsAlert(
+    return showDialog(
       context: context,
-      entry: item,
-      usage: usage,
-      entryProvider: entryProvider,
-      costProvider: costProvider,
+      builder: (context) => DetailsEntry(entry: item),
     );
-
-    if (value == null) {
-      entryProvider.setStateNote(false);
-    }
   }
 
   @override
@@ -189,12 +181,14 @@ class EntryCard extends StatelessWidget {
                 Icons.note,
                 color: Colors.grey,
               ),
-            const SizedBox(
-              width: 10,
-            ),
             if (item.transmittedToProvider)
               const Icon(
                 Icons.upload_file_rounded,
+                color: Colors.grey,
+              ),
+            if (item.imagePath != null)
+              const Icon(
+                Icons.image,
                 color: Colors.grey,
               ),
           ],
@@ -243,7 +237,7 @@ class EntryCard extends StatelessWidget {
               ),
             ],
           ),
-        if (usage == -1 && (!item.isReset || !item.transmittedToProvider))
+        if (usage == -1 && !item.isReset)
           Text(
             'Erstablesung',
             style: Theme.of(context).textTheme.bodyMedium,

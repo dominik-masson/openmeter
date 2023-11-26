@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:openmeter/core/model/meter_dto.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -17,8 +19,11 @@ import '../model/meter_with_room.dart';
 import '../model/provider_dto.dart';
 import '../model/room_dto.dart';
 import '../provider/meter_provider.dart';
+import 'meter_image_helper.dart';
 
 class DatabaseExportImportHelper {
+  final MeterImageHelper _meterImageHelper = MeterImageHelper();
+
   List<MeterWithRoom> _metersWithRoom = [];
   List<RoomDto> _rooms = [];
   List<ContractDto> _contracts = [];
@@ -77,6 +82,7 @@ class DatabaseExportImportHelper {
       'date': entry.date.toString(),
       'transmittedToProvider': entry.transmittedToProvider,
       'isReset': entry.isReset,
+      'imagePath': entry.imagePath,
     };
   }
 
@@ -158,6 +164,30 @@ class DatabaseExportImportHelper {
     }
   }
 
+  Future _handleExportImages(
+      File dbFile, String fileName, String exportPath) async {
+    try {
+      final encoder = ZipFileEncoder();
+
+      final newPath = p.join(exportPath, '${fileName.split('.')[0]}.zip');
+
+      encoder.create(newPath);
+      encoder.addFile(dbFile);
+
+      encoder.addDirectory(await _meterImageHelper.getDir());
+
+      encoder.close();
+
+      dbFile.deleteSync();
+
+      log('Successfully export db as zip file!',
+          name: LogNames.databaseExportImport);
+    } catch (e) {
+      log('Error while export db as zip file: $e',
+          name: LogNames.databaseExportImport);
+    }
+  }
+
   Future<bool> exportAsJSON(
       {required LocalDatabase db,
       required bool isBackup,
@@ -170,17 +200,30 @@ class DatabaseExportImportHelper {
     try {
       String newPath = '';
 
+      String fileName = '';
+
       if (isBackup) {
         DateTime date = DateTime.now();
         String formattedDate = DateFormat('yyyy_MM_dd_HH_mm_ss').format(date);
 
-        newPath = p.join(path, 'meter_$formattedDate.json');
+        fileName = 'meter_$formattedDate.json';
+
+        newPath = p.join(path, fileName);
 
         if (clearBackupFiles) {
           await clearLastBackupFiles(path);
         }
       } else {
-        newPath = p.join(path, 'meter.json');
+        fileName = 'meter.json';
+        newPath = p.join(path, fileName);
+      }
+
+      final hasImages = await _meterImageHelper.imagesExists();
+
+      if (hasImages) {
+        final dir = await getApplicationCacheDirectory();
+
+        newPath = p.join(dir.path, fileName);
       }
 
       File file = File(newPath);
@@ -190,6 +233,10 @@ class DatabaseExportImportHelper {
       }
 
       file.writeAsStringSync(jsonResult, flush: true, mode: FileMode.write);
+
+      if (hasImages) {
+        await _handleExportImages(file, fileName, path);
+      }
 
       return true;
     } on PlatformException catch (e) {
@@ -301,14 +348,16 @@ class DatabaseExportImportHelper {
 
       for (EntryDto entry in entries) {
         final EntriesCompanion entriesCompanion = EntriesCompanion(
-            note: drift.Value(entry.note),
-            meter: drift.Value(meterId),
-            days: drift.Value(entry.days),
-            date: drift.Value(entry.date),
-            count: drift.Value(entry.count),
-            usage: drift.Value(entry.usage),
-            transmittedToProvider: drift.Value(entry.transmittedToProvider),
-            isReset: drift.Value(entry.isReset));
+          note: drift.Value(entry.note),
+          meter: drift.Value(meterId),
+          days: drift.Value(entry.days),
+          date: drift.Value(entry.date),
+          count: drift.Value(entry.count),
+          usage: drift.Value(entry.usage),
+          transmittedToProvider: drift.Value(entry.transmittedToProvider),
+          isReset: drift.Value(entry.isReset),
+          imagePath: drift.Value(entry.imagePath),
+        );
 
         await db.entryDao.createEntry(entriesCompanion);
       }
@@ -337,13 +386,56 @@ class DatabaseExportImportHelper {
     return countArchiv;
   }
 
+  _handleImportZip(String path) async {
+    final inputStream = InputFileStream(path);
+    final zipData = ZipDecoder().decodeBuffer(inputStream);
+
+    final saveImagePath = await _meterImageHelper.getDir();
+
+    for (var file in zipData.files) {
+      if (file.isFile) {
+        final fileName = file.name;
+
+        if (fileName.endsWith('.jpg')) {
+          final fileNameArray = fileName.split('/');
+
+          final outputStream =
+              OutputFileStream('${saveImagePath.path}/${fileNameArray[1]}');
+
+          file.writeContent(outputStream);
+
+          outputStream.close();
+        }
+        if (fileName.endsWith('.json')) {
+          final cacheDir = await getApplicationCacheDirectory();
+
+          final outputStream = OutputFileStream('${cacheDir.path}/meter.json');
+
+          file.writeContent(outputStream);
+
+          outputStream.close();
+        }
+      }
+    }
+  }
+
   Future<bool> importFromJson(
       {required LocalDatabase db,
       required String path,
       required MeterProvider meterProvider}) async {
     _clearAllLists();
 
-    File file = File(path);
+    File? file;
+
+    if (path.endsWith('.zip')) {
+      await _handleImportZip(path);
+
+      final cacheDir = await getApplicationCacheDirectory();
+
+      file = File('${cacheDir.path}/meter.json');
+    } else {
+      file = File(path);
+    }
 
     if (file.existsSync()) {
       try {

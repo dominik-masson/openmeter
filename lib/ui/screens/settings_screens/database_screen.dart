@@ -50,6 +50,10 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       return;
     }
 
+    setState(() {
+      _loadData = true;
+    });
+
     bool success = await _exportImportHelper.exportAsJSON(
       db: db,
       isBackup: false,
@@ -57,9 +61,11 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       clearBackupFiles: false,
     );
 
-    if (success) {
-      provider.setHasUpdate(true);
+    setState(() {
+      _loadData = false;
+    });
 
+    if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
@@ -84,7 +90,10 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
 
     await FilePicker.platform.clearTemporaryFiles();
 
-    FilePickerResult? path = await FilePicker.platform.pickFiles();
+    FilePickerResult? path = await FilePicker.platform.pickFiles(
+      allowedExtensions: ['json', 'zip'],
+      type: FileType.custom,
+    );
 
     if (path == null) {
       provider.setHasUpdate(true);
