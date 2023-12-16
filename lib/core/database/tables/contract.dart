@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart';
 
 class Contract extends Table {
-  IntColumn get uid => integer().autoIncrement()();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get meterTyp => text()();
 
-  IntColumn get provider =>
-      integer().references(Provider, #uid, onDelete: KeyAction.cascade)();
+  IntColumn get provider => integer()
+      .references(Provider, #id, onDelete: KeyAction.setNull)
+      .nullable()();
 
   RealColumn get basicPrice => real()();
 
@@ -14,21 +15,31 @@ class Contract extends Table {
 
   RealColumn get discount => real()();
 
-  IntColumn get bonus => integer()();
+  IntColumn get bonus => integer().nullable()();
 
   TextColumn get note => text()();
+
+  TextColumn get unit => text()();
+
+  BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
 }
 
 class Provider extends Table {
-  IntColumn get uid => integer().autoIncrement()();
+  IntColumn get id => integer().autoIncrement()();
 
   TextColumn get name => text()();
 
   TextColumn get contractNumber => text()();
 
-  IntColumn get notice => integer()();
+  IntColumn get notice => integer().nullable()();
 
   DateTimeColumn get validFrom => dateTime()();
 
   DateTimeColumn get validUntil => dateTime()();
+
+  IntColumn get renewal => integer().nullable()();
+
+  BoolColumn get canceled => boolean().nullable()();
+
+  DateTimeColumn get canceledDate => dateTime().nullable()();
 }

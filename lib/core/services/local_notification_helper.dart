@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
@@ -6,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../../utils/log.dart';
 
 class LocalNotificationHelper {
   late final FlutterLocalNotificationsPlugin _localNotification;
@@ -38,14 +41,19 @@ class LocalNotificationHelper {
 
   /*
     request notification permission
-      for android 13 and higher
+     for android 13 and higher
    */
-  void requestPermission() {
+  Future<void> requestPermission() async {
     if (Platform.isAndroid) {
-      _localNotification
+      await _localNotification
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestPermission();
+          ?.requestNotificationsPermission();
+
+      await _localNotification
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestExactAlarmsPermission();
     }
   }
 
@@ -79,6 +87,8 @@ class LocalNotificationHelper {
       minute,
     );
 
+    log('Set schedule date: $scheduleDate', name: LogNames.readingReminder);
+
     return scheduleDate;
   }
 
@@ -91,8 +101,8 @@ class LocalNotificationHelper {
       _notificationDetails(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.wallClockTime,
-      androidAllowWhileIdle: true,
       matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 
@@ -102,6 +112,9 @@ class LocalNotificationHelper {
     while (!(scheduleDate.weekday == day)) {
       scheduleDate = scheduleDate.add(const Duration(days: 1));
     }
+
+    log('Set weekly schedule date: $scheduleDate',
+        name: LogNames.readingReminder);
 
     return scheduleDate;
   }
@@ -115,22 +128,35 @@ class LocalNotificationHelper {
       _notificationDetails(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.wallClockTime,
-      androidAllowWhileIdle: true,
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 
-  void monthlyReminder(int hour, int minute) async {
+  tz.TZDateTime _convertTimeMonthly(int hour, int minute, int day) {
+    tz.TZDateTime scheduleDate = _convertTime(hour, minute);
+
+    while (scheduleDate.day != day) {
+      scheduleDate = scheduleDate.add(const Duration(days: 1));
+    }
+
+    log('Set monthly schedule date: $scheduleDate',
+        name: LogNames.readingReminder);
+
+    return scheduleDate;
+  }
+
+  void monthlyReminder(int hour, int minute, int day) async {
     await _localNotification.zonedSchedule(
       0,
       _notificationTitle,
       _notificationBody,
-      _convertTime(hour, minute),
+      _convertTimeMonthly(hour, minute, day),
       _notificationDetails(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      androidAllowWhileIdle: true,
       matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 

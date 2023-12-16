@@ -1,195 +1,271 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/meter_provider.dart';
+import '../../../core/services/database_export_import.dart';
+import '../../../core/services/database_settings_helper.dart';
+import '../../widgets/settings_screen/database_stats.dart';
 
 class DatabaseExportImport extends StatefulWidget {
-  const DatabaseExportImport({Key? key}) : super(key: key);
+  const DatabaseExportImport({super.key});
 
   @override
   State<DatabaseExportImport> createState() => _DatabaseExportImportState();
 }
 
 class _DatabaseExportImportState extends State<DatabaseExportImport> {
-  String? _selectedPath;
-  FilePickerResult? _selectedDB;
+  late DatabaseSettingsHelper _databaseHelper;
+  bool _loadData = false;
+  final _exportImportHelper = DatabaseExportImportHelper();
 
-  final _filePicker = FilePicker.platform;
+  bool autoBackupState = false;
+  String autoBackupDirectory = '';
 
-  _exportDB(LocalDatabase db) async {
-    _resetState();
-    bool permissionGranted = await _askPermission();
+  bool clearOldestAutoBackupFiles = false;
+
+  @override
+  void initState() {
+    _databaseHelper = DatabaseSettingsHelper(context);
+    super.initState();
+  }
+
+  void _handleExport(
+      LocalDatabase db, DatabaseSettingsProvider provider) async {
+    provider.setHasUpdate(false);
+
+    bool permissionGranted = await _exportImportHelper.askPermission();
 
     if (!permissionGranted) {
+      provider.setHasUpdate(true);
       return;
     }
 
-    try {
-      String? path = await FilePicker.platform.getDirectoryPath();
+    String? path = await FilePicker.platform.getDirectoryPath();
 
-      if (path == null) {
-        return;
-      }
+    if (path == null) {
+      provider.setHasUpdate(true);
+      return;
+    }
 
-      setState(() {
-        _selectedPath = path;
-      });
+    setState(() {
+      _loadData = true;
+    });
 
-      await db.exportInto(_selectedPath!).then((value) {
+    bool success = await _exportImportHelper.exportAsJSON(
+      db: db,
+      isBackup: false,
+      path: path,
+      clearBackupFiles: false,
+    );
+
+    setState(() {
+      _loadData = false;
+    });
+
+    if (success) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
-            'Backup wurde erstellt!',
+            'Datenbank wurde erfolgreich exportiert!',
           ),
+          behavior: SnackBarBehavior.floating,
         ));
-      });
-    } on PlatformException catch (e) {
-      if (kDebugMode) {
-        print('Unsupported operation $e');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e.toString());
       }
     }
   }
 
-  _importDB(LocalDatabase db) async {
-    _resetState();
-    _selectedDB = await _filePicker.pickFiles();
+  void _handleImport(LocalDatabase db, DatabaseSettingsProvider provider,
+      MeterProvider meterProvider) async {
+    provider.setHasUpdate(false);
 
-    if (_selectedDB == null) {
+    bool permissionGranted = await _exportImportHelper.askPermission();
+
+    if (!permissionGranted) {
+      provider.setHasUpdate(true);
       return;
     }
 
-    await db.importDB(_selectedDB!.files.single.path!).then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text(
-          'Backup wird wiederhergestellt!',
-        ),
-      ));
-    });
-  }
+    await FilePicker.platform.clearTemporaryFiles();
 
-  _deleteDB(LocalDatabase db) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Zurücksetzen?'),
-        content: const Text(
-            'Möchten Sie Ihre Datenbank wirklich zurücksetzen und somit alle Daten löschen?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Abbrechen'),
-          ),
-          TextButton(
-            onPressed: () {
-              db.deleteDB().then((value) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text(
-                    'Datenbank wurde erfolgreich zurückgesetzt!',
-                  ),
-                ));
-                Navigator.of(context).pop();
-              });
-            },
-            child: const Text(
-              'Zurücksetzen',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+    FilePickerResult? path = await FilePicker.platform.pickFiles(
+      allowedExtensions: ['json', 'zip'],
+      type: FileType.custom,
     );
-  }
 
-  Future<bool> _askPermission() async {
-    var status = await Permission.manageExternalStorage.status;
-    if (status.isGranted) {
-      return true;
-    } else if (status.isDenied) {
-      if (await Permission.manageExternalStorage.request().isGranted) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  _resetState() {
-    if (!mounted) {
+    if (path == null) {
+      provider.setHasUpdate(true);
       return;
     }
+
     setState(() {
-      _selectedPath = null;
-      _selectedDB = null;
+      _loadData = true;
     });
+
+    bool success = await _exportImportHelper.importFromJson(
+      db: db,
+      path: path.files.single.path!,
+      meterProvider: meterProvider,
+    );
+
+    if (success == false) {
+      provider.setHasUpdate(true);
+    }
+
+    setState(() {
+      _loadData = false;
+    });
+
+    provider.resetStats();
   }
 
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
+    final provider = Provider.of<DatabaseSettingsProvider>(context);
+    final meterProvider = Provider.of<MeterProvider>(context);
+
+    autoBackupState = provider.getAutoBackupState;
+    autoBackupDirectory = provider.getAutoBackupDirectory;
+    clearOldestAutoBackupFiles = provider.getClearBackupFilesState;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Datenbankeinstellungen'),
+        title: const Text('Daten und Speicher'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Image.asset(
-              'assets/icons/database_icon.png',
-              width: 150,
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DatabaseStats(databaseSettingsHelper: _databaseHelper),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.cloud_upload),
+                  title: Text(
+                    'Daten exportieren',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: const Text(
+                    'Erstelle und speichere ein Backup deiner Daten.',
+                  ),
+                  onTap: () => _handleExport(db, provider),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud_download),
+                  title: Text(
+                    'Daten importieren',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: const Text(
+                    'Importiere deine gespeicherten Daten.',
+                  ),
+                  onTap: () => _handleImport(db, provider, meterProvider),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.replay),
+                  title: Text(
+                    'Daten zurücksetzen',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: const Text(
+                    'Lösche alle gespeicherten Daten.',
+                  ),
+                  onTap: () => _databaseHelper.deleteDB(context, db),
+                ),
+                const Divider(),
+                _autoBackupWidget(provider),
+              ],
             ),
-          ),
-          const SizedBox(
-            height: 50,
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_upload),
-            title: const Text(
-              'Datenbank exportieren',
-              style: TextStyle(fontSize: 18),
-            ),
-            subtitle: const Text(
-              'Erstelle und speichere ein Backup deiner Daten.',
-            ),
-            onTap: () => _exportDB(db),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_download),
-            title: const Text(
-              'Datenbank importieren',
-              style: TextStyle(fontSize: 18),
-            ),
-            subtitle: const Text(
-              'Importiere die Datenbank, um die Daten wiederherzustellen.',
-            ),
-            onTap: () => _importDB(db),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          ListTile(
-            leading: const Icon(Icons.replay),
-            title: const Text(
-              'Datenbank zurücksetzen',
-              style: TextStyle(fontSize: 18),
-            ),
-            subtitle: const Text(
-              'Setze die Datenbank zurück, um alle bisherigen Daten zu löschen.',
-            ),
-            onTap: () => _deleteDB(db),
-          ),
-        ],
+            if (_loadData == true)
+              Container(
+                height: MediaQuery.of(context).size.height,
+                alignment: Alignment.center,
+                child: const SizedBox(
+                  height: 80,
+                  width: 80,
+                  child: CircularProgressIndicator(strokeWidth: 8),
+                ),
+              ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _autoBackupWidget(DatabaseSettingsProvider provider) {
+    toastEmptyDirectory() {
+      return ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Es muss zuerst ein Backup Ordner ausgewählt werden!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // toggle backup state
+        SwitchListTile(
+          title: Text(
+            'Automatisches Backup',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+              'Erstellt automatisch ein Backup der Datenbank sobald die App geschlossen wird.'),
+          secondary: const Icon(Icons.settings_backup_restore),
+          value: autoBackupState,
+          onChanged: (bool value) {
+            if (autoBackupDirectory.isEmpty) {
+              toastEmptyDirectory();
+              return;
+            }
+            setState(() {
+              autoBackupState = value;
+              provider.setAutoBackupState(autoBackupState);
+            });
+          },
+        ),
+        // Get backup directory
+        ListTile(
+          leading: const Icon(Icons.drive_folder_upload),
+          title: Text(
+            'Ordner für Datensicherung wählen',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: autoBackupDirectory.isEmpty
+              ? const Text('Es wurde noch kein Verzeichnis ausgewählt')
+              : Text(autoBackupDirectory),
+          onTap: () => _databaseHelper.selectAutoBackupPath(provider),
+        ),
+        SwitchListTile(
+          title: Text(
+            'Alte Backups löschen',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+              'Es werden alle Backup Dateien gelöscht, bis auf die neusten zwei.'),
+          secondary: const Icon(Icons.auto_delete_outlined),
+          onChanged: (value) async {
+            if (autoBackupState) {
+              setState(() {
+                clearOldestAutoBackupFiles = value;
+                provider.setClearBackupFilesState(clearOldestAutoBackupFiles);
+              });
+            }
+          },
+          value: clearOldestAutoBackupFiles,
+        ),
+      ],
     );
   }
 }

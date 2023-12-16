@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../local_database.dart';
-import '../models/meter_with_room.dart';
+import '../../model/meter_with_room.dart';
 import '../tables/entries.dart';
 import '../tables/meter.dart';
 import '../tables/room.dart';
@@ -32,10 +32,6 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .go();
   }
 
-  Future<List<MeterData>> getMeterByTag(String tagId) async {
-    return await (db.select(db.meter)..where((tbl) => tbl.tag.contains(tagId))).get();
-  }
-
   Future updateMeter(MeterData meter) async {
     return update(db.meter).replace(meter);
   }
@@ -53,7 +49,7 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
         .getSingle();
   }
 
-  Stream<List<MeterWithRoom>> watchAllMeterWithRooms() {
+  Stream<List<MeterWithRoom>> watchAllMeterWithRooms(bool isArchived) {
     final query = select(db.meter).join([
       leftOuterJoin(
         db.meterInRoom,
@@ -62,19 +58,72 @@ class MeterDao extends DatabaseAccessor<LocalDatabase> with _$MeterDaoMixin {
       ),
       leftOuterJoin(
         db.room,
-        meterInRoom.roomId.equalsExp(room.id),
+        meterInRoom.roomId.equalsExp(room.uuid),
         // useColumns: false,
       ),
-    ]);
+    ])
+      ..where(meter.isArchived.equals(isArchived));
 
     return query.watch().map(
       (rows) {
         return rows.map((row) {
           return MeterWithRoom(
-              meter: row.readTable(db.meter),
-              room: row.readTableOrNull(db.room));
+            meter: row.readTable(db.meter),
+            room: row.readTableOrNull(db.room),
+            isSelected: false,
+          );
         }).toList();
       },
     );
+  }
+
+  Future updateArchived(int meterId, bool isArchived) async {
+    return (update(meter)..where((tbl) => tbl.id.equals(meterId)))
+        .write(MeterCompanion(isArchived: Value(isArchived)));
+  }
+
+  Future<List<MeterWithRoom>> getAllMeterWithRooms() {
+    final query = select(db.meter).join([
+      leftOuterJoin(
+        db.meterInRoom,
+        meter.id.equalsExp(meterInRoom.meterId),
+        // useColumns: false,
+      ),
+      leftOuterJoin(
+        db.room,
+        meterInRoom.roomId.equalsExp(room.uuid),
+        // useColumns: false,
+      ),
+    ]);
+
+    return query
+        .map(
+          (row) => MeterWithRoom(
+            meter: row.readTable(db.meter),
+            room: row.readTableOrNull(db.room),
+            isSelected: false,
+          ),
+        )
+        .get();
+  }
+
+  Future<List<String?>> getAllMeterTyps() async {
+    final query = selectOnly(db.meter, distinct: true)..addColumns([meter.typ]);
+
+    List<String?> result = await query.map((row) => row.read(meter.typ)).get();
+
+    result.sort(
+      (a, b) => a!.compareTo(b!),
+    );
+
+    return result;
+  }
+
+  Future<int?> getTableLength() async {
+    var count = db.meter.id.count();
+
+    return await (db.selectOnly(db.meter)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
   }
 }

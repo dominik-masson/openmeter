@@ -1,32 +1,63 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/entry_dto.dart';
+import '../../../core/model/meter_dto.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
-import '../../../core/provider/small_feature_provider.dart';
+import '../../../core/provider/torch_provider.dart';
+import '../../../core/services/meter_image_helper.dart';
 import '../../../core/services/torch_controller.dart';
+import '../../../utils/convert_count.dart';
+import '../../../utils/custom_icons.dart';
 
-class AddEntry {
+class AddEntry extends StatefulWidget {
+  final MeterDto meter;
+
+  const AddEntry({super.key, required this.meter});
+
+  @override
+  State<AddEntry> createState() => _AddEntryState();
+}
+
+class _AddEntryState extends State<AddEntry> {
+  final MeterImageHelper _imageHelper = MeterImageHelper();
+
+  final _formKey = GlobalKey<FormState>();
+  final FocusNode _countFocus = FocusNode();
+
+  final _iconKey = GlobalKey();
+
   final TextEditingController _datecontroller = TextEditingController();
   final TextEditingController _countercontroller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  DateTime? _selectedDate = DateTime.now();
-
-  final MeterData meter;
-
   final TorchController _torchController = TorchController();
+  final PageController _pageController = PageController();
+
+  DateTime? _selectedDate = DateTime.now();
   bool _stateTorch = false;
+  bool _isReset = false;
+  bool _isTransmitted = false;
 
-  AddEntry({required this.meter});
+  int _selectedWidgetView = 0;
+  String? _imagePath;
+  bool _saved = false;
 
+  @override
   void dispose() {
+    super.dispose();
     _datecontroller.dispose();
     _countercontroller.dispose();
+    _countFocus.dispose();
   }
 
-  void _showDatePicker(BuildContext context) async {
+  void _showDatePicker() async {
     await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -43,50 +74,13 @@ class AddEntry {
     });
   }
 
-  _saveEntry(BuildContext context, SmallFeatureProvider torchProvider,
-      EntryCardProvider entryProvider) async {
-    final db = Provider.of<LocalDatabase>(context, listen: false);
-
-    String currentCount = entryProvider.getCurrentCount;
-    DateTime oldDate = entryProvider.getOldDate;
-
-    if (_formKey.currentState!.validate()) {
-      final entry = EntriesCompanion(
-        meter: drift.Value(meter.id),
-        date: drift.Value(_selectedDate!),
-        count: drift.Value(int.parse(_countercontroller.text)),
-        usage: drift.Value(_calcUsage(currentCount)),
-        days: drift.Value(_calcDays(_selectedDate!, oldDate)),
-      );
-
-      await db.entryDao.createEntry(entry).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Eintrag wird hinzugefügt!'),
-          ),
-        );
-
-        if (_torchController.stateTorch && torchProvider.stateTorch) {
-          _torchController.getTorch();
-          _stateTorch = false;
-        }
-
-        entryProvider.setCurrentCount(_countercontroller.text);
-        entryProvider.setOldDate(_selectedDate!);
-        Navigator.pop(context, true);
-        _countercontroller.clear();
-        _selectedDate = DateTime.now();
-      });
-    }
-  }
-
   int _calcUsage(String currentCount) {
     int count = 0;
 
     if (currentCount == 'none') {
       return -1;
     } else {
-      count = int.parse(currentCount);
+      count = ConvertCount.convertString(currentCount);
     }
 
     final countController = int.parse(_countercontroller.text);
@@ -98,22 +92,384 @@ class AddEntry {
     return newDate.difference(oldDate).inDays;
   }
 
-  showBottomModel(
-    BuildContext context,
-    EntryCardProvider entryProvider,
+  _saveEntry(
+      TorchProvider torchProvider, EntryCardProvider entryProvider) async {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    EntryDto? newestEntry = entryProvider.getNewestEntry;
+
+    String currentCount = 'none';
+    DateTime? oldDate;
+
+    if (newestEntry != null) {
+      currentCount = newestEntry.count.toString();
+      oldDate = newestEntry.date;
+    }
+
+    if (_formKey.currentState!.validate()) {
+      late EntriesCompanion entry;
+
+      if (oldDate != null && _selectedDate!.isBefore(oldDate)) {
+        int count = int.parse(_countercontroller.text);
+        String usageCount = '0';
+        DateTime date = DateTime.now();
+
+        final prevEntry = entryProvider.getPrevEntry(_selectedDate!);
+
+        if (prevEntry != null) {
+          usageCount = prevEntry.count.toString();
+          date = prevEntry.date;
+        } else {
+          usageCount = 'none';
+          date = _selectedDate!;
+        }
+
+        entry = EntriesCompanion(
+          meter: drift.Value(widget.meter.id!),
+          date: drift.Value(_selectedDate!),
+          count: drift.Value(count),
+          usage: drift.Value(_isReset ? -1 : _calcUsage(usageCount)),
+          days: drift.Value(_isReset ? -1 : _calcDays(_selectedDate!, date)),
+          isReset: drift.Value(_isReset),
+          transmittedToProvider: drift.Value(_isTransmitted),
+          imagePath: drift.Value(_imagePath),
+        );
+
+        await entryProvider.saveNewMiddleEntry(
+            EntryDto.fromEntriesCompanion(entry), db);
+      } else {
+        entry = EntriesCompanion(
+          meter: drift.Value(widget.meter.id!),
+          date: drift.Value(_selectedDate!),
+          count: drift.Value(_countercontroller.text.isEmpty
+              ? 0
+              : int.parse(_countercontroller.text)),
+          usage: drift.Value(_isReset ? -1 : _calcUsage(currentCount)),
+          days: drift.Value(_isReset || oldDate == null
+              ? -1
+              : _calcDays(_selectedDate!, oldDate)),
+          isReset: drift.Value(_isReset),
+          transmittedToProvider: drift.Value(_isTransmitted),
+          imagePath: drift.Value(_imagePath),
+        );
+
+        entryProvider.setCurrentCount(_countercontroller.text);
+        entryProvider.setOldDate(_selectedDate!);
+      }
+
+      await db.entryDao.createEntry(entry).then((value) {
+        if (_torchController.stateTorch && torchProvider.stateTorch) {
+          _torchController.getTorch();
+          _stateTorch = false;
+        }
+
+        _saved = true;
+
+        Provider.of<DatabaseSettingsProvider>(context, listen: false)
+            .setHasUpdate(true);
+
+        entryProvider.setHasEntries(true);
+
+        Navigator.pop(context, true);
+
+        _countercontroller.clear();
+        _selectedDate = DateTime.now();
+      });
+    }
+  }
+
+  _switchTiles(Function setState) {
+    return Column(
+      children: [
+        SwitchListTile(
+          value: _isTransmitted,
+          onChanged: (value) {
+            setState(
+              () => _isTransmitted = value,
+            );
+          },
+          title: const Text('An Anbieter gemeldet'),
+        ),
+        SwitchListTile(
+          value: _isReset,
+          onChanged: (value) {
+            setState(
+              () => _isReset = value,
+            );
+          },
+          title: const Text('Zähler zurücksetzen'),
+        ),
+      ],
+    );
+  }
+
+  _showAddImagePopupMenu(Offset offset, Function setState) {
+    double left = offset.dx;
+    double top = offset.dy; // MediaQuery.sizeOf(context).height * 0.44;
+
+    return showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(left, top, 0, 0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      items: [
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.camera_alt,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild aufnehmen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          onTap: () async {
+            String? imagePath =
+                await _imageHelper.selectAndSaveImage(ImageSource.camera);
+
+            setState(() {
+              _imagePath = imagePath;
+
+              if (_imagePath != null) {
+                _selectedWidgetView = 1;
+                _pageController.nextPage(
+                    duration: Durations.short1, curve: Curves.linear);
+              }
+            });
+          },
+        ),
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.photo_library,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild aus der Galerie wählen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          onTap: () async {
+            String? imagePath =
+                await _imageHelper.selectAndSaveImage(ImageSource.gallery);
+
+            setState(() {
+              _imagePath = imagePath;
+
+              if (_imagePath != null) {
+                _selectedWidgetView = 1;
+                _pageController.nextPage(
+                    duration: Durations.short1, curve: Curves.linear);
+              }
+            });
+          },
+        ),
+        if (_imagePath != null)
+          PopupMenuItem(
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.delete,
+                  size: 20,
+                ),
+                const SizedBox(
+                  width: 15,
+                ),
+                Text(
+                  'Bild löschen',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            onTap: () async {
+              await _imageHelper.deleteImage(_imagePath!);
+              setState(() {
+                _imagePath = null;
+                _selectedWidgetView = 0;
+              });
+            },
+          ),
+      ],
+    );
+  }
+
+  _topBar(
+    TorchProvider torchProvider,
+    Function setState,
   ) {
-    final torchProvider =
-        Provider.of<SmallFeatureProvider>(context, listen: false);
+    bool isTorchOn = _torchController.stateTorch;
 
     if (torchProvider.stateTorch && !_torchController.stateTorch) {
       _torchController.getTorch();
       _stateTorch = true;
+      isTorchOn = true;
     }
 
-    bool isTorchOn = _torchController.stateTorch;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Neuer Zählerstand',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () async {
+                bool torch = await _torchController.getTorch();
+                setState(() {
+                  if (torch) {
+                    isTorchOn = !isTorchOn;
+                    torchProvider.setIsTorchOn(isTorchOn);
+                  }
+                });
+              },
+              tooltip: isTorchOn
+                  ? 'Schalte die Taschenlampe aus'
+                  : 'Schalte die Taschenlampe an',
+              icon: isTorchOn
+                  ? const Icon(
+                      Icons.flashlight_on,
+                    )
+                  : const Icon(
+                      Icons.flashlight_off,
+                    ),
+            ),
+            IconButton(
+              key: _iconKey,
+              tooltip: _imagePath == null
+                  ? 'Füge ein Bild hinzu'
+                  : 'Füge ein neues Bild hinzu oder lösche das aktuelle',
+              icon: _imagePath == null
+                  ? const Icon(
+                      CustomIcons.photoadd,
+                      size: 26,
+                    )
+                  : const Icon(
+                      CustomIcons.photoedit,
+                      size: 26,
+                    ),
+              onPressed: () async {
+                if (_countFocus.hasFocus) {
+                  _countFocus.unfocus();
+                  await Future.delayed(const Duration(milliseconds: 250));
+                }
+
+                RenderBox renderBox =
+                    _iconKey.currentContext?.findRenderObject() as RenderBox;
+
+                Offset offset = renderBox.localToGlobal(Offset.zero);
+
+                _showAddImagePopupMenu(offset, setState);
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  _addView(Function setState) {
+    return Column(
+      children: [
+        TextFormField(
+          readOnly: true,
+          textInputAction: TextInputAction.next,
+          controller: _datecontroller
+            ..text = _selectedDate != null
+                ? DateFormat('dd.MM.yyyy').format(_selectedDate!)
+                : '',
+          onTap: () => _showDatePicker(),
+          decoration: const InputDecoration(
+              icon: Icon(Icons.date_range), label: Text('Datum')),
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        TextFormField(
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if ((value == null || value.isEmpty) && !_isReset) {
+              return 'Bitte geben sie den Zählerstand an!';
+            }
+            if (value == null || (value.isNotEmpty && int.parse(value) < 0)) {
+              return 'Bitte gebe eine positive Zahl an!';
+            }
+            return null;
+          },
+          controller: _countercontroller,
+          focusNode: _countFocus,
+          decoration: const InputDecoration(
+              icon: Icon(Icons.onetwothree), label: Text('Zählerstand')),
+        ),
+        const SizedBox(
+          height: 20,
+        ),
+        const Divider(),
+        _switchTiles(setState),
+      ],
+    );
+  }
+
+  _imageView() {
+    return Image.file(
+      File(_imagePath!),
+      height: 150,
+    );
+  }
+
+  _mainView(Function setState) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 300,
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (value) {
+              setState(() => _selectedWidgetView = value);
+            },
+            children: [
+              _addView(setState),
+              if (_imagePath != null) _imageView(),
+            ],
+          ),
+        ),
+        if (_imagePath != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: AnimatedSmoothIndicator(
+              activeIndex: _selectedWidgetView,
+              count: 2,
+              effect: WormEffect(
+                activeDotColor: Theme.of(context).primaryColor,
+                dotHeight: 10,
+                dotWidth: 10,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  _showBottomModel(
+    EntryCardProvider entryProvider,
+    TorchProvider torchProvider,
+  ) {
+    _torchController.setStateTorch(torchProvider.getStateIsTorchOn);
 
     return showModalBottomSheet(
-      backgroundColor: Theme.of(context).bottomAppBarTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),
@@ -127,97 +483,31 @@ class AddEntry {
             return Padding(
               padding: MediaQuery.of(context).viewInsets,
               child: Container(
-                height: 400,
-                padding: const EdgeInsets.all(25),
+                height: 500,
+                padding: const EdgeInsets.only(left: 25, right: 25),
                 child: Center(
                   child: Form(
                     key: _formKey,
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        // crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Neuer Zählerstand',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isTorchOn = !isTorchOn;
-                                  });
-                                  _torchController.getTorch();
-                                },
-                                icon: isTorchOn
-                                    ? const Icon(
-                                        Icons.flashlight_on,
-                                        // color: darkMode
-                                        //     ? Colors.white
-                                        //     : Colors.black,
-                                      )
-                                    : const Icon(
-                                        Icons.flashlight_off,
-                                        // color: darkMode ? Colors.white : Colors.black,
-                                      ),
-                              ),
-                            ],
-                          ),
+                          _topBar(torchProvider, setState),
                           const SizedBox(
-                            height: 20,
+                            height: 15,
                           ),
-                          TextFormField(
-                            readOnly: true,
-                            textInputAction: TextInputAction.next,
-                            controller: _datecontroller
-                              ..text = _selectedDate != null
-                                  ? DateFormat('dd.MM.yyyy')
-                                      .format(_selectedDate!)
-                                  : '',
-                            onTap: () => _showDatePicker(context),
-                            decoration: const InputDecoration(
-                                icon: Icon(Icons.date_range),
-                                label: Text('Datum')),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          TextFormField(
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Bitte geben sie den Zählerstand an!';
-                              }
-                              if (int.parse(value) < 0) {
-                                return 'Bitte gebe eine positive Zahl an!';
-                              }
-                              return null;
-                            },
-                            controller: _countercontroller,
-                            decoration: const InputDecoration(
-                                icon: Icon(Icons.onetwothree),
-                                label: Text('Zählerstand')),
-                          ),
+                          _mainView(setState),
                           const SizedBox(
                             height: 30,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () => _saveEntry(
-                                    context, torchProvider, entryProvider),
-                                icon: const Icon(Icons.check),
-                                label: const Text('Speichern'),
-                              ),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: FloatingActionButton.extended(
+                              onPressed: () =>
+                                  _saveEntry(torchProvider, entryProvider),
+                              label: const Text('Speichern'),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -232,6 +522,37 @@ class AddEntry {
       if (_torchController.stateTorch && _stateTorch) {
         _torchController.getTorch();
       }
+
+      _resetFields();
     });
+  }
+
+  _resetFields() async {
+    _isReset = false;
+    _selectedDate = DateTime.now();
+    _countercontroller.clear();
+    _stateTorch = false;
+    _isTransmitted = false;
+    _selectedWidgetView = 0;
+
+    if (_imagePath != null && !_saved) {
+      await _imageHelper.deleteImage(_imagePath!);
+    }
+
+    _imagePath = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final torchProvider = Provider.of<TorchProvider>(context);
+
+    return IconButton(
+      onPressed: () {
+        _showBottomModel(entryProvider, torchProvider);
+      },
+      icon: const Icon(Icons.add),
+      tooltip: 'Eintrag erstellen',
+    );
   }
 }

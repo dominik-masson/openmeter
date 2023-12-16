@@ -37,17 +37,24 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
       'unit', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
+  static const VerificationMeta _isArchivedMeta =
+      const VerificationMeta('isArchived');
   @override
-  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
-      'tag', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+      'is_archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
-  List<GeneratedColumn> get $columns => [id, typ, note, number, unit, tag];
+  List<GeneratedColumn> get $columns =>
+      [id, typ, note, number, unit, isArchived];
   @override
-  String get aliasedName => _alias ?? 'meter';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'meter';
+  String get actualTableName => $name;
+  static const String $name = 'meter';
   @override
   VerificationContext validateIntegrity(Insertable<MeterData> instance,
       {bool isInserting = false}) {
@@ -80,9 +87,11 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
-    if (data.containsKey('tag')) {
+    if (data.containsKey('is_archived')) {
       context.handle(
-          _tagMeta, tag.isAcceptableOrUnknown(data['tag']!, _tagMeta));
+          _isArchivedMeta,
+          isArchived.isAcceptableOrUnknown(
+              data['is_archived']!, _isArchivedMeta));
     }
     return context;
   }
@@ -103,8 +112,8 @@ class $MeterTable extends Meter with TableInfo<$MeterTable, MeterData> {
           .read(DriftSqlType.string, data['${effectivePrefix}number'])!,
       unit: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
-      tag: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}tag']),
+      isArchived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
     );
   }
 
@@ -120,14 +129,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
   final String note;
   final String number;
   final String unit;
-  final String? tag;
+  final bool isArchived;
   const MeterData(
       {required this.id,
       required this.typ,
       required this.note,
       required this.number,
       required this.unit,
-      this.tag});
+      required this.isArchived});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -136,9 +145,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
     map['note'] = Variable<String>(note);
     map['number'] = Variable<String>(number);
     map['unit'] = Variable<String>(unit);
-    if (!nullToAbsent || tag != null) {
-      map['tag'] = Variable<String>(tag);
-    }
+    map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
 
@@ -149,7 +156,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: Value(note),
       number: Value(number),
       unit: Value(unit),
-      tag: tag == null && nullToAbsent ? const Value.absent() : Value(tag),
+      isArchived: Value(isArchived),
     );
   }
 
@@ -162,7 +169,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       note: serializer.fromJson<String>(json['note']),
       number: serializer.fromJson<String>(json['number']),
       unit: serializer.fromJson<String>(json['unit']),
-      tag: serializer.fromJson<String?>(json['tag']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
   @override
@@ -174,7 +181,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
       'note': serializer.toJson<String>(note),
       'number': serializer.toJson<String>(number),
       'unit': serializer.toJson<String>(unit),
-      'tag': serializer.toJson<String?>(tag),
+      'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
 
@@ -184,14 +191,14 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           String? note,
           String? number,
           String? unit,
-          Value<String?> tag = const Value.absent()}) =>
+          bool? isArchived}) =>
       MeterData(
         id: id ?? this.id,
         typ: typ ?? this.typ,
         note: note ?? this.note,
         number: number ?? this.number,
         unit: unit ?? this.unit,
-        tag: tag.present ? tag.value : this.tag,
+        isArchived: isArchived ?? this.isArchived,
       );
   @override
   String toString() {
@@ -201,13 +208,13 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           ..write('note: $note, ')
           ..write('number: $number, ')
           ..write('unit: $unit, ')
-          ..write('tag: $tag')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, typ, note, number, unit, tag);
+  int get hashCode => Object.hash(id, typ, note, number, unit, isArchived);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -217,7 +224,7 @@ class MeterData extends DataClass implements Insertable<MeterData> {
           other.note == this.note &&
           other.number == this.number &&
           other.unit == this.unit &&
-          other.tag == this.tag);
+          other.isArchived == this.isArchived);
 }
 
 class MeterCompanion extends UpdateCompanion<MeterData> {
@@ -226,14 +233,14 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
   final Value<String> note;
   final Value<String> number;
   final Value<String> unit;
-  final Value<String?> tag;
+  final Value<bool> isArchived;
   const MeterCompanion({
     this.id = const Value.absent(),
     this.typ = const Value.absent(),
     this.note = const Value.absent(),
     this.number = const Value.absent(),
     this.unit = const Value.absent(),
-    this.tag = const Value.absent(),
+    this.isArchived = const Value.absent(),
   });
   MeterCompanion.insert({
     this.id = const Value.absent(),
@@ -241,7 +248,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     required String note,
     required String number,
     required String unit,
-    this.tag = const Value.absent(),
+    this.isArchived = const Value.absent(),
   })  : typ = Value(typ),
         note = Value(note),
         number = Value(number),
@@ -252,7 +259,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     Expression<String>? note,
     Expression<String>? number,
     Expression<String>? unit,
-    Expression<String>? tag,
+    Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -260,7 +267,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       if (note != null) 'note': note,
       if (number != null) 'number': number,
       if (unit != null) 'unit': unit,
-      if (tag != null) 'tag': tag,
+      if (isArchived != null) 'is_archived': isArchived,
     });
   }
 
@@ -270,14 +277,14 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
       Value<String>? note,
       Value<String>? number,
       Value<String>? unit,
-      Value<String?>? tag}) {
+      Value<bool>? isArchived}) {
     return MeterCompanion(
       id: id ?? this.id,
       typ: typ ?? this.typ,
       note: note ?? this.note,
       number: number ?? this.number,
       unit: unit ?? this.unit,
-      tag: tag ?? this.tag,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
@@ -299,8 +306,8 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
-    if (tag.present) {
-      map['tag'] = Variable<String>(tag.value);
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
     }
     return map;
   }
@@ -313,7 +320,7 @@ class MeterCompanion extends UpdateCompanion<MeterData> {
           ..write('note: $note, ')
           ..write('number: $number, ')
           ..write('unit: $unit, ')
-          ..write('tag: $tag')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
@@ -366,13 +373,50 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isResetMeta =
+      const VerificationMeta('isReset');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, meter, count, usage, date, days, note];
+  late final GeneratedColumn<bool> isReset = GeneratedColumn<bool>(
+      'is_reset', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_reset" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _transmittedToProviderMeta =
+      const VerificationMeta('transmittedToProvider');
   @override
-  String get aliasedName => _alias ?? 'entries';
+  late final GeneratedColumn<bool> transmittedToProvider =
+      GeneratedColumn<bool>('transmitted_to_provider', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("transmitted_to_provider" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  static const VerificationMeta _imagePathMeta =
+      const VerificationMeta('imagePath');
   @override
-  String get actualTableName => 'entries';
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+      'image_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        meter,
+        count,
+        usage,
+        date,
+        days,
+        note,
+        isReset,
+        transmittedToProvider,
+        imagePath
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'entries';
   @override
   VerificationContext validateIntegrity(Insertable<Entrie> instance,
       {bool isInserting = false}) {
@@ -415,6 +459,20 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
+    if (data.containsKey('is_reset')) {
+      context.handle(_isResetMeta,
+          isReset.isAcceptableOrUnknown(data['is_reset']!, _isResetMeta));
+    }
+    if (data.containsKey('transmitted_to_provider')) {
+      context.handle(
+          _transmittedToProviderMeta,
+          transmittedToProvider.isAcceptableOrUnknown(
+              data['transmitted_to_provider']!, _transmittedToProviderMeta));
+    }
+    if (data.containsKey('image_path')) {
+      context.handle(_imagePathMeta,
+          imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta));
+    }
     return context;
   }
 
@@ -438,6 +496,13 @@ class $EntriesTable extends Entries with TableInfo<$EntriesTable, Entrie> {
           .read(DriftSqlType.int, data['${effectivePrefix}days'])!,
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      isReset: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_reset'])!,
+      transmittedToProvider: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}transmitted_to_provider'])!,
+      imagePath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_path']),
     );
   }
 
@@ -455,6 +520,9 @@ class Entrie extends DataClass implements Insertable<Entrie> {
   final DateTime date;
   final int days;
   final String? note;
+  final bool isReset;
+  final bool transmittedToProvider;
+  final String? imagePath;
   const Entrie(
       {required this.id,
       required this.meter,
@@ -462,7 +530,10 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       required this.usage,
       required this.date,
       required this.days,
-      this.note});
+      this.note,
+      required this.isReset,
+      required this.transmittedToProvider,
+      this.imagePath});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -474,6 +545,11 @@ class Entrie extends DataClass implements Insertable<Entrie> {
     map['days'] = Variable<int>(days);
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
+    }
+    map['is_reset'] = Variable<bool>(isReset);
+    map['transmitted_to_provider'] = Variable<bool>(transmittedToProvider);
+    if (!nullToAbsent || imagePath != null) {
+      map['image_path'] = Variable<String>(imagePath);
     }
     return map;
   }
@@ -487,6 +563,11 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       date: Value(date),
       days: Value(days),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      isReset: Value(isReset),
+      transmittedToProvider: Value(transmittedToProvider),
+      imagePath: imagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imagePath),
     );
   }
 
@@ -501,6 +582,10 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       date: serializer.fromJson<DateTime>(json['date']),
       days: serializer.fromJson<int>(json['days']),
       note: serializer.fromJson<String?>(json['note']),
+      isReset: serializer.fromJson<bool>(json['isReset']),
+      transmittedToProvider:
+          serializer.fromJson<bool>(json['transmittedToProvider']),
+      imagePath: serializer.fromJson<String?>(json['imagePath']),
     );
   }
   @override
@@ -514,6 +599,9 @@ class Entrie extends DataClass implements Insertable<Entrie> {
       'date': serializer.toJson<DateTime>(date),
       'days': serializer.toJson<int>(days),
       'note': serializer.toJson<String?>(note),
+      'isReset': serializer.toJson<bool>(isReset),
+      'transmittedToProvider': serializer.toJson<bool>(transmittedToProvider),
+      'imagePath': serializer.toJson<String?>(imagePath),
     };
   }
 
@@ -524,7 +612,10 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           int? usage,
           DateTime? date,
           int? days,
-          Value<String?> note = const Value.absent()}) =>
+          Value<String?> note = const Value.absent(),
+          bool? isReset,
+          bool? transmittedToProvider,
+          Value<String?> imagePath = const Value.absent()}) =>
       Entrie(
         id: id ?? this.id,
         meter: meter ?? this.meter,
@@ -533,6 +624,10 @@ class Entrie extends DataClass implements Insertable<Entrie> {
         date: date ?? this.date,
         days: days ?? this.days,
         note: note.present ? note.value : this.note,
+        isReset: isReset ?? this.isReset,
+        transmittedToProvider:
+            transmittedToProvider ?? this.transmittedToProvider,
+        imagePath: imagePath.present ? imagePath.value : this.imagePath,
       );
   @override
   String toString() {
@@ -543,13 +638,17 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           ..write('usage: $usage, ')
           ..write('date: $date, ')
           ..write('days: $days, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isReset: $isReset, ')
+          ..write('transmittedToProvider: $transmittedToProvider, ')
+          ..write('imagePath: $imagePath')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, meter, count, usage, date, days, note);
+  int get hashCode => Object.hash(id, meter, count, usage, date, days, note,
+      isReset, transmittedToProvider, imagePath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -560,7 +659,10 @@ class Entrie extends DataClass implements Insertable<Entrie> {
           other.usage == this.usage &&
           other.date == this.date &&
           other.days == this.days &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.isReset == this.isReset &&
+          other.transmittedToProvider == this.transmittedToProvider &&
+          other.imagePath == this.imagePath);
 }
 
 class EntriesCompanion extends UpdateCompanion<Entrie> {
@@ -571,6 +673,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
   final Value<DateTime> date;
   final Value<int> days;
   final Value<String?> note;
+  final Value<bool> isReset;
+  final Value<bool> transmittedToProvider;
+  final Value<String?> imagePath;
   const EntriesCompanion({
     this.id = const Value.absent(),
     this.meter = const Value.absent(),
@@ -579,6 +684,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     this.date = const Value.absent(),
     this.days = const Value.absent(),
     this.note = const Value.absent(),
+    this.isReset = const Value.absent(),
+    this.transmittedToProvider = const Value.absent(),
+    this.imagePath = const Value.absent(),
   });
   EntriesCompanion.insert({
     this.id = const Value.absent(),
@@ -588,6 +696,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     required DateTime date,
     required int days,
     this.note = const Value.absent(),
+    this.isReset = const Value.absent(),
+    this.transmittedToProvider = const Value.absent(),
+    this.imagePath = const Value.absent(),
   })  : meter = Value(meter),
         count = Value(count),
         usage = Value(usage),
@@ -601,6 +712,9 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     Expression<DateTime>? date,
     Expression<int>? days,
     Expression<String>? note,
+    Expression<bool>? isReset,
+    Expression<bool>? transmittedToProvider,
+    Expression<String>? imagePath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -610,6 +724,10 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       if (date != null) 'date': date,
       if (days != null) 'days': days,
       if (note != null) 'note': note,
+      if (isReset != null) 'is_reset': isReset,
+      if (transmittedToProvider != null)
+        'transmitted_to_provider': transmittedToProvider,
+      if (imagePath != null) 'image_path': imagePath,
     });
   }
 
@@ -620,7 +738,10 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       Value<int>? usage,
       Value<DateTime>? date,
       Value<int>? days,
-      Value<String?>? note}) {
+      Value<String?>? note,
+      Value<bool>? isReset,
+      Value<bool>? transmittedToProvider,
+      Value<String?>? imagePath}) {
     return EntriesCompanion(
       id: id ?? this.id,
       meter: meter ?? this.meter,
@@ -629,6 +750,10 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
       date: date ?? this.date,
       days: days ?? this.days,
       note: note ?? this.note,
+      isReset: isReset ?? this.isReset,
+      transmittedToProvider:
+          transmittedToProvider ?? this.transmittedToProvider,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 
@@ -656,6 +781,16 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (isReset.present) {
+      map['is_reset'] = Variable<bool>(isReset.value);
+    }
+    if (transmittedToProvider.present) {
+      map['transmitted_to_provider'] =
+          Variable<bool>(transmittedToProvider.value);
+    }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
     return map;
   }
 
@@ -668,7 +803,10 @@ class EntriesCompanion extends UpdateCompanion<Entrie> {
           ..write('usage: $usage, ')
           ..write('date: $date, ')
           ..write('days: $days, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('isReset: $isReset, ')
+          ..write('transmittedToProvider: $transmittedToProvider, ')
+          ..write('imagePath: $imagePath')
           ..write(')'))
         .toString();
   }
@@ -688,6 +826,11 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -699,11 +842,12 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
       'typ', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, name, typ];
+  List<GeneratedColumn> get $columns => [id, uuid, name, typ];
   @override
-  String get aliasedName => _alias ?? 'room';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room';
+  String get actualTableName => $name;
+  static const String $name = 'room';
   @override
   VerificationContext validateIntegrity(Insertable<RoomData> instance,
       {bool isInserting = false}) {
@@ -711,6 +855,12 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -735,6 +885,8 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
     return RoomData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       typ: attachedDatabase.typeMapping
@@ -750,13 +902,19 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
 
 class RoomData extends DataClass implements Insertable<RoomData> {
   final int id;
+  final String uuid;
   final String name;
   final String typ;
-  const RoomData({required this.id, required this.name, required this.typ});
+  const RoomData(
+      {required this.id,
+      required this.uuid,
+      required this.name,
+      required this.typ});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['name'] = Variable<String>(name);
     map['typ'] = Variable<String>(typ);
     return map;
@@ -765,6 +923,7 @@ class RoomData extends DataClass implements Insertable<RoomData> {
   RoomCompanion toCompanion(bool nullToAbsent) {
     return RoomCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       name: Value(name),
       typ: Value(typ),
     );
@@ -775,6 +934,7 @@ class RoomData extends DataClass implements Insertable<RoomData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RoomData(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       name: serializer.fromJson<String>(json['name']),
       typ: serializer.fromJson<String>(json['typ']),
     );
@@ -784,13 +944,16 @@ class RoomData extends DataClass implements Insertable<RoomData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'name': serializer.toJson<String>(name),
       'typ': serializer.toJson<String>(typ),
     };
   }
 
-  RoomData copyWith({int? id, String? name, String? typ}) => RoomData(
+  RoomData copyWith({int? id, String? uuid, String? name, String? typ}) =>
+      RoomData(
         id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         name: name ?? this.name,
         typ: typ ?? this.typ,
       );
@@ -798,6 +961,7 @@ class RoomData extends DataClass implements Insertable<RoomData> {
   String toString() {
     return (StringBuffer('RoomData(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('typ: $typ')
           ..write(')'))
@@ -805,47 +969,58 @@ class RoomData extends DataClass implements Insertable<RoomData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, typ);
+  int get hashCode => Object.hash(id, uuid, name, typ);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RoomData &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.name == this.name &&
           other.typ == this.typ);
 }
 
 class RoomCompanion extends UpdateCompanion<RoomData> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> name;
   final Value<String> typ;
   const RoomCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.name = const Value.absent(),
     this.typ = const Value.absent(),
   });
   RoomCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String name,
     required String typ,
-  })  : name = Value(name),
+  })  : uuid = Value(uuid),
+        name = Value(name),
         typ = Value(typ);
   static Insertable<RoomData> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? name,
     Expression<String>? typ,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (name != null) 'name': name,
       if (typ != null) 'typ': typ,
     });
   }
 
   RoomCompanion copyWith(
-      {Value<int>? id, Value<String>? name, Value<String>? typ}) {
+      {Value<int>? id,
+      Value<String>? uuid,
+      Value<String>? name,
+      Value<String>? typ}) {
     return RoomCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       typ: typ ?? this.typ,
     );
@@ -856,6 +1031,9 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -870,6 +1048,7 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
   String toString() {
     return (StringBuffer('RoomCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('typ: $typ')
           ..write(')'))
@@ -894,18 +1073,16 @@ class $MeterInRoomTable extends MeterInRoom
           'REFERENCES meter (id) ON DELETE CASCADE'));
   static const VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
   @override
-  late final GeneratedColumn<int> roomId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> roomId = GeneratedColumn<String>(
       'room_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES room (id) ON DELETE CASCADE'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [meterId, roomId];
   @override
-  String get aliasedName => _alias ?? 'meter_in_room';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'meter_in_room';
+  String get actualTableName => $name;
+  static const String $name = 'meter_in_room';
   @override
   VerificationContext validateIntegrity(Insertable<MeterInRoomData> instance,
       {bool isInserting = false}) {
@@ -935,7 +1112,7 @@ class $MeterInRoomTable extends MeterInRoom
       meterId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}meter_id'])!,
       roomId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}room_id'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}room_id'])!,
     );
   }
 
@@ -947,13 +1124,13 @@ class $MeterInRoomTable extends MeterInRoom
 
 class MeterInRoomData extends DataClass implements Insertable<MeterInRoomData> {
   final int meterId;
-  final int roomId;
+  final String roomId;
   const MeterInRoomData({required this.meterId, required this.roomId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['meter_id'] = Variable<int>(meterId);
-    map['room_id'] = Variable<int>(roomId);
+    map['room_id'] = Variable<String>(roomId);
     return map;
   }
 
@@ -969,7 +1146,7 @@ class MeterInRoomData extends DataClass implements Insertable<MeterInRoomData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MeterInRoomData(
       meterId: serializer.fromJson<int>(json['meterId']),
-      roomId: serializer.fromJson<int>(json['roomId']),
+      roomId: serializer.fromJson<String>(json['roomId']),
     );
   }
   @override
@@ -977,11 +1154,11 @@ class MeterInRoomData extends DataClass implements Insertable<MeterInRoomData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'meterId': serializer.toJson<int>(meterId),
-      'roomId': serializer.toJson<int>(roomId),
+      'roomId': serializer.toJson<String>(roomId),
     };
   }
 
-  MeterInRoomData copyWith({int? meterId, int? roomId}) => MeterInRoomData(
+  MeterInRoomData copyWith({int? meterId, String? roomId}) => MeterInRoomData(
         meterId: meterId ?? this.meterId,
         roomId: roomId ?? this.roomId,
       );
@@ -1006,30 +1183,37 @@ class MeterInRoomData extends DataClass implements Insertable<MeterInRoomData> {
 
 class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
   final Value<int> meterId;
-  final Value<int> roomId;
+  final Value<String> roomId;
+  final Value<int> rowid;
   const MeterInRoomCompanion({
     this.meterId = const Value.absent(),
     this.roomId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   MeterInRoomCompanion.insert({
     required int meterId,
-    required int roomId,
+    required String roomId,
+    this.rowid = const Value.absent(),
   })  : meterId = Value(meterId),
         roomId = Value(roomId);
   static Insertable<MeterInRoomData> custom({
     Expression<int>? meterId,
-    Expression<int>? roomId,
+    Expression<String>? roomId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (meterId != null) 'meter_id': meterId,
       if (roomId != null) 'room_id': roomId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  MeterInRoomCompanion copyWith({Value<int>? meterId, Value<int>? roomId}) {
+  MeterInRoomCompanion copyWith(
+      {Value<int>? meterId, Value<String>? roomId, Value<int>? rowid}) {
     return MeterInRoomCompanion(
       meterId: meterId ?? this.meterId,
       roomId: roomId ?? this.roomId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1040,7 +1224,10 @@ class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
       map['meter_id'] = Variable<int>(meterId.value);
     }
     if (roomId.present) {
-      map['room_id'] = Variable<int>(roomId.value);
+      map['room_id'] = Variable<String>(roomId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1049,7 +1236,8 @@ class MeterInRoomCompanion extends UpdateCompanion<MeterInRoomData> {
   String toString() {
     return (StringBuffer('MeterInRoomCompanion(')
           ..write('meterId: $meterId, ')
-          ..write('roomId: $roomId')
+          ..write('roomId: $roomId, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1061,10 +1249,10 @@ class $ProviderTable extends Provider
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ProviderTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uidMeta = const VerificationMeta('uid');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> uid = GeneratedColumn<int>(
-      'uid', aliasedName, false,
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
       hasAutoIncrement: true,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
@@ -1084,8 +1272,8 @@ class $ProviderTable extends Provider
   static const VerificationMeta _noticeMeta = const VerificationMeta('notice');
   @override
   late final GeneratedColumn<int> notice = GeneratedColumn<int>(
-      'notice', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      'notice', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _validFromMeta =
       const VerificationMeta('validFrom');
   @override
@@ -1098,21 +1286,51 @@ class $ProviderTable extends Provider
   late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
       'valid_until', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _renewalMeta =
+      const VerificationMeta('renewal');
   @override
-  List<GeneratedColumn> get $columns =>
-      [uid, name, contractNumber, notice, validFrom, validUntil];
+  late final GeneratedColumn<int> renewal = GeneratedColumn<int>(
+      'renewal', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _canceledMeta =
+      const VerificationMeta('canceled');
   @override
-  String get aliasedName => _alias ?? 'provider';
+  late final GeneratedColumn<bool> canceled = GeneratedColumn<bool>(
+      'canceled', aliasedName, true,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("canceled" IN (0, 1))'));
+  static const VerificationMeta _canceledDateMeta =
+      const VerificationMeta('canceledDate');
   @override
-  String get actualTableName => 'provider';
+  late final GeneratedColumn<DateTime> canceledDate = GeneratedColumn<DateTime>(
+      'canceled_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        contractNumber,
+        notice,
+        validFrom,
+        validUntil,
+        renewal,
+        canceled,
+        canceledDate
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'provider';
   @override
   VerificationContext validateIntegrity(Insertable<ProviderData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('uid')) {
-      context.handle(
-          _uidMeta, uid.isAcceptableOrUnknown(data['uid']!, _uidMeta));
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -1131,8 +1349,6 @@ class $ProviderTable extends Provider
     if (data.containsKey('notice')) {
       context.handle(_noticeMeta,
           notice.isAcceptableOrUnknown(data['notice']!, _noticeMeta));
-    } else if (isInserting) {
-      context.missing(_noticeMeta);
     }
     if (data.containsKey('valid_from')) {
       context.handle(_validFromMeta,
@@ -1148,27 +1364,47 @@ class $ProviderTable extends Provider
     } else if (isInserting) {
       context.missing(_validUntilMeta);
     }
+    if (data.containsKey('renewal')) {
+      context.handle(_renewalMeta,
+          renewal.isAcceptableOrUnknown(data['renewal']!, _renewalMeta));
+    }
+    if (data.containsKey('canceled')) {
+      context.handle(_canceledMeta,
+          canceled.isAcceptableOrUnknown(data['canceled']!, _canceledMeta));
+    }
+    if (data.containsKey('canceled_date')) {
+      context.handle(
+          _canceledDateMeta,
+          canceledDate.isAcceptableOrUnknown(
+              data['canceled_date']!, _canceledDateMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {uid};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   ProviderData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProviderData(
-      uid: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}uid'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       contractNumber: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}contract_number'])!,
       notice: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}notice'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}notice']),
       validFrom: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_from'])!,
       validUntil: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until'])!,
+      renewal: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}renewal']),
+      canceled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}canceled']),
+      canceledDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}canceled_date']),
     );
   }
 
@@ -1179,39 +1415,66 @@ class $ProviderTable extends Provider
 }
 
 class ProviderData extends DataClass implements Insertable<ProviderData> {
-  final int uid;
+  final int id;
   final String name;
   final String contractNumber;
-  final int notice;
+  final int? notice;
   final DateTime validFrom;
   final DateTime validUntil;
+  final int? renewal;
+  final bool? canceled;
+  final DateTime? canceledDate;
   const ProviderData(
-      {required this.uid,
+      {required this.id,
       required this.name,
       required this.contractNumber,
-      required this.notice,
+      this.notice,
       required this.validFrom,
-      required this.validUntil});
+      required this.validUntil,
+      this.renewal,
+      this.canceled,
+      this.canceledDate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['uid'] = Variable<int>(uid);
+    map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['contract_number'] = Variable<String>(contractNumber);
-    map['notice'] = Variable<int>(notice);
+    if (!nullToAbsent || notice != null) {
+      map['notice'] = Variable<int>(notice);
+    }
     map['valid_from'] = Variable<DateTime>(validFrom);
     map['valid_until'] = Variable<DateTime>(validUntil);
+    if (!nullToAbsent || renewal != null) {
+      map['renewal'] = Variable<int>(renewal);
+    }
+    if (!nullToAbsent || canceled != null) {
+      map['canceled'] = Variable<bool>(canceled);
+    }
+    if (!nullToAbsent || canceledDate != null) {
+      map['canceled_date'] = Variable<DateTime>(canceledDate);
+    }
     return map;
   }
 
   ProviderCompanion toCompanion(bool nullToAbsent) {
     return ProviderCompanion(
-      uid: Value(uid),
+      id: Value(id),
       name: Value(name),
       contractNumber: Value(contractNumber),
-      notice: Value(notice),
+      notice:
+          notice == null && nullToAbsent ? const Value.absent() : Value(notice),
       validFrom: Value(validFrom),
       validUntil: Value(validUntil),
+      renewal: renewal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(renewal),
+      canceled: canceled == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canceled),
+      canceledDate: canceledDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canceledDate),
     );
   }
 
@@ -1219,137 +1482,176 @@ class ProviderData extends DataClass implements Insertable<ProviderData> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProviderData(
-      uid: serializer.fromJson<int>(json['uid']),
+      id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       contractNumber: serializer.fromJson<String>(json['contractNumber']),
-      notice: serializer.fromJson<int>(json['notice']),
+      notice: serializer.fromJson<int?>(json['notice']),
       validFrom: serializer.fromJson<DateTime>(json['validFrom']),
       validUntil: serializer.fromJson<DateTime>(json['validUntil']),
+      renewal: serializer.fromJson<int?>(json['renewal']),
+      canceled: serializer.fromJson<bool?>(json['canceled']),
+      canceledDate: serializer.fromJson<DateTime?>(json['canceledDate']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'uid': serializer.toJson<int>(uid),
+      'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'contractNumber': serializer.toJson<String>(contractNumber),
-      'notice': serializer.toJson<int>(notice),
+      'notice': serializer.toJson<int?>(notice),
       'validFrom': serializer.toJson<DateTime>(validFrom),
       'validUntil': serializer.toJson<DateTime>(validUntil),
+      'renewal': serializer.toJson<int?>(renewal),
+      'canceled': serializer.toJson<bool?>(canceled),
+      'canceledDate': serializer.toJson<DateTime?>(canceledDate),
     };
   }
 
   ProviderData copyWith(
-          {int? uid,
+          {int? id,
           String? name,
           String? contractNumber,
-          int? notice,
+          Value<int?> notice = const Value.absent(),
           DateTime? validFrom,
-          DateTime? validUntil}) =>
+          DateTime? validUntil,
+          Value<int?> renewal = const Value.absent(),
+          Value<bool?> canceled = const Value.absent(),
+          Value<DateTime?> canceledDate = const Value.absent()}) =>
       ProviderData(
-        uid: uid ?? this.uid,
+        id: id ?? this.id,
         name: name ?? this.name,
         contractNumber: contractNumber ?? this.contractNumber,
-        notice: notice ?? this.notice,
+        notice: notice.present ? notice.value : this.notice,
         validFrom: validFrom ?? this.validFrom,
         validUntil: validUntil ?? this.validUntil,
+        renewal: renewal.present ? renewal.value : this.renewal,
+        canceled: canceled.present ? canceled.value : this.canceled,
+        canceledDate:
+            canceledDate.present ? canceledDate.value : this.canceledDate,
       );
   @override
   String toString() {
     return (StringBuffer('ProviderData(')
-          ..write('uid: $uid, ')
+          ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('contractNumber: $contractNumber, ')
           ..write('notice: $notice, ')
           ..write('validFrom: $validFrom, ')
-          ..write('validUntil: $validUntil')
+          ..write('validUntil: $validUntil, ')
+          ..write('renewal: $renewal, ')
+          ..write('canceled: $canceled, ')
+          ..write('canceledDate: $canceledDate')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(uid, name, contractNumber, notice, validFrom, validUntil);
+  int get hashCode => Object.hash(id, name, contractNumber, notice, validFrom,
+      validUntil, renewal, canceled, canceledDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProviderData &&
-          other.uid == this.uid &&
+          other.id == this.id &&
           other.name == this.name &&
           other.contractNumber == this.contractNumber &&
           other.notice == this.notice &&
           other.validFrom == this.validFrom &&
-          other.validUntil == this.validUntil);
+          other.validUntil == this.validUntil &&
+          other.renewal == this.renewal &&
+          other.canceled == this.canceled &&
+          other.canceledDate == this.canceledDate);
 }
 
 class ProviderCompanion extends UpdateCompanion<ProviderData> {
-  final Value<int> uid;
+  final Value<int> id;
   final Value<String> name;
   final Value<String> contractNumber;
-  final Value<int> notice;
+  final Value<int?> notice;
   final Value<DateTime> validFrom;
   final Value<DateTime> validUntil;
+  final Value<int?> renewal;
+  final Value<bool?> canceled;
+  final Value<DateTime?> canceledDate;
   const ProviderCompanion({
-    this.uid = const Value.absent(),
+    this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.contractNumber = const Value.absent(),
     this.notice = const Value.absent(),
     this.validFrom = const Value.absent(),
     this.validUntil = const Value.absent(),
+    this.renewal = const Value.absent(),
+    this.canceled = const Value.absent(),
+    this.canceledDate = const Value.absent(),
   });
   ProviderCompanion.insert({
-    this.uid = const Value.absent(),
+    this.id = const Value.absent(),
     required String name,
     required String contractNumber,
-    required int notice,
+    this.notice = const Value.absent(),
     required DateTime validFrom,
     required DateTime validUntil,
+    this.renewal = const Value.absent(),
+    this.canceled = const Value.absent(),
+    this.canceledDate = const Value.absent(),
   })  : name = Value(name),
         contractNumber = Value(contractNumber),
-        notice = Value(notice),
         validFrom = Value(validFrom),
         validUntil = Value(validUntil);
   static Insertable<ProviderData> custom({
-    Expression<int>? uid,
+    Expression<int>? id,
     Expression<String>? name,
     Expression<String>? contractNumber,
     Expression<int>? notice,
     Expression<DateTime>? validFrom,
     Expression<DateTime>? validUntil,
+    Expression<int>? renewal,
+    Expression<bool>? canceled,
+    Expression<DateTime>? canceledDate,
   }) {
     return RawValuesInsertable({
-      if (uid != null) 'uid': uid,
+      if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (contractNumber != null) 'contract_number': contractNumber,
       if (notice != null) 'notice': notice,
       if (validFrom != null) 'valid_from': validFrom,
       if (validUntil != null) 'valid_until': validUntil,
+      if (renewal != null) 'renewal': renewal,
+      if (canceled != null) 'canceled': canceled,
+      if (canceledDate != null) 'canceled_date': canceledDate,
     });
   }
 
   ProviderCompanion copyWith(
-      {Value<int>? uid,
+      {Value<int>? id,
       Value<String>? name,
       Value<String>? contractNumber,
-      Value<int>? notice,
+      Value<int?>? notice,
       Value<DateTime>? validFrom,
-      Value<DateTime>? validUntil}) {
+      Value<DateTime>? validUntil,
+      Value<int?>? renewal,
+      Value<bool?>? canceled,
+      Value<DateTime?>? canceledDate}) {
     return ProviderCompanion(
-      uid: uid ?? this.uid,
+      id: id ?? this.id,
       name: name ?? this.name,
       contractNumber: contractNumber ?? this.contractNumber,
       notice: notice ?? this.notice,
       validFrom: validFrom ?? this.validFrom,
       validUntil: validUntil ?? this.validUntil,
+      renewal: renewal ?? this.renewal,
+      canceled: canceled ?? this.canceled,
+      canceledDate: canceledDate ?? this.canceledDate,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (uid.present) {
-      map['uid'] = Variable<int>(uid.value);
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -1366,18 +1668,30 @@ class ProviderCompanion extends UpdateCompanion<ProviderData> {
     if (validUntil.present) {
       map['valid_until'] = Variable<DateTime>(validUntil.value);
     }
+    if (renewal.present) {
+      map['renewal'] = Variable<int>(renewal.value);
+    }
+    if (canceled.present) {
+      map['canceled'] = Variable<bool>(canceled.value);
+    }
+    if (canceledDate.present) {
+      map['canceled_date'] = Variable<DateTime>(canceledDate.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('ProviderCompanion(')
-          ..write('uid: $uid, ')
+          ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('contractNumber: $contractNumber, ')
           ..write('notice: $notice, ')
           ..write('validFrom: $validFrom, ')
-          ..write('validUntil: $validUntil')
+          ..write('validUntil: $validUntil, ')
+          ..write('renewal: $renewal, ')
+          ..write('canceled: $canceled, ')
+          ..write('canceledDate: $canceledDate')
           ..write(')'))
         .toString();
   }
@@ -1389,10 +1703,10 @@ class $ContractTable extends Contract
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ContractTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uidMeta = const VerificationMeta('uid');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> uid = GeneratedColumn<int>(
-      'uid', aliasedName, false,
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
       hasAutoIncrement: true,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
@@ -1408,11 +1722,11 @@ class $ContractTable extends Contract
       const VerificationMeta('provider');
   @override
   late final GeneratedColumn<int> provider = GeneratedColumn<int>(
-      'provider', aliasedName, false,
+      'provider', aliasedName, true,
       type: DriftSqlType.int,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES provider (uid) ON DELETE CASCADE'));
+          'REFERENCES provider (id) ON DELETE SET NULL'));
   static const VerificationMeta _basicPriceMeta =
       const VerificationMeta('basicPrice');
   @override
@@ -1434,28 +1748,53 @@ class $ContractTable extends Contract
   static const VerificationMeta _bonusMeta = const VerificationMeta('bonus');
   @override
   late final GeneratedColumn<int> bonus = GeneratedColumn<int>(
-      'bonus', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      'bonus', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
   @override
-  List<GeneratedColumn> get $columns =>
-      [uid, meterTyp, provider, basicPrice, energyPrice, discount, bonus, note];
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isArchivedMeta =
+      const VerificationMeta('isArchived');
   @override
-  String get aliasedName => _alias ?? 'contract';
+  late final GeneratedColumn<bool> isArchived = GeneratedColumn<bool>(
+      'is_archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
-  String get actualTableName => 'contract';
+  List<GeneratedColumn> get $columns => [
+        id,
+        meterTyp,
+        provider,
+        basicPrice,
+        energyPrice,
+        discount,
+        bonus,
+        note,
+        unit,
+        isArchived
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contract';
   @override
   VerificationContext validateIntegrity(Insertable<ContractData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('uid')) {
-      context.handle(
-          _uidMeta, uid.isAcceptableOrUnknown(data['uid']!, _uidMeta));
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('meter_typ')) {
       context.handle(_meterTypMeta,
@@ -1466,8 +1805,6 @@ class $ContractTable extends Contract
     if (data.containsKey('provider')) {
       context.handle(_providerMeta,
           provider.isAcceptableOrUnknown(data['provider']!, _providerMeta));
-    } else if (isInserting) {
-      context.missing(_providerMeta);
     }
     if (data.containsKey('basic_price')) {
       context.handle(
@@ -1494,8 +1831,6 @@ class $ContractTable extends Contract
     if (data.containsKey('bonus')) {
       context.handle(
           _bonusMeta, bonus.isAcceptableOrUnknown(data['bonus']!, _bonusMeta));
-    } else if (isInserting) {
-      context.missing(_bonusMeta);
     }
     if (data.containsKey('note')) {
       context.handle(
@@ -1503,21 +1838,33 @@ class $ContractTable extends Contract
     } else if (isInserting) {
       context.missing(_noteMeta);
     }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('is_archived')) {
+      context.handle(
+          _isArchivedMeta,
+          isArchived.isAcceptableOrUnknown(
+              data['is_archived']!, _isArchivedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {uid};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   ContractData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContractData(
-      uid: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}uid'])!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       meterTyp: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}meter_typ'])!,
       provider: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}provider'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}provider']),
       basicPrice: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}basic_price'])!,
       energyPrice: attachedDatabase.typeMapping
@@ -1525,9 +1872,13 @@ class $ContractTable extends Contract
       discount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}discount'])!,
       bonus: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}bonus'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}bonus']),
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      isArchived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
     );
   }
 
@@ -1538,47 +1889,62 @@ class $ContractTable extends Contract
 }
 
 class ContractData extends DataClass implements Insertable<ContractData> {
-  final int uid;
+  final int id;
   final String meterTyp;
-  final int provider;
+  final int? provider;
   final double basicPrice;
   final double energyPrice;
   final double discount;
-  final int bonus;
+  final int? bonus;
   final String note;
+  final String unit;
+  final bool isArchived;
   const ContractData(
-      {required this.uid,
+      {required this.id,
       required this.meterTyp,
-      required this.provider,
+      this.provider,
       required this.basicPrice,
       required this.energyPrice,
       required this.discount,
-      required this.bonus,
-      required this.note});
+      this.bonus,
+      required this.note,
+      required this.unit,
+      required this.isArchived});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['uid'] = Variable<int>(uid);
+    map['id'] = Variable<int>(id);
     map['meter_typ'] = Variable<String>(meterTyp);
-    map['provider'] = Variable<int>(provider);
+    if (!nullToAbsent || provider != null) {
+      map['provider'] = Variable<int>(provider);
+    }
     map['basic_price'] = Variable<double>(basicPrice);
     map['energy_price'] = Variable<double>(energyPrice);
     map['discount'] = Variable<double>(discount);
-    map['bonus'] = Variable<int>(bonus);
+    if (!nullToAbsent || bonus != null) {
+      map['bonus'] = Variable<int>(bonus);
+    }
     map['note'] = Variable<String>(note);
+    map['unit'] = Variable<String>(unit);
+    map['is_archived'] = Variable<bool>(isArchived);
     return map;
   }
 
   ContractCompanion toCompanion(bool nullToAbsent) {
     return ContractCompanion(
-      uid: Value(uid),
+      id: Value(id),
       meterTyp: Value(meterTyp),
-      provider: Value(provider),
+      provider: provider == null && nullToAbsent
+          ? const Value.absent()
+          : Value(provider),
       basicPrice: Value(basicPrice),
       energyPrice: Value(energyPrice),
       discount: Value(discount),
-      bonus: Value(bonus),
+      bonus:
+          bonus == null && nullToAbsent ? const Value.absent() : Value(bonus),
       note: Value(note),
+      unit: Value(unit),
+      isArchived: Value(isArchived),
     );
   }
 
@@ -1586,93 +1952,107 @@ class ContractData extends DataClass implements Insertable<ContractData> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContractData(
-      uid: serializer.fromJson<int>(json['uid']),
+      id: serializer.fromJson<int>(json['id']),
       meterTyp: serializer.fromJson<String>(json['meterTyp']),
-      provider: serializer.fromJson<int>(json['provider']),
+      provider: serializer.fromJson<int?>(json['provider']),
       basicPrice: serializer.fromJson<double>(json['basicPrice']),
       energyPrice: serializer.fromJson<double>(json['energyPrice']),
       discount: serializer.fromJson<double>(json['discount']),
-      bonus: serializer.fromJson<int>(json['bonus']),
+      bonus: serializer.fromJson<int?>(json['bonus']),
       note: serializer.fromJson<String>(json['note']),
+      unit: serializer.fromJson<String>(json['unit']),
+      isArchived: serializer.fromJson<bool>(json['isArchived']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'uid': serializer.toJson<int>(uid),
+      'id': serializer.toJson<int>(id),
       'meterTyp': serializer.toJson<String>(meterTyp),
-      'provider': serializer.toJson<int>(provider),
+      'provider': serializer.toJson<int?>(provider),
       'basicPrice': serializer.toJson<double>(basicPrice),
       'energyPrice': serializer.toJson<double>(energyPrice),
       'discount': serializer.toJson<double>(discount),
-      'bonus': serializer.toJson<int>(bonus),
+      'bonus': serializer.toJson<int?>(bonus),
       'note': serializer.toJson<String>(note),
+      'unit': serializer.toJson<String>(unit),
+      'isArchived': serializer.toJson<bool>(isArchived),
     };
   }
 
   ContractData copyWith(
-          {int? uid,
+          {int? id,
           String? meterTyp,
-          int? provider,
+          Value<int?> provider = const Value.absent(),
           double? basicPrice,
           double? energyPrice,
           double? discount,
-          int? bonus,
-          String? note}) =>
+          Value<int?> bonus = const Value.absent(),
+          String? note,
+          String? unit,
+          bool? isArchived}) =>
       ContractData(
-        uid: uid ?? this.uid,
+        id: id ?? this.id,
         meterTyp: meterTyp ?? this.meterTyp,
-        provider: provider ?? this.provider,
+        provider: provider.present ? provider.value : this.provider,
         basicPrice: basicPrice ?? this.basicPrice,
         energyPrice: energyPrice ?? this.energyPrice,
         discount: discount ?? this.discount,
-        bonus: bonus ?? this.bonus,
+        bonus: bonus.present ? bonus.value : this.bonus,
         note: note ?? this.note,
+        unit: unit ?? this.unit,
+        isArchived: isArchived ?? this.isArchived,
       );
   @override
   String toString() {
     return (StringBuffer('ContractData(')
-          ..write('uid: $uid, ')
+          ..write('id: $id, ')
           ..write('meterTyp: $meterTyp, ')
           ..write('provider: $provider, ')
           ..write('basicPrice: $basicPrice, ')
           ..write('energyPrice: $energyPrice, ')
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('unit: $unit, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      uid, meterTyp, provider, basicPrice, energyPrice, discount, bonus, note);
+  int get hashCode => Object.hash(id, meterTyp, provider, basicPrice,
+      energyPrice, discount, bonus, note, unit, isArchived);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ContractData &&
-          other.uid == this.uid &&
+          other.id == this.id &&
           other.meterTyp == this.meterTyp &&
           other.provider == this.provider &&
           other.basicPrice == this.basicPrice &&
           other.energyPrice == this.energyPrice &&
           other.discount == this.discount &&
           other.bonus == this.bonus &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.unit == this.unit &&
+          other.isArchived == this.isArchived);
 }
 
 class ContractCompanion extends UpdateCompanion<ContractData> {
-  final Value<int> uid;
+  final Value<int> id;
   final Value<String> meterTyp;
-  final Value<int> provider;
+  final Value<int?> provider;
   final Value<double> basicPrice;
   final Value<double> energyPrice;
   final Value<double> discount;
-  final Value<int> bonus;
+  final Value<int?> bonus;
   final Value<String> note;
+  final Value<String> unit;
+  final Value<bool> isArchived;
   const ContractCompanion({
-    this.uid = const Value.absent(),
+    this.id = const Value.absent(),
     this.meterTyp = const Value.absent(),
     this.provider = const Value.absent(),
     this.basicPrice = const Value.absent(),
@@ -1680,25 +2060,28 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     this.discount = const Value.absent(),
     this.bonus = const Value.absent(),
     this.note = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.isArchived = const Value.absent(),
   });
   ContractCompanion.insert({
-    this.uid = const Value.absent(),
+    this.id = const Value.absent(),
     required String meterTyp,
-    required int provider,
+    this.provider = const Value.absent(),
     required double basicPrice,
     required double energyPrice,
     required double discount,
-    required int bonus,
+    this.bonus = const Value.absent(),
     required String note,
+    required String unit,
+    this.isArchived = const Value.absent(),
   })  : meterTyp = Value(meterTyp),
-        provider = Value(provider),
         basicPrice = Value(basicPrice),
         energyPrice = Value(energyPrice),
         discount = Value(discount),
-        bonus = Value(bonus),
-        note = Value(note);
+        note = Value(note),
+        unit = Value(unit);
   static Insertable<ContractData> custom({
-    Expression<int>? uid,
+    Expression<int>? id,
     Expression<String>? meterTyp,
     Expression<int>? provider,
     Expression<double>? basicPrice,
@@ -1706,9 +2089,11 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     Expression<double>? discount,
     Expression<int>? bonus,
     Expression<String>? note,
+    Expression<String>? unit,
+    Expression<bool>? isArchived,
   }) {
     return RawValuesInsertable({
-      if (uid != null) 'uid': uid,
+      if (id != null) 'id': id,
       if (meterTyp != null) 'meter_typ': meterTyp,
       if (provider != null) 'provider': provider,
       if (basicPrice != null) 'basic_price': basicPrice,
@@ -1716,20 +2101,24 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       if (discount != null) 'discount': discount,
       if (bonus != null) 'bonus': bonus,
       if (note != null) 'note': note,
+      if (unit != null) 'unit': unit,
+      if (isArchived != null) 'is_archived': isArchived,
     });
   }
 
   ContractCompanion copyWith(
-      {Value<int>? uid,
+      {Value<int>? id,
       Value<String>? meterTyp,
-      Value<int>? provider,
+      Value<int?>? provider,
       Value<double>? basicPrice,
       Value<double>? energyPrice,
       Value<double>? discount,
-      Value<int>? bonus,
-      Value<String>? note}) {
+      Value<int?>? bonus,
+      Value<String>? note,
+      Value<String>? unit,
+      Value<bool>? isArchived}) {
     return ContractCompanion(
-      uid: uid ?? this.uid,
+      id: id ?? this.id,
       meterTyp: meterTyp ?? this.meterTyp,
       provider: provider ?? this.provider,
       basicPrice: basicPrice ?? this.basicPrice,
@@ -1737,14 +2126,16 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
       discount: discount ?? this.discount,
       bonus: bonus ?? this.bonus,
       note: note ?? this.note,
+      unit: unit ?? this.unit,
+      isArchived: isArchived ?? this.isArchived,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (uid.present) {
-      map['uid'] = Variable<int>(uid.value);
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
     }
     if (meterTyp.present) {
       map['meter_typ'] = Variable<String>(meterTyp.value);
@@ -1767,20 +2158,28 @@ class ContractCompanion extends UpdateCompanion<ContractData> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (isArchived.present) {
+      map['is_archived'] = Variable<bool>(isArchived.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('ContractCompanion(')
-          ..write('uid: $uid, ')
+          ..write('id: $id, ')
           ..write('meterTyp: $meterTyp, ')
           ..write('provider: $provider, ')
           ..write('basicPrice: $basicPrice, ')
           ..write('energyPrice: $energyPrice, ')
           ..write('discount: $discount, ')
           ..write('bonus: $bonus, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('unit: $unit, ')
+          ..write('isArchived: $isArchived')
           ..write(')'))
         .toString();
   }
@@ -1800,6 +2199,11 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -1811,11 +2215,12 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
       'color', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, name, color];
+  List<GeneratedColumn> get $columns => [id, uuid, name, color];
   @override
-  String get aliasedName => _alias ?? 'tags';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'tags';
+  String get actualTableName => $name;
+  static const String $name = 'tags';
   @override
   VerificationContext validateIntegrity(Insertable<Tag> instance,
       {bool isInserting = false}) {
@@ -1823,6 +2228,12 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -1847,6 +2258,8 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     return Tag(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       color: attachedDatabase.typeMapping
@@ -1862,13 +2275,19 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
 
 class Tag extends DataClass implements Insertable<Tag> {
   final int id;
+  final String uuid;
   final String name;
   final int color;
-  const Tag({required this.id, required this.name, required this.color});
+  const Tag(
+      {required this.id,
+      required this.uuid,
+      required this.name,
+      required this.color});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['name'] = Variable<String>(name);
     map['color'] = Variable<int>(color);
     return map;
@@ -1877,6 +2296,7 @@ class Tag extends DataClass implements Insertable<Tag> {
   TagsCompanion toCompanion(bool nullToAbsent) {
     return TagsCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       name: Value(name),
       color: Value(color),
     );
@@ -1887,6 +2307,7 @@ class Tag extends DataClass implements Insertable<Tag> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Tag(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       name: serializer.fromJson<String>(json['name']),
       color: serializer.fromJson<int>(json['color']),
     );
@@ -1896,13 +2317,15 @@ class Tag extends DataClass implements Insertable<Tag> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'name': serializer.toJson<String>(name),
       'color': serializer.toJson<int>(color),
     };
   }
 
-  Tag copyWith({int? id, String? name, int? color}) => Tag(
+  Tag copyWith({int? id, String? uuid, String? name, int? color}) => Tag(
         id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         name: name ?? this.name,
         color: color ?? this.color,
       );
@@ -1910,6 +2333,7 @@ class Tag extends DataClass implements Insertable<Tag> {
   String toString() {
     return (StringBuffer('Tag(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('color: $color')
           ..write(')'))
@@ -1917,47 +2341,58 @@ class Tag extends DataClass implements Insertable<Tag> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, color);
+  int get hashCode => Object.hash(id, uuid, name, color);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Tag &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.name == this.name &&
           other.color == this.color);
 }
 
 class TagsCompanion extends UpdateCompanion<Tag> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> name;
   final Value<int> color;
   const TagsCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.name = const Value.absent(),
     this.color = const Value.absent(),
   });
   TagsCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String name,
     required int color,
-  })  : name = Value(name),
+  })  : uuid = Value(uuid),
+        name = Value(name),
         color = Value(color);
   static Insertable<Tag> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? name,
     Expression<int>? color,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (name != null) 'name': name,
       if (color != null) 'color': color,
     });
   }
 
   TagsCompanion copyWith(
-      {Value<int>? id, Value<String>? name, Value<int>? color}) {
+      {Value<int>? id,
+      Value<String>? uuid,
+      Value<String>? name,
+      Value<int>? color}) {
     return TagsCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       color: color ?? this.color,
     );
@@ -1968,6 +2403,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -1982,8 +2420,527 @@ class TagsCompanion extends UpdateCompanion<Tag> {
   String toString() {
     return (StringBuffer('TagsCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MeterWithTagsTable extends MeterWithTags
+    with TableInfo<$MeterWithTagsTable, MeterWithTag> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MeterWithTagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _meterIdMeta =
+      const VerificationMeta('meterId');
+  @override
+  late final GeneratedColumn<int> meterId = GeneratedColumn<int>(
+      'meter_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES meter (id) ON DELETE CASCADE'));
+  static const VerificationMeta _tagIdMeta = const VerificationMeta('tagId');
+  @override
+  late final GeneratedColumn<String> tagId = GeneratedColumn<String>(
+      'tag_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [meterId, tagId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'meter_with_tags';
+  @override
+  VerificationContext validateIntegrity(Insertable<MeterWithTag> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('meter_id')) {
+      context.handle(_meterIdMeta,
+          meterId.isAcceptableOrUnknown(data['meter_id']!, _meterIdMeta));
+    } else if (isInserting) {
+      context.missing(_meterIdMeta);
+    }
+    if (data.containsKey('tag_id')) {
+      context.handle(
+          _tagIdMeta, tagId.isAcceptableOrUnknown(data['tag_id']!, _tagIdMeta));
+    } else if (isInserting) {
+      context.missing(_tagIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {meterId, tagId};
+  @override
+  MeterWithTag map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MeterWithTag(
+      meterId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}meter_id'])!,
+      tagId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tag_id'])!,
+    );
+  }
+
+  @override
+  $MeterWithTagsTable createAlias(String alias) {
+    return $MeterWithTagsTable(attachedDatabase, alias);
+  }
+}
+
+class MeterWithTag extends DataClass implements Insertable<MeterWithTag> {
+  final int meterId;
+  final String tagId;
+  const MeterWithTag({required this.meterId, required this.tagId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['meter_id'] = Variable<int>(meterId);
+    map['tag_id'] = Variable<String>(tagId);
+    return map;
+  }
+
+  MeterWithTagsCompanion toCompanion(bool nullToAbsent) {
+    return MeterWithTagsCompanion(
+      meterId: Value(meterId),
+      tagId: Value(tagId),
+    );
+  }
+
+  factory MeterWithTag.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MeterWithTag(
+      meterId: serializer.fromJson<int>(json['meterId']),
+      tagId: serializer.fromJson<String>(json['tagId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'meterId': serializer.toJson<int>(meterId),
+      'tagId': serializer.toJson<String>(tagId),
+    };
+  }
+
+  MeterWithTag copyWith({int? meterId, String? tagId}) => MeterWithTag(
+        meterId: meterId ?? this.meterId,
+        tagId: tagId ?? this.tagId,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('MeterWithTag(')
+          ..write('meterId: $meterId, ')
+          ..write('tagId: $tagId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(meterId, tagId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MeterWithTag &&
+          other.meterId == this.meterId &&
+          other.tagId == this.tagId);
+}
+
+class MeterWithTagsCompanion extends UpdateCompanion<MeterWithTag> {
+  final Value<int> meterId;
+  final Value<String> tagId;
+  final Value<int> rowid;
+  const MeterWithTagsCompanion({
+    this.meterId = const Value.absent(),
+    this.tagId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MeterWithTagsCompanion.insert({
+    required int meterId,
+    required String tagId,
+    this.rowid = const Value.absent(),
+  })  : meterId = Value(meterId),
+        tagId = Value(tagId);
+  static Insertable<MeterWithTag> custom({
+    Expression<int>? meterId,
+    Expression<String>? tagId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (meterId != null) 'meter_id': meterId,
+      if (tagId != null) 'tag_id': tagId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MeterWithTagsCompanion copyWith(
+      {Value<int>? meterId, Value<String>? tagId, Value<int>? rowid}) {
+    return MeterWithTagsCompanion(
+      meterId: meterId ?? this.meterId,
+      tagId: tagId ?? this.tagId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (meterId.present) {
+      map['meter_id'] = Variable<int>(meterId.value);
+    }
+    if (tagId.present) {
+      map['tag_id'] = Variable<String>(tagId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MeterWithTagsCompanion(')
+          ..write('meterId: $meterId, ')
+          ..write('tagId: $tagId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CostCompareTable extends CostCompare
+    with TableInfo<$CostCompareTable, CostCompareData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CostCompareTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _basicPriceMeta =
+      const VerificationMeta('basicPrice');
+  @override
+  late final GeneratedColumn<double> basicPrice = GeneratedColumn<double>(
+      'basic_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _energyPriceMeta =
+      const VerificationMeta('energyPrice');
+  @override
+  late final GeneratedColumn<double> energyPrice = GeneratedColumn<double>(
+      'energy_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _bonusMeta = const VerificationMeta('bonus');
+  @override
+  late final GeneratedColumn<int> bonus = GeneratedColumn<int>(
+      'bonus', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _usageMeta = const VerificationMeta('usage');
+  @override
+  late final GeneratedColumn<int> usage = GeneratedColumn<int>(
+      'usage', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _parentIdMeta =
+      const VerificationMeta('parentId');
+  @override
+  late final GeneratedColumn<int> parentId = GeneratedColumn<int>(
+      'parent_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contract (id) ON DELETE CASCADE'));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, basicPrice, energyPrice, bonus, usage, parentId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cost_compare';
+  @override
+  VerificationContext validateIntegrity(Insertable<CostCompareData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('basic_price')) {
+      context.handle(
+          _basicPriceMeta,
+          basicPrice.isAcceptableOrUnknown(
+              data['basic_price']!, _basicPriceMeta));
+    } else if (isInserting) {
+      context.missing(_basicPriceMeta);
+    }
+    if (data.containsKey('energy_price')) {
+      context.handle(
+          _energyPriceMeta,
+          energyPrice.isAcceptableOrUnknown(
+              data['energy_price']!, _energyPriceMeta));
+    } else if (isInserting) {
+      context.missing(_energyPriceMeta);
+    }
+    if (data.containsKey('bonus')) {
+      context.handle(
+          _bonusMeta, bonus.isAcceptableOrUnknown(data['bonus']!, _bonusMeta));
+    } else if (isInserting) {
+      context.missing(_bonusMeta);
+    }
+    if (data.containsKey('usage')) {
+      context.handle(
+          _usageMeta, usage.isAcceptableOrUnknown(data['usage']!, _usageMeta));
+    } else if (isInserting) {
+      context.missing(_usageMeta);
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(_parentIdMeta,
+          parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
+    } else if (isInserting) {
+      context.missing(_parentIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CostCompareData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CostCompareData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      basicPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}basic_price'])!,
+      energyPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}energy_price'])!,
+      bonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}bonus'])!,
+      usage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}usage'])!,
+      parentId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}parent_id'])!,
+    );
+  }
+
+  @override
+  $CostCompareTable createAlias(String alias) {
+    return $CostCompareTable(attachedDatabase, alias);
+  }
+}
+
+class CostCompareData extends DataClass implements Insertable<CostCompareData> {
+  final int id;
+  final double basicPrice;
+  final double energyPrice;
+  final int bonus;
+  final int usage;
+  final int parentId;
+  const CostCompareData(
+      {required this.id,
+      required this.basicPrice,
+      required this.energyPrice,
+      required this.bonus,
+      required this.usage,
+      required this.parentId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['basic_price'] = Variable<double>(basicPrice);
+    map['energy_price'] = Variable<double>(energyPrice);
+    map['bonus'] = Variable<int>(bonus);
+    map['usage'] = Variable<int>(usage);
+    map['parent_id'] = Variable<int>(parentId);
+    return map;
+  }
+
+  CostCompareCompanion toCompanion(bool nullToAbsent) {
+    return CostCompareCompanion(
+      id: Value(id),
+      basicPrice: Value(basicPrice),
+      energyPrice: Value(energyPrice),
+      bonus: Value(bonus),
+      usage: Value(usage),
+      parentId: Value(parentId),
+    );
+  }
+
+  factory CostCompareData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CostCompareData(
+      id: serializer.fromJson<int>(json['id']),
+      basicPrice: serializer.fromJson<double>(json['basicPrice']),
+      energyPrice: serializer.fromJson<double>(json['energyPrice']),
+      bonus: serializer.fromJson<int>(json['bonus']),
+      usage: serializer.fromJson<int>(json['usage']),
+      parentId: serializer.fromJson<int>(json['parentId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'basicPrice': serializer.toJson<double>(basicPrice),
+      'energyPrice': serializer.toJson<double>(energyPrice),
+      'bonus': serializer.toJson<int>(bonus),
+      'usage': serializer.toJson<int>(usage),
+      'parentId': serializer.toJson<int>(parentId),
+    };
+  }
+
+  CostCompareData copyWith(
+          {int? id,
+          double? basicPrice,
+          double? energyPrice,
+          int? bonus,
+          int? usage,
+          int? parentId}) =>
+      CostCompareData(
+        id: id ?? this.id,
+        basicPrice: basicPrice ?? this.basicPrice,
+        energyPrice: energyPrice ?? this.energyPrice,
+        bonus: bonus ?? this.bonus,
+        usage: usage ?? this.usage,
+        parentId: parentId ?? this.parentId,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('CostCompareData(')
+          ..write('id: $id, ')
+          ..write('basicPrice: $basicPrice, ')
+          ..write('energyPrice: $energyPrice, ')
+          ..write('bonus: $bonus, ')
+          ..write('usage: $usage, ')
+          ..write('parentId: $parentId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, basicPrice, energyPrice, bonus, usage, parentId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CostCompareData &&
+          other.id == this.id &&
+          other.basicPrice == this.basicPrice &&
+          other.energyPrice == this.energyPrice &&
+          other.bonus == this.bonus &&
+          other.usage == this.usage &&
+          other.parentId == this.parentId);
+}
+
+class CostCompareCompanion extends UpdateCompanion<CostCompareData> {
+  final Value<int> id;
+  final Value<double> basicPrice;
+  final Value<double> energyPrice;
+  final Value<int> bonus;
+  final Value<int> usage;
+  final Value<int> parentId;
+  const CostCompareCompanion({
+    this.id = const Value.absent(),
+    this.basicPrice = const Value.absent(),
+    this.energyPrice = const Value.absent(),
+    this.bonus = const Value.absent(),
+    this.usage = const Value.absent(),
+    this.parentId = const Value.absent(),
+  });
+  CostCompareCompanion.insert({
+    this.id = const Value.absent(),
+    required double basicPrice,
+    required double energyPrice,
+    required int bonus,
+    required int usage,
+    required int parentId,
+  })  : basicPrice = Value(basicPrice),
+        energyPrice = Value(energyPrice),
+        bonus = Value(bonus),
+        usage = Value(usage),
+        parentId = Value(parentId);
+  static Insertable<CostCompareData> custom({
+    Expression<int>? id,
+    Expression<double>? basicPrice,
+    Expression<double>? energyPrice,
+    Expression<int>? bonus,
+    Expression<int>? usage,
+    Expression<int>? parentId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (basicPrice != null) 'basic_price': basicPrice,
+      if (energyPrice != null) 'energy_price': energyPrice,
+      if (bonus != null) 'bonus': bonus,
+      if (usage != null) 'usage': usage,
+      if (parentId != null) 'parent_id': parentId,
+    });
+  }
+
+  CostCompareCompanion copyWith(
+      {Value<int>? id,
+      Value<double>? basicPrice,
+      Value<double>? energyPrice,
+      Value<int>? bonus,
+      Value<int>? usage,
+      Value<int>? parentId}) {
+    return CostCompareCompanion(
+      id: id ?? this.id,
+      basicPrice: basicPrice ?? this.basicPrice,
+      energyPrice: energyPrice ?? this.energyPrice,
+      bonus: bonus ?? this.bonus,
+      usage: usage ?? this.usage,
+      parentId: parentId ?? this.parentId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (basicPrice.present) {
+      map['basic_price'] = Variable<double>(basicPrice.value);
+    }
+    if (energyPrice.present) {
+      map['energy_price'] = Variable<double>(energyPrice.value);
+    }
+    if (bonus.present) {
+      map['bonus'] = Variable<int>(bonus.value);
+    }
+    if (usage.present) {
+      map['usage'] = Variable<int>(usage.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<int>(parentId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CostCompareCompanion(')
+          ..write('id: $id, ')
+          ..write('basicPrice: $basicPrice, ')
+          ..write('energyPrice: $energyPrice, ')
+          ..write('bonus: $bonus, ')
+          ..write('usage: $usage, ')
+          ..write('parentId: $parentId')
           ..write(')'))
         .toString();
   }
@@ -1998,17 +2955,30 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   late final $ProviderTable provider = $ProviderTable(this);
   late final $ContractTable contract = $ContractTable(this);
   late final $TagsTable tags = $TagsTable(this);
+  late final $MeterWithTagsTable meterWithTags = $MeterWithTagsTable(this);
+  late final $CostCompareTable costCompare = $CostCompareTable(this);
   late final MeterDao meterDao = MeterDao(this as LocalDatabase);
   late final EntryDao entryDao = EntryDao(this as LocalDatabase);
   late final RoomDao roomDao = RoomDao(this as LocalDatabase);
   late final ContractDao contractDao = ContractDao(this as LocalDatabase);
   late final TagsDao tagsDao = TagsDao(this as LocalDatabase);
+  late final CostCompareDao costCompareDao =
+      CostCompareDao(this as LocalDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [meter, entries, room, meterInRoom, provider, contract, tags];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        meter,
+        entries,
+        room,
+        meterInRoom,
+        provider,
+        contract,
+        tags,
+        meterWithTags,
+        costCompare
+      ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -2027,17 +2997,24 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
             ],
           ),
           WritePropagation(
-            on: TableUpdateQuery.onTableName('room',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('meter_in_room', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
             on: TableUpdateQuery.onTableName('provider',
                 limitUpdateKind: UpdateKind.delete),
             result: [
-              TableUpdate('contract', kind: UpdateKind.delete),
+              TableUpdate('contract', kind: UpdateKind.update),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('meter',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('meter_with_tags', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('contract',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('cost_compare', kind: UpdateKind.delete),
             ],
           ),
         ],

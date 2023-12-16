@@ -6,6 +6,6 @@ part of 'meter_dao.dart';
 mixin _$MeterDaoMixin on DatabaseAccessor<LocalDatabase> {
   $MeterTable get meter => attachedDatabase.meter;
   $EntriesTable get entries => attachedDatabase.entries;
-  $RoomTable get room => attachedDatabase.room;
   $MeterInRoomTable get meterInRoom => attachedDatabase.meterInRoom;
+  $RoomTable get room => attachedDatabase.room;
 }

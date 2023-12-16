@@ -5,7 +5,7 @@ import '../../../core/database/local_database.dart';
 import '../../../core/provider/stats_provider.dart';
 
 class MeterTypsWidget extends StatefulWidget {
-  const MeterTypsWidget({Key? key}) : super(key: key);
+  const MeterTypsWidget({super.key});
 
   @override
   State<MeterTypsWidget> createState() => _MeterTypsWidgetState();
@@ -38,7 +38,7 @@ Widget _calcWithSelectedTags(LocalDatabase db) {
 
 Widget _calcWithoutSelectedTags(LocalDatabase db) {
   return StreamBuilder(
-    stream: db.meterDao.watchAllMeterWithRooms(),
+    stream: db.meterDao.watchAllMeterWithRooms(false),
     builder: (context, snapshot) {
       final List<MeterData> meters = [];
 

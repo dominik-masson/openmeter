@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../../model/meter_dto.dart';
+import '../../model/room_dto.dart';
 import '../local_database.dart';
 import '../tables/meter.dart';
 import '../tables/room.dart';
@@ -16,10 +18,10 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return await db.into(db.room).insert(room);
   }
 
-  Future<int> deleteRoom(int roomId) async {
+  Future<int> deleteRoom(String roomId) async {
     await (db.delete(db.meterInRoom)..where((tbl) => tbl.roomId.equals(roomId)))
         .go();
-    return await (db.delete(db.room)..where((tbl) => tbl.id.equals(roomId)))
+    return await (db.delete(db.room)..where((tbl) => tbl.uuid.equals(roomId)))
         .go();
   }
 
@@ -37,11 +39,21 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return select(db.room).watch();
   }
 
+  Future<List<RoomDto>> getAllRooms() async {
+    return await select(db.room).map((r) => RoomDto.fromData(r)).get();
+  }
+
   Future<int> createMeterInRoom(MeterInRoomCompanion entity) async {
     return await db.into(db.meterInRoom).insert(entity);
   }
 
-  Future<int?> getNumberCounts(int roomId) {
+  updateMeterInRoom(MeterInRoomCompanion entity) async {
+    return await (update(db.meterInRoom)
+          ..where((tbl) => tbl.meterId.equals(entity.meterId.value)))
+        .write(entity);
+  }
+
+  Future<int?> getNumberCounts(String roomId) {
     final countExp = db.meterInRoom.roomId
         .count(filter: db.meterInRoom.roomId.equals(roomId));
 
@@ -50,32 +62,37 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
     return query.map((row) => row.read(countExp)).getSingle();
   }
 
-  Future<Future<List<String>>> getTypOfMeter(int roomId) async {
+  Future<Future<List<String>>> getTypOfMeter(String roomId) async {
     const query =
-        'SELECT meter.typ as typ FROM meter INNER JOIN meter_in_room ON meter_id = meter.id WHERE room_id = ?';
+        'SELECT meter.typ as typ FROM meter INNER JOIN meter_in_room ON meter_id = meter.id WHERE room_id = ? ORDER BY typ';
 
     return customSelect(query,
-            variables: [Variable.withInt(roomId)],
+            variables: [Variable.withString(roomId)],
             readsFrom: {meter, meterInRoom})
         .map((r) => r.read<String>('typ'))
         .get();
   }
 
-  Future<Future<List<Future<MeterData>>>> getMeterInRooms(int roomId) async {
-    // final query = db.select(db.meterInRoom)
-    //   ..join([
-    //     innerJoin(db.meter, db.meterInRoom.meterId.equalsExp(db.meter.id),
-    //         useColumns: false),
-    //   ])..where((tbl) => tbl.roomId.equals(roomId));
+  Future<List<MeterDto>> getMeterInRooms(String roomId) async {
+    final query = select(db.meter).join([
+      leftOuterJoin(
+        db.meterInRoom,
+        db.meterInRoom.meterId.equalsExp(db.meter.id),
+      ),
+    ])
+      ..where(db.meterInRoom.roomId.equals(roomId))
+      ..orderBy([OrderingTerm.asc(meter.number)]);
 
-    final selectMeterIds = db.select(db.meterInRoom)..join([
-      innerJoin(db.meter, db.meterInRoom.meterId.equalsExp(db.meter.id))
-    ])..where((tbl) => tbl.roomId.equals(roomId));
+    return await query
+        .map((r) => MeterDto.fromData(r.readTable(db.meter), false))
+        .get();
+  }
 
-    var meter = selectMeterIds.map((p0) => p0.meterId);
+  Future<int?> getTableLength() async {
+    var count = db.room.id.count();
 
-    var meterList = meter.map((p0) => db.meterDao.getSingleMeter(p0));
-
-    return meterList.get();
+    return await (db.selectOnly(db.room)..addColumns([count]))
+        .map((row) => row.read(count))
+        .getSingleOrNull();
   }
 }

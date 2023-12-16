@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../ui/screens/settings_screens/reminder_screen.dart';
+import '../enums/notifications_repeat_values.dart';
 import '../services/local_notification_helper.dart';
 
 class ReminderProvider extends ChangeNotifier {
@@ -69,7 +69,7 @@ class ReminderProvider extends ChangeNotifier {
     _hour = _prefs.getInt(keyHour) ?? 0;
     _minute = _prefs.getInt(keyMinute) ?? 0;
 
-    _monthDay = _prefs.getInt(keyMonthDay) ?? 1;
+    _monthDay = _prefs.getInt(keyMonthDay) ?? 0;
 
     notifyListeners();
   }
@@ -80,14 +80,14 @@ class ReminderProvider extends ChangeNotifier {
       _localNotificationHelper.dailyReminder(_hour, _minute);
     }
 
-    // weekly reminder
+    // weekly reminders
     if (_repeatInterval == RepeatValues.weekly) {
       _localNotificationHelper.weeklyReminder(_hour, _minute, _weekDay + 1);
     }
 
     // monthly reminder
     if (_repeatInterval == RepeatValues.monthly) {
-      _localNotificationHelper.monthlyReminder(_hour, _minute);
+      _localNotificationHelper.monthlyReminder(_hour, _minute, _monthDay);
     }
   }
 
@@ -95,14 +95,14 @@ class ReminderProvider extends ChangeNotifier {
     _localNotificationHelper.testNotification();
   }
 
-  void setActive(bool state) {
+  void setActive(bool state) async {
     _isActive = state;
     _prefs.setBool(keyActive, _isActive);
 
     if (!_firstReminderOn) {
       _prefs.setBool(keyFirstOn, true);
       _firstReminderOn = true;
-      _localNotificationHelper.requestPermission();
+      await _localNotificationHelper.requestPermission();
     }
 
     if (!_isActive) {

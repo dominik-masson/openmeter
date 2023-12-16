@@ -1,83 +1,70 @@
 import 'package:flutter/material.dart';
 
+import '../core/model/meter_typ.dart';
 import 'custom_icons.dart';
 
-Map<String, dynamic> meterTyps = {
-  'Stromzähler': {
-    'einheit': 'kWh',
-    'anbieter': 'Stromanbieter',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.green,
-      child: Icon(
-        CustomIcons.power_plug,
-        color: Colors.white,
-      ),
-    )
-  },
-  'Photovoltaikanlage': {
-    'einheit': 'kWh',
-    'anbieter': '',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.orange,
-      child: Icon(
-        CustomIcons.power_plug,
-        color: Colors.white,
-      ),
+final List<MeterTyp> meterTyps = [
+  MeterTyp(
+    meterTyp: 'Stromzähler',
+    unit: 'kwh',
+    providerTitle: 'Stromanbieter',
+    avatar: CustomAvatar(
+      color: Colors.green,
+      icon: CustomIcons.powerplug,
     ),
-  },
-  'Solarthermieanlage': {
-    'einheit': 'kWh',
-    'anbieter': '',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.yellow,
-      child: Icon(
-        CustomIcons.sun,
-        color: Colors.white,
-      ),
+  ),
+  MeterTyp(
+    meterTyp: 'Photovoltaikanlage',
+    unit: 'kwh',
+    providerTitle: '',
+    avatar: CustomAvatar(
+      color: Colors.orange,
+      icon: CustomIcons.powerplug,
     ),
-  },
-  'Kaltwasserzähler': {
-    'einheit': 'l',
-    'anbieter': 'Wassergebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.blue,
-      child: Icon(
-        CustomIcons.water,
-        color: Colors.white,
-      ),
+  ),
+  MeterTyp(
+    meterTyp: 'Solarthermieanlage',
+    unit: 'kwh',
+    providerTitle: '',
+    avatar: CustomAvatar(
+      color: Colors.yellow,
+      icon: CustomIcons.sun,
     ),
-  },
-  'Warmwasserzähler': {
-    'einheit': 'l',
-    'anbieter': 'Wassergebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.red,
-      child: Icon(
-        CustomIcons.water,
-        color: Colors.white,
-      ),
+  ),
+  MeterTyp(
+    meterTyp: 'Kaltwasserzähler',
+    unit: 'l',
+    providerTitle: 'Wassergebühren',
+    avatar: CustomAvatar(
+      color: Colors.blue,
+      icon: CustomIcons.water,
     ),
-  },
-  'Heizung': {
-    'einheit': 'kWh',
-    'anbieter': 'Heizungsgebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.orange,
-      child: Icon(
-        CustomIcons.heater,
-        color: Colors.white,
-      ),
+  ),
+  MeterTyp(
+    meterTyp: 'Warmwasserzähler',
+    unit: 'l',
+    providerTitle: 'Wassergebühren',
+    avatar: CustomAvatar(
+      color: Colors.red,
+      icon: CustomIcons.water,
     ),
-  },
-  'Gaszähler': {
-    'einheit': 'kWh',
-    'anbieter': 'Heizungsgebühren',
-    'avatar': const CircleAvatar(
-      backgroundColor: Colors.blueGrey,
-      child: Icon(
-        CustomIcons.flamme,
-        color: Colors.white,
-      ),
+  ),
+  MeterTyp(
+    meterTyp: 'Heizung',
+    unit: 'kWh',
+    providerTitle: 'Heizungsgebühren',
+    avatar: CustomAvatar(
+      color: Colors.orange,
+      icon: CustomIcons.heater,
     ),
-  },
-};
+  ),
+  MeterTyp(
+    meterTyp: 'Gaszähler',
+    unit: 'kWh',
+    providerTitle: 'Heizungsgebühren',
+    avatar: CustomAvatar(
+      color: Colors.blueGrey,
+      icon: CustomIcons.fire,
+    ),
+  ),
+];

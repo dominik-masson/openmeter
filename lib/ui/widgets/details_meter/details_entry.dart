@@ -1,44 +1,93 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:drift/drift.dart' as drift;
 
 import '../../../core/database/local_database.dart';
+import '../../../core/model/entry_dto.dart';
 import '../../../core/provider/cost_provider.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
-import '../../../utils/meter_typ.dart';
+import '../../../core/services/meter_image_helper.dart';
+import '../../../utils/convert_count.dart';
+import '../../../utils/convert_meter_unit.dart';
+import '../../../utils/custom_icons.dart';
 
-class DetailsEntry {
-  bool _stateNote = false; // if ture => write some note
-  final TextEditingController _noteController = TextEditingController();
+class DetailsEntry extends StatefulWidget {
+  final EntryDto entry;
 
-  late Entrie _entry;
+  const DetailsEntry({
+    super.key,
+    required this.entry,
+  });
+
+  @override
+  State<DetailsEntry> createState() => _DetailsEntryState();
+}
+
+class _DetailsEntryState extends State<DetailsEntry> {
+  final MeterImageHelper _meterImageHelper = MeterImageHelper();
+  final ConvertMeterUnit convertMeterUnit = ConvertMeterUnit();
+
+  late EntryDto _entry;
   late EntryCardProvider _entryProvider;
 
-  DetailsEntry();
+  final GlobalKey _iconKey = GlobalKey();
 
-  _saveNote(BuildContext context, EntryCardProvider entryProvider) async {
+  final FocusNode _noteFocus = FocusNode();
+
+  final TextEditingController _noteController = TextEditingController();
+  final PageController _pageController = PageController();
+
+  String? _imagePath;
+  int _selectedView = 0;
+
+  @override
+  initState() {
+    super.initState();
+    _entry = widget.entry;
+    _imagePath = _entry.imagePath;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _noteController.dispose();
+    _pageController.dispose();
+    _noteFocus.dispose();
+  }
+
+  _saveNote(EntryCardProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
-    if (_noteController.text.isEmpty) {
-      _stateNote = false;
-      entryProvider.setStateNote(false);
-    }
-
     final newEntry = EntriesCompanion(
-      id: drift.Value(_entry.id),
+      id: drift.Value(_entry.id!),
       days: drift.Value(_entry.days),
       count: drift.Value(_entry.count),
       usage: drift.Value(_entry.usage),
-      meter: drift.Value(_entry.meter),
+      meter: drift.Value(_entry.meterId!),
       date: drift.Value(_entry.date),
       note: drift.Value(_noteController.text),
+      transmittedToProvider: drift.Value(_entry.transmittedToProvider),
+      isReset: drift.Value(_entry.isReset),
     );
 
-    await db.entryDao.updateEntry(newEntry);
+    await db.entryDao.replaceEntry(newEntry);
+
+    if (context.mounted) {
+      Provider.of<DatabaseSettingsProvider>(context, listen: false)
+          .setHasUpdate(true);
+    }
   }
 
-  _noteWidget(BuildContext context) {
+  _noteWidget() {
     return Column(
       children: [
         const SizedBox(
@@ -46,10 +95,8 @@ class DetailsEntry {
         ),
         TextFormField(
           controller: _noteController,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.normal,
-          ),
+          focusNode: _noteFocus,
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: const InputDecoration(
             icon: Icon(Icons.notes),
             hintText: 'Füge eine Notiz hinzu',
@@ -60,48 +107,83 @@ class DetailsEntry {
     );
   }
 
-  _contractWidget(
-    BuildContext context,
-    int usage,
-    MeterData meter,
-    Entrie entry,
-    CostProvider costProvider,
-  ) {
+  _transmittedToProvider() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(top: 25),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.upload_file_rounded,
+            color: Colors.grey,
+          ),
+          const SizedBox(
+            width: 15,
+          ),
+          SizedBox(
+            width: 230,
+            child: Text(
+              'Dieser Wert wurde an den Anbieter übermittelt.',
+              overflow: TextOverflow.visible,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _extraInformation(String text) {
+    return Column(
+      children: [
+        Center(
+          child: Text(text, style: Theme.of(context).textTheme.labelLarge!),
+        ),
+        _noteWidget(),
+      ],
+    );
+  }
+
+  _contractWidget({
+    required int usage,
+    required String unit,
+    required CostProvider costProvider,
+  }) {
     double usageCost = costProvider.calcUsage(usage);
-    double dailyCost = usageCost / entry.days;
+    double dailyCost = usageCost / _entry.days;
+
+    final String local = Platform.localeName;
+    final costFormat = NumberFormat.simpleCurrency(locale: local);
 
     return Column(
       children: [
         // full days
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '+$usage ${meter.unit}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                convertMeterUnit.getUnitWidget(
+                  count: '+${ConvertCount.convertCount(usage)}',
+                  unit: unit,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          _entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
                 Text(
-                  'innerhalb ${entry.days} Tagen',
-                  style: const TextStyle(color: Colors.grey),
+                  costFormat.format(usageCost),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
-            Column(
-              children: [
-                Text(
-                  '${usageCost.toStringAsFixed(2)} €',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
+            Text(
+              'innerhalb ${_entry.days} Tagen',
+              style: Theme.of(context).textTheme.labelLarge,
             ),
           ],
         ),
@@ -110,52 +192,44 @@ class DetailsEntry {
         ),
 
         // Daily
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${_entryProvider.getDailyUsage(
-                    usage,
-                    entry.days,
-                  )} ${meter.unit}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                convertMeterUnit.getUnitWidget(
+                  count: _entryProvider.getDailyUsage(usage, _entry.days),
+                  unit: unit,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          _entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
-                const Text(
-                  'pro Tag',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  costFormat.format(dailyCost),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
-            Column(
-              children: [
-                Text(
-                  '${dailyCost.toStringAsFixed(2)} €',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
+            Text(
+              'pro Tag',
+              style: Theme.of(context).textTheme.labelLarge,
             ),
           ],
         ),
-        if (_stateNote) _noteWidget(context),
+        if (_entry.transmittedToProvider) _transmittedToProvider(),
+        _noteWidget(),
       ],
     );
   }
 
-  _noContractWidget(
-    BuildContext context,
-    int usage,
-    MeterData meter,
-    Entrie entry,
-  ) {
+  _noContractWidget({
+    required int usage,
+    required String unit,
+  }) {
     return Column(
       children: [
         Row(
@@ -164,56 +238,54 @@ class DetailsEntry {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '+$usage ${meter.unit}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                convertMeterUnit.getUnitWidget(
+                  count: '+${ConvertCount.convertCount(usage)}',
+                  unit: unit,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          _entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
                 Text(
-                  'innerhalb ${entry.days} Tagen',
-                  style: const TextStyle(color: Colors.grey),
+                  'innerhalb ${_entry.days} Tagen',
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${_entryProvider.getDailyUsage(
-                    usage,
-                    entry.days,
-                  )} ${meter.unit}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _entryProvider.getColors(
-                      entry.count,
-                      usage,
-                    ),
-                  ),
+                convertMeterUnit.getUnitWidget(
+                  count: _entryProvider.getDailyUsage(usage, _entry.days),
+                  unit: unit,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: _entryProvider.getColors(
+                          _entry.count,
+                          usage,
+                        ),
+                      ),
                 ),
-                const Text(
+                Text(
                   'pro Tag',
-                  style: TextStyle(color: Colors.grey),
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
             ),
           ],
         ),
-        if (_stateNote) _noteWidget(context),
+        if (_entry.transmittedToProvider) _transmittedToProvider(),
+        _noteWidget(),
         const SizedBox(
           height: 25,
         ),
-        const Text(
+        Text(
           'Für mehr Information füge einen Vertrag hinzu.',
-          style: TextStyle(
-            color: Colors.grey,
-            // fontSize: 14,
-          ),
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall!
+              .copyWith(color: Colors.grey),
           textAlign: TextAlign.center,
         ),
       ],
@@ -221,146 +293,361 @@ class DetailsEntry {
   }
 
   _information({
-    required BuildContext context,
     required int usage,
-    required MeterData meter,
-    required Entrie entry,
-    required EntryCardProvider entryProvider,
+    required String unit,
     required CostProvider costProvider,
-    required Function setState,
   }) {
-    bool contract = entryProvider.getContractData;
-    _stateNote = entryProvider.getStateNote;
+    bool contract = _entryProvider.getContractData;
 
     return Column(
       children: [
         if (!contract)
-          _noContractWidget(context, usage, meter, entry),
+          _noContractWidget(
+            usage: usage,
+            unit: unit,
+          ),
         if (contract)
           _contractWidget(
-              context, usage, meter,  entry, costProvider),
-      ],
-    );
-  }
-
-  _firstCount(BuildContext context){
-    return Column(
-      children: [
-        const Center(
-          child: Text(
-            'Erstablesung',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            usage: usage,
+            unit: unit,
+            costProvider: costProvider,
           ),
-        ),
-        if (_stateNote) _noteWidget(context,),
       ],
     );
   }
 
-  getDetailsAlert({
-    required BuildContext context,
-    required Entrie entry,
-    required MeterData meter,
+  _mainInformation({
     required int usage,
-    required EntryCardProvider entryProvider,
+    required String unit,
     required CostProvider costProvider,
   }) {
-    _entry = Entrie(
-        id: entry.id,
-        meter: entry.meter,
-        count: entry.count,
-        usage: entry.usage,
-        date: entry.date,
-        days: entry.days,
-        note: entry.note);
+    return Column(
+      children: [
+        if (usage == -1 && !_entry.isReset) _extraInformation('Erstablesung'),
+        if (_entry.isReset)
+          _extraInformation('Dieser Zähler wurde Zurückgesetzt.'),
+        if (_entry.transmittedToProvider && (_entry.isReset || usage == -1))
+          _transmittedToProvider(),
+        const SizedBox(
+          height: 5,
+        ),
+        if (usage != -1)
+          _information(
+            usage: usage,
+            unit: unit,
+            costProvider: costProvider,
+          ),
+      ],
+    );
+  }
+
+  _imageView({
+    required EntryDto entry,
+  }) {
+    return Image.file(
+      File(_imagePath!),
+    );
+  }
+
+  _showAddImagePopup({
+    required Offset offset,
+  }) {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    return showMenu(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      position: RelativeRect.fromLTRB(0, offset.dy, 0, 0),
+      items: [
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.camera_alt,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild aufnehmen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          onTap: () async {
+            String? imagePath =
+                await _meterImageHelper.selectAndSaveImage(ImageSource.camera);
+
+            _entry.imagePath = imagePath;
+            await db.entryDao.updateEntry(_entry.id!,
+                EntriesCompanion(imagePath: drift.Value(imagePath)));
+
+            setState(() {
+              _imagePath = imagePath;
+
+              if (_imagePath != null) {
+                _selectedView = 1;
+                _pageController.nextPage(
+                    duration: Durations.short1, curve: Curves.linear);
+              }
+            });
+          },
+        ),
+        PopupMenuItem(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.photo_library,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild aus der Galerie wählen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+          onTap: () async {
+            String? imagePath =
+                await _meterImageHelper.selectAndSaveImage(ImageSource.gallery);
+
+            _entry.imagePath = imagePath;
+            await db.entryDao.updateEntry(_entry.id!,
+                EntriesCompanion(imagePath: drift.Value(imagePath)));
+
+            setState(() {
+              _imagePath = imagePath;
+
+              if (_imagePath != null) {
+                _selectedView = 1;
+                _pageController.nextPage(
+                    duration: Durations.short1, curve: Curves.linear);
+              }
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  _imagePopUpMenu() {
+    final db = Provider.of<LocalDatabase>(context, listen: false);
+
+    return PopupMenuButton(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      tooltip: 'Teilen oder löschen von dem Bild',
+      icon: Icon(
+        CustomIcons.photoedit,
+        color: Theme.of(context).hintColor,
+      ),
+      onSelected: (value) async {
+        if (value == 0) {
+          await ImageGallerySaver.saveImage(
+              File(_imagePath!).readAsBytesSync());
+        }
+        if (value == 1) {
+          await Share.shareXFiles([XFile(_imagePath!)]);
+        }
+        if (value == 2) {
+          await _meterImageHelper.deleteImage(_imagePath!);
+
+          const EntriesCompanion entry =
+              EntriesCompanion(imagePath: drift.Value(null));
+
+          await db.entryDao.updateEntry(_entry.id!, entry);
+
+          setState(() {
+            _selectedView = 0;
+            _imagePath = null;
+          });
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 0,
+          child: Row(
+            children: [
+              const Icon(
+                Icons.save_alt,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild in die Galerie speichern',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 1,
+          child: Row(
+            children: [
+              const Icon(
+                Icons.share,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild teilen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 2,
+          child: Row(
+            children: [
+              const Icon(
+                Icons.delete,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 15,
+              ),
+              Text(
+                'Bild löschen',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _entryProvider = Provider.of<EntryCardProvider>(context);
+    final costProvider = Provider.of<CostProvider>(context, listen: false);
 
     if (_entry.note == null || _entry.note!.isEmpty) {
-      _stateNote = false;
-      entryProvider.setStateNote(false);
+      _entryProvider.setStateNote(false);
     } else {
-      _stateNote = true;
-      entryProvider.setStateNote(true);
+      _entryProvider.setStateNote(true);
       _noteController.text = _entry.note!;
     }
 
-    _entryProvider = entryProvider;
+    String unit = _entryProvider.getMeterUnit;
+    int usage = _entryProvider.getUsage(_entry);
 
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text(
-                        DateFormat('dd.MM.yyyy').format(entry.date),
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      Text(
-                        '${entry.count} ${meter.unit}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  const Divider(
-                    thickness: 1,
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  if (usage == -1)
-                    _firstCount(context),
-                  if (usage != -1)
-                    _information(
-                      context: context,
-                      usage: usage,
-                      meter: meter,
-                      entry: entry,
-                      entryProvider: entryProvider,
-                      costProvider: costProvider,
-                      setState: setState,
-                    ),
-                ],
-              ),
-              actions: [
-                if (!entryProvider.getStateNote && !_stateNote)
-                  IconButton(
-                    onPressed: () {
-                      entryProvider.setStateNote(true);
-                      setState(
-                        () => _stateNote = true,
-                      );
-                    },
-                    icon: const Icon(Icons.note_add),
-                  ),
-                TextButton(
-                  onPressed: () {
-                    _saveNote(context, entryProvider);
-                    entryProvider.setStateNote(false);
-                    Navigator.of(context).pop(true);
-                  },
-                  child: const Text(
-                    'Okay',
-                    style: TextStyle(fontSize: 16),
-                  ),
+    return AlertDialog(
+      content: SizedBox(
+        // height: 500,
+        width: MediaQuery.sizeOf(context).height * 0.9,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text(
+                  DateFormat('dd.MM.yyyy').format(_entry.date),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                convertMeterUnit.getUnitWidget(
+                  count: ConvertCount.convertCount(_entry.count),
+                  unit: unit,
+                  textStyle: Theme.of(context).textTheme.bodyMedium!,
                 ),
               ],
-            );
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            const Divider(),
+            SizedBox(
+              height:
+                  _entry.transmittedToProvider && !_entry.isReset ? 270 : 200,
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (value) {
+                  if (_noteFocus.hasFocus) {
+                    _noteFocus.unfocus();
+                  }
+
+                  setState(
+                    () => _selectedView = value,
+                  );
+                },
+                children: [
+                  _mainInformation(
+                    usage: usage,
+                    unit: unit,
+                    costProvider: costProvider,
+                  ),
+                  if (_imagePath != null) _imageView(entry: _entry),
+                ],
+              ),
+            ),
+            if (_imagePath != null)
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.only(top: 8.0),
+                child: AnimatedSmoothIndicator(
+                  activeIndex: _selectedView,
+                  count: 2,
+                  effect: WormEffect(
+                    activeDotColor: Theme.of(context).primaryColor,
+                    dotHeight: 10,
+                    dotWidth: 10,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        if (_imagePath == null)
+          IconButton(
+            key: _iconKey,
+            onPressed: () async {
+              if (_noteFocus.hasFocus) {
+                _noteFocus.unfocus();
+                await Future.delayed(const Duration(milliseconds: 250));
+              }
+
+              RenderBox renderBox =
+                  _iconKey.currentContext?.findRenderObject() as RenderBox;
+
+              Offset offset = renderBox.localToGlobal(Offset.zero);
+
+              _showAddImagePopup(offset: offset);
+            },
+            icon: Icon(
+              CustomIcons.photoadd,
+              color: Theme.of(context).hintColor,
+            ),
+            tooltip: 'Füge ein Bild hinzu',
+          ),
+        if (_selectedView == 1) _imagePopUpMenu(),
+        TextButton(
+          onPressed: () {
+            _saveNote(_entryProvider);
+            _entryProvider.setStateNote(false);
+            Navigator.of(context).pop(true);
           },
-        );
-      },
+          child: Text(
+            'Okay',
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Theme.of(context).primaryColor,
+                ),
+          ),
+        ),
+      ],
     );
   }
 }

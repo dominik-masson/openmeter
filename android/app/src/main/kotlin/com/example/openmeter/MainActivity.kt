@@ -1,6 +1,9 @@
 package com.example.openmeter
 
+import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.util.Log
@@ -8,12 +11,15 @@ import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.lang.Exception
 
 class MainActivity : FlutterActivity() {
     private val channel = "com.example.openmeter/main"
     private val enableTorch = "enableTorch"
     private val disableTorch = "disableTorch"
     private val torchAvailable = "torchAvailable"
+    private val getStateTorch = "getStateTorch"
+    private val isTorchOn = "isTorchOn"
 
     private var cameraManager: CameraManager? = null
     private var cameraID: String? = null
@@ -42,7 +48,6 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
-
 
     private fun isTorchAvailable(result: MethodChannel.Result) {
         result.success(context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))

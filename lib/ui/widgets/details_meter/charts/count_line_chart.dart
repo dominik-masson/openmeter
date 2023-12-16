@@ -4,14 +4,16 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
-import '../../../../core/provider/chart_provider.dart';
+import '../../../../core/model/meter_dto.dart';
 import '../../../../core/services/chart_helper.dart';
+import '../../../../utils/convert_count.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
 
 class CountLineChart extends StatefulWidget {
-  final MeterData meter;
+  final MeterDto meter;
 
-  const CountLineChart({Key? key, required this.meter}) : super(key: key);
+  const CountLineChart({super.key, required this.meter});
 
   @override
   State<CountLineChart> createState() => _CountLineChartState();
@@ -20,6 +22,7 @@ class CountLineChart extends StatefulWidget {
 class _CountLineChartState extends State<CountLineChart> {
   bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
+  final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   List<LineChartBarData> _lineData(List<Entrie> entries) {
     List<FlSpot> spots = entries.map((e) {
@@ -33,14 +36,14 @@ class _CountLineChartState extends State<CountLineChart> {
       LineChartBarData(
         spots: spots,
         isCurved: true,
-        color: Theme.of(context).primaryColorLight,
+        color: Theme.of(context).primaryColor,
         barWidth: 4,
         shadow: const Shadow(
           blurRadius: 0.2,
         ),
         belowBarData: BarAreaData(
           show: true,
-          color: Theme.of(context).primaryColorLight.withOpacity(0.2),
+          color: Theme.of(context).primaryColor.withOpacity(0.2),
         ),
       ),
     ];
@@ -100,10 +103,10 @@ class _CountLineChartState extends State<CountLineChart> {
 
   FlTitlesData _titlesData() {
     return FlTitlesData(
-      rightTitles: AxisTitles(
+      rightTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
-      topTitles: AxisTitles(
+      topTitles: const AxisTitles(
         sideTitles: SideTitles(showTitles: false),
       ),
       bottomTitles: _bottomTitles(),
@@ -122,7 +125,7 @@ class _CountLineChartState extends State<CountLineChart> {
   }
 
   FlGridData _gridData() {
-    return FlGridData(show: false);
+    return const FlGridData(show: false);
   }
 
   LineTouchData _touchData() {
@@ -138,7 +141,7 @@ class _CountLineChartState extends State<CountLineChart> {
             final String dateFormat = DateFormat('dd.MM.yyyy').format(date);
 
             return LineTooltipItem(
-              '$dateFormat \n ${e.y.toInt()}  ${widget.meter.unit}',
+              '$dateFormat \n ${ConvertCount.convertCount(e.y.toInt())}  ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
               const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -172,7 +175,7 @@ class _CountLineChartState extends State<CountLineChart> {
     bool isEmpty = false;
 
     return StreamBuilder(
-      stream: db.entryDao.watchAllEntries(widget.meter.id),
+      stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
         final List<Entrie> entries = snapshot.data ?? [];
         List<Entrie> finalEntries = [];
@@ -182,9 +185,9 @@ class _CountLineChartState extends State<CountLineChart> {
         }
 
         if (_twelveMonths && entries.length > 12) {
-          List<Entrie> newEntries = _helper.getLastMonths(entries);
+          // List<Entrie> newEntries = _helper.getLastMonths(entries);
           finalEntries =
-              newEntries.getRange(newEntries.length - 12, newEntries.length).toList();
+              entries.getRange(entries.length - 12, entries.length).toList();
         } else {
           finalEntries = entries;
         }
@@ -192,8 +195,6 @@ class _CountLineChartState extends State<CountLineChart> {
         if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
         }
-
-
 
         return SizedBox(
           height: 300,
@@ -213,37 +214,23 @@ class _CountLineChartState extends State<CountLineChart> {
                           fontSize: 16,
                         ),
                       ),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              if (finalEntries.length >= 12) {
-                                setState(() {
-                                  _twelveMonths = !_twelveMonths;
-                                });
-                              }
-                            },
-                            child: Text(
-                              'letzte 12 Monate',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: _twelveMonths
-                                    ? Theme.of(context).primaryColorLight
-                                    : Colors.grey,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              Provider.of<ChartProvider>(context, listen: false)
-                                  .setLineChart(false);
-                            },
-                            icon: Icon(
-                              Icons.bar_chart,
-                              color: Theme.of(context).hintColor,
-                            ),
-                          ),
-                        ],
+                      TextButton(
+                        onPressed: () {
+                          if (finalEntries.length >= 12) {
+                            setState(() {
+                              _twelveMonths = !_twelveMonths;
+                            });
+                          }
+                        },
+                        child: Text(
+                          'letzte 12 Monate',
+                          style:
+                              Theme.of(context).textTheme.bodySmall!.copyWith(
+                                    color: _twelveMonths
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                  ),
+                        ),
                       ),
                     ],
                   ),
@@ -257,11 +244,10 @@ class _CountLineChartState extends State<CountLineChart> {
                 if (!isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 5),
-                    child: Text(
-                      widget.meter.unit,
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
+                    child: _convertMeterUnit.getUnitWidget(
+                      count: '',
+                      unit: widget.meter.unit,
+                      textStyle: Theme.of(context).textTheme.bodySmall!,
                     ),
                   ),
                 if (!isEmpty) _mainChart(finalEntries),

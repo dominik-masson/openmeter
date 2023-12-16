@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/settings_screen/active_torch.dart';
+import '../../widgets/settings_screen/desing_tile.dart';
 import '../../widgets/settings_screen/tags_tile.dart';
-import 'database_screen.dart';
 import '../../widgets/settings_screen/database_listtile.dart';
-import '../../widgets/settings_screen/display_awake.dart';
 import '../../widgets/settings_screen/reading_reminder.dart';
-import '../../widgets/settings_screen/theme_title.dart';
 
 class MainSettings extends StatelessWidget {
-  const MainSettings({Key? key}) : super(key: key);
+  const MainSettings({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,32 +15,18 @@ class MainSettings extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Einstellungen'),
       ),
-      body: SingleChildScrollView(
+      body: const SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const DatabaseSettings(),
-              const SizedBox(height: 5,),
-              const TagsTile(),
-              const Divider(thickness: 0.5),
-              Text(
-                'Funktionen',
-                style: TextStyle(
-                    color: Theme.of(context).primaryColorLight, fontSize: 16),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              const ReadingReminder(),
-              const SizedBox(height: 5,),
-              const DisplayAwake(),
-              const SizedBox(height: 5,),
-              const ActiveTorch(),
-              const Divider(thickness: 0.5),
-              const ThemeTitle(),
-
+              DesignTile(),
+              DatabaseSettings(),
+              Divider(),
+              ReadingReminder(),
+              TagsTile(),
+              ActiveTorch(),
             ],
           ),
         ),

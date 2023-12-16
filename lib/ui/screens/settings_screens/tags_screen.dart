@@ -3,14 +3,16 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
+import '../../../core/enums/tag_chip_state.dart';
+import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/small_feature_provider.dart';
-import '../../widgets/tags_screen/add_tags.dart';
-import '../../widgets/tags_screen/tag_chip.dart';
+import '../../widgets/tags/add_tags.dart';
+import '../../widgets/tags/tag_chip.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TagsScreen> createState() => _TagsScreenState();
@@ -31,12 +33,12 @@ class _TagsScreenState extends State<TagsScreen> {
       padding: const EdgeInsets.all(8.0),
       child: Center(
         child: Column(
-          children: const [
+          children: [
             Text(
               'Es sind keine Tags vorhanden!',
-              style: TextStyle(fontSize: 16),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            Text(
+            const Text(
               'Drücke jetzt auf das + um einen neuen Tag zu erstellen!',
               style: TextStyle(color: Colors.grey),
             ),
@@ -49,11 +51,13 @@ class _TagsScreenState extends State<TagsScreen> {
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
-    final smallProvider = Provider.of<SmallFeatureProvider>(context, listen: false);
+    final smallProvider =
+        Provider.of<SmallFeatureProvider>(context, listen: false);
 
     _showTags = smallProvider.getShowTags;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Tags'),
         actions: [
@@ -62,98 +66,85 @@ class _TagsScreenState extends State<TagsScreen> {
               _addTags.getAddTags(context);
             },
             icon: const Icon(Icons.add),
+            tooltip: 'Tag erstellen',
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.asset(
-                'assets/icons/tag.png',
-                width: 200,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Image.asset(
+                  'assets/icons/tag.png',
+                  width: 200,
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            const Text(
-              'Aktuelle Tags:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              const SizedBox(
+                height: 50,
               ),
-            ),
-            StreamBuilder(
-              stream: db.tagsDao.watchAllTags(),
-              builder: (context, snapshot) {
-                final List<Tag> tags = snapshot.data ?? [];
-
-                if (tags.isEmpty) {
-                  return _noTags();
-                }
-
-                return GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: MediaQuery.of(context).size.width /
-                        (MediaQuery.of(context).size.height / 4),
-                  ),
-                  shrinkWrap: true,
-                  itemCount: tags.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: TagChip(
-                        tag: tags[index],
-                        delete: true,
-                        checked: false,
+              SwitchListTile(
+                title: const Text('Tags anzeigen'),
+                subtitle: const Text(
+                    'Ermöglicht das anzeigen eines Tags auf der Startseite.'),
+                secondary: _showTags
+                    ? FaIcon(
+                        FontAwesomeIcons.eye,
+                        color: Theme.of(context).indicatorColor,
+                      )
+                    : FaIcon(
+                        FontAwesomeIcons.eyeSlash,
+                        color: Theme.of(context).indicatorColor,
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            SwitchListTile(
-              title: const Text('Tags anzeigen'),
-              subtitle: const Text(
-                  'Ermöglicht das anzeigen eines Tags auf der Startseite.'),
-              secondary: _showTags
-                  ? FaIcon(
-                      FontAwesomeIcons.eye,
-                      color: Theme.of(context).indicatorColor,
-                    )
-                  : FaIcon(
-                      FontAwesomeIcons.eyeSlash,
-                      color: Theme.of(context).indicatorColor,
-                    ),
-              value: _showTags,
-              onChanged: (value) {
-                setState(() {
-                  _showTags = value;
-                });
-                smallProvider.setShowTags(_showTags);
-              },
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            const Text(
-              'Informationen:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                value: _showTags,
+                onChanged: (value) {
+                  setState(() {
+                    _showTags = value;
+                  });
+                  smallProvider.setShowTags(_showTags);
+                },
               ),
-            ),
-            const Text(
-                'Tags werden auf der Seite \'Statistik\' genutzt, um nur ausgewählte Zähler in der Berechnung zu berücksichtigen. '
-                'Hat ein Zähler keinen Tag, so wird er in der Berechnung mit eingerechnet.'),
-          ],
+              const SizedBox(
+                height: 30,
+              ),
+              Text(
+                'Aktuelle Tags:',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              StreamBuilder(
+                stream: db.tagsDao.watchAllTags(),
+                builder: (context, snapshot) {
+                  final List<Tag> tags = snapshot.data ?? [];
+
+                  if (tags.isEmpty) {
+                    return _noTags();
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: MediaQuery.of(context).size.width /
+                          (MediaQuery.of(context).size.height / 4),
+                    ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: tags.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: TagChip(
+                          tag: TagDto.fromData(tags[index]),
+                          state: TagChipState.delete,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

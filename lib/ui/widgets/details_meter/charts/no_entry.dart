@@ -4,7 +4,6 @@ class NoEntry {
   NoEntry();
 
   Widget getNoData(String text) {
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -20,9 +19,8 @@ class NoEntry {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-
           ),
-          textAlign:TextAlign.center,
+          textAlign: TextAlign.center,
         ),
         const SizedBox(
           height: 10,
@@ -32,6 +30,7 @@ class NoEntry {
           style: TextStyle(
             color: Colors.grey,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
