@@ -9,15 +9,17 @@ Over time, many more features are to be added and eventually the app will be rel
 ### Screenshots
 
 <pre >
-<img src="screenshots/light_mode.jpg" height="500"> &nbsp; <img src="screenshots/home_screen.jpg" height="500"> &nbsp; <img src="screenshots/details_screen.jpg" height="500">&nbsp; <img src="screenshots/details_screen2.jpg" height="500"> &nbsp; <img src="screenshots/add_entry.jpg" height="500"> &nbsp; <img src="screenshots/object_screen.jpg" height="500">  
+<img src="screenshots/light_mode.jpg" height="500" alt=""> &nbsp; <img src="screenshots/home_screen.jpg" height="500" alt=""> &nbsp; <img src="screenshots/details_screen.jpg" height="500" alt=""> &nbsp; <img src="screenshots/object_screen.jpg" height="500" alt="object screen with two rooms and one contract">  
 </pre>
 
 ### Current functions
 
+- compare contracts
 - create tags and assign them to meters
-- local notifications (currently android only)
+- daily, weekly or monthly reminders for meter reading (currently android only)
 - keep display awake
-- part meter in rooms 
-- dark mode
-- toggle flashlight 
-- export/import database
+- part meter in rooms
+- add pictures to entries
+- toggle flashlight
+- export/import database + create autobackups
+- material 3 design + dark mode 
