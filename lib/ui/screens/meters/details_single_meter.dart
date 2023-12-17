@@ -100,20 +100,18 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
     _meter.hasEntry = entryProvider.getHasEntries;
 
+    entryProvider.setMeterNumber(_meter.number);
+
     return Scaffold(
       appBar: hasSelectedEntries
           ? _selectedAppBar(entryProvider)
           : _unselectedAppBar(entryProvider, _meter),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        canPop: hasSelectedEntries ? false : true,
+        onPopInvoked: (bool didPop) async {
           if (hasSelectedEntries) {
             entryProvider.removeAllSelectedEntries();
-
-            return false;
           }
-
-          Navigator.of(context).pop(_room);
-          return true;
         },
         child: Stack(
           children: [
