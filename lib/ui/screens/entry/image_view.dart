@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/model/entry_dto.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/services/meter_image_helper.dart';
 import '../../../utils/convert_count.dart';
@@ -140,6 +141,9 @@ class _ImageViewState extends State<ImageView>
   }
 
   _bottomBar() {
+    final databaseSettingsProvider =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
+
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.1,
       child: Card(
@@ -181,7 +185,9 @@ class _ImageViewState extends State<ImageView>
                 ),
                 GestureDetector(
                   onTap: () async {
+                    databaseSettingsProvider.toggleInAppActionState();
                     await Share.shareXFiles([XFile(widget.image.path)]);
+                    databaseSettingsProvider.toggleInAppActionState();
                   },
                   child: _createButtons(
                     Icons.share,
