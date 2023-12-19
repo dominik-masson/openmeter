@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +17,7 @@ import '../../../core/services/meter_image_helper.dart';
 import '../../../utils/convert_count.dart';
 import '../../../utils/convert_meter_unit.dart';
 import '../../../utils/custom_icons.dart';
+import '../../screens/entry/image_view.dart';
 
 class DetailsEntry extends StatefulWidget {
   final EntryDto entry;
@@ -344,8 +344,24 @@ class _DetailsEntryState extends State<DetailsEntry> {
   _imageView({
     required EntryDto entry,
   }) {
-    return Image.file(
-      File(_imagePath!),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context)
+            .push(MaterialPageRoute(
+          builder: (context) =>
+              ImageView(image: File(_imagePath!), entry: _entry),
+        ))
+            .then((value) async {
+          bool deleteImage = value ?? false;
+
+          if (deleteImage) {
+            await _deleteImage();
+          }
+        });
+      },
+      child: Image.file(
+        File(_imagePath!),
+      ),
     );
   }
 
@@ -435,9 +451,21 @@ class _DetailsEntryState extends State<DetailsEntry> {
     );
   }
 
-  _imagePopUpMenu() {
+  _deleteImage() async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
+    const EntriesCompanion entry =
+        EntriesCompanion(imagePath: drift.Value(null));
+
+    await db.entryDao.updateEntry(_entry.id!, entry);
+
+    setState(() {
+      _selectedView = 0;
+      _imagePath = null;
+    });
+  }
+
+  _imagePopUpMenu() {
     return PopupMenuButton(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -449,8 +477,30 @@ class _DetailsEntryState extends State<DetailsEntry> {
       ),
       onSelected: (value) async {
         if (value == 0) {
-          await ImageGallerySaver.saveImage(
-              File(_imagePath!).readAsBytesSync());
+          bool success =
+              await _meterImageHelper.saveImageToGallery(File(_imagePath!));
+
+          if (mounted) {
+            if (success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Bild wurde in der Galerie gespeichert!',
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Bild konnte nicht in die Galerie gespeichert werden!',
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          }
         }
         if (value == 1) {
           await Share.shareXFiles([XFile(_imagePath!)]);
@@ -458,15 +508,7 @@ class _DetailsEntryState extends State<DetailsEntry> {
         if (value == 2) {
           await _meterImageHelper.deleteImage(_imagePath!);
 
-          const EntriesCompanion entry =
-              EntriesCompanion(imagePath: drift.Value(null));
-
-          await db.entryDao.updateEntry(_entry.id!, entry);
-
-          setState(() {
-            _selectedView = 0;
-            _imagePath = null;
-          });
+          await _deleteImage();
         }
       },
       itemBuilder: (context) => [

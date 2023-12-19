@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -53,7 +54,7 @@ class MeterImageHelper {
     final Directory appDir = await _createDirectory();
 
     try {
-      String imagePath = '${appDir.path}/$filename';
+      String imagePath = '${appDir.path}$filename';
       await image.saveTo(imagePath);
 
       log(
@@ -122,5 +123,17 @@ class MeterImageHelper {
     final dir = await _createDirectory();
 
     return dir.listSync(recursive: true).length;
+  }
+
+  saveImageToGallery(File image) async {
+    var result = await ImageGallerySaver.saveImage(
+      image.readAsBytesSync(),
+    );
+
+    if (result['isSuccess']) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

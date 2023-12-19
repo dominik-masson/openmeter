@@ -24,6 +24,7 @@ class EntryCardProvider extends ChangeNotifier {
   bool _setStateNote = false;
   String _unit = '';
   bool _hasEntries = true;
+  String _meterNumber = '';
 
   String get getCurrentCount => _count;
 
@@ -40,6 +41,12 @@ class EntryCardProvider extends ChangeNotifier {
   List<EntryDto> get getAllEntries => _entries;
 
   String get getMeterUnit => _unit;
+
+  String get getMeterNumber => _meterNumber;
+
+  void setMeterNumber(String value) {
+    _meterNumber = value;
+  }
 
   void setMeterUnit(String value) {
     _unit = value;
