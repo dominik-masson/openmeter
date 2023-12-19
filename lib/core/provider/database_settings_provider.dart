@@ -16,6 +16,7 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   String _databaseSize = '0 KB';
   String _imageSize = '0 KB';
   String _fullSize = '0 KB';
+  bool _inAppAction = false;
 
   late SharedPreferences _prefs;
   final keyAutoBackupDir = 'auto-backup-dir';
@@ -92,12 +93,18 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   }
 
   bool checkIfAutoBackupIsPossible() {
-    return _autoBackupState && _autoBackupDirectory.isNotEmpty && _hasUpdate;
+    return _autoBackupState &&
+        _autoBackupDirectory.isNotEmpty &&
+        _hasUpdate &&
+        !_inAppAction;
+  }
+
+  void toggleInAppActionState() {
+    _inAppAction = !_inAppAction;
   }
 
   void setStateHasReset(bool value) {
     _hasReset = value;
-    // notifyListeners();
   }
 
   void setItemStatsValues(List<double> values) {

@@ -100,7 +100,11 @@ class DatabaseSettingsHelper {
     }
 
     try {
+      provider.toggleInAppActionState();
+
       String? path = await FilePicker.platform.getDirectoryPath();
+
+      provider.toggleInAppActionState();
 
       if (path == null) {
         return;
