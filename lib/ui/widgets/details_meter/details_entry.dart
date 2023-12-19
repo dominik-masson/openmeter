@@ -369,6 +369,8 @@ class _DetailsEntryState extends State<DetailsEntry> {
     required Offset offset,
   }) {
     final db = Provider.of<LocalDatabase>(context, listen: false);
+    final databaseSettingsProvider =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
 
     return showMenu(
       context: context,
@@ -394,8 +396,12 @@ class _DetailsEntryState extends State<DetailsEntry> {
             ],
           ),
           onTap: () async {
+            databaseSettingsProvider.toggleInAppActionState();
+
             String? imagePath =
                 await _meterImageHelper.selectAndSaveImage(ImageSource.camera);
+
+            databaseSettingsProvider.toggleInAppActionState();
 
             _entry.imagePath = imagePath;
             await db.entryDao.updateEntry(_entry.id!,
@@ -429,8 +435,12 @@ class _DetailsEntryState extends State<DetailsEntry> {
             ],
           ),
           onTap: () async {
+            databaseSettingsProvider.toggleInAppActionState();
+
             String? imagePath =
                 await _meterImageHelper.selectAndSaveImage(ImageSource.gallery);
+
+            databaseSettingsProvider.toggleInAppActionState();
 
             _entry.imagePath = imagePath;
             await db.entryDao.updateEntry(_entry.id!,
@@ -466,6 +476,9 @@ class _DetailsEntryState extends State<DetailsEntry> {
   }
 
   _imagePopUpMenu() {
+    final databaseSettingsProvider =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
+
     return PopupMenuButton(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -503,7 +516,11 @@ class _DetailsEntryState extends State<DetailsEntry> {
           }
         }
         if (value == 1) {
+          databaseSettingsProvider.toggleInAppActionState();
+
           await Share.shareXFiles([XFile(_imagePath!)]);
+
+          databaseSettingsProvider.toggleInAppActionState();
         }
         if (value == 2) {
           await _meterImageHelper.deleteImage(_imagePath!);
