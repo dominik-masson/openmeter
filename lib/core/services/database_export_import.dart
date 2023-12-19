@@ -34,6 +34,8 @@ class DatabaseExportImportHelper {
   final RegExp clearBackupSearchPattern =
       RegExp(r'meter_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})');
 
+  final RegExp getDateInMeterPattern = RegExp(r'meter_(\d{4}_\d{2}_\d{2})');
+
   Future<bool> askPermission() async {
     var status = await Permission.manageExternalStorage.status;
     if (status.isGranted) {
@@ -149,17 +151,76 @@ class DatabaseExportImportHelper {
         element is! File ||
         clearBackupSearchPattern.firstMatch(element.path) == null);
 
-    files.sort(
-      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
-    );
+    DateTime now = DateTime.now();
+    String formattedNow = DateFormat('yyyy_MM_dd').format(now);
 
-    for (int i = 0; i < files.length - 1; i++) {
-      try {
-        log('Datei ${files[i]} wurde erfolgreich gelöscht',
-            name: LogNames.databaseExportImport);
-        await files[i].delete();
-      } catch (e) {
-        log(e.toString(), name: LogNames.databaseExportImport);
+    Map<String, List<FileSystemEntity>> filesByDate = {};
+
+    // Sort all files with the same date
+    for (FileSystemEntity file in files) {
+      Match? match = getDateInMeterPattern.firstMatch(file.path);
+
+      if (match != null) {
+        String? dateKey = match.group(1);
+
+        filesByDate.putIfAbsent(dateKey ?? '', () => []);
+        filesByDate[dateKey]!.add(file);
+      }
+    }
+
+    // Delete all files, except the last one, from the lists
+    // If the key is today's date, the entire list is deleted
+    filesByDate.forEach((key, value) {
+      if (value.length > 1) {
+        int subList = (key == formattedNow) ? 0 : 1;
+
+        if (key == formattedNow) {
+          for (var element in value) {
+            try {
+              element.deleteSync(recursive: true);
+
+              log('$element wurde erfolgreich gelöscht',
+                  name: LogNames.databaseExportImport);
+            } catch (e) {
+              log(e.toString(), name: LogNames.databaseExportImport);
+            }
+          }
+
+          value.clear();
+        } else {
+          for (int i = 0; i < value.length - subList; i++) {
+            try {
+              value.elementAt(i).deleteSync(recursive: true);
+
+              log('${value[i]} wurde erfolgreich gelöscht',
+                  name: LogNames.databaseExportImport);
+            } catch (e) {
+              log(e.toString(), name: LogNames.databaseExportImport);
+            }
+
+            value.removeAt(i);
+          }
+        }
+      }
+    });
+
+    List<List<FileSystemEntity>> fileValues = filesByDate.values.toList();
+
+    fileValues.removeWhere((element) => element.isEmpty);
+
+    // Delete all files except for the oldest two
+    for (int i = 0; i < fileValues.length - 1; i++) {
+      final value = fileValues.elementAt(i);
+
+      if (value.isNotEmpty) {
+        try {
+          value.elementAt(0).deleteSync(recursive: true);
+
+          log('${value[0]} wurde erfolgreich gelöscht',
+              name: LogNames.databaseExportImport);
+        } catch (e) {
+          log(e.toString(), name: LogNames.databaseExportImport);
+        }
       }
     }
   }
@@ -190,7 +251,7 @@ class DatabaseExportImportHelper {
 
   Future<bool> exportAsJSON(
       {required LocalDatabase db,
-      required bool isBackup,
+      required bool isAutoBackup,
       required String path,
       required bool clearBackupFiles}) async {
     await _getData(db);
@@ -202,7 +263,7 @@ class DatabaseExportImportHelper {
 
       String fileName = '';
 
-      if (isBackup) {
+      if (isAutoBackup) {
         DateTime date = DateTime.now();
         String formattedDate = DateFormat('yyyy_MM_dd_HH_mm_ss').format(date);
 

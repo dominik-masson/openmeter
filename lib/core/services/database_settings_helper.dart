@@ -128,7 +128,7 @@ class DatabaseSettingsHelper {
       String path = provider.getAutoBackupDirectory;
       await DatabaseExportImportHelper().exportAsJSON(
         db: db,
-        isBackup: true,
+        isAutoBackup: true,
         path: path,
         clearBackupFiles: provider.getClearBackupFilesState,
       );
