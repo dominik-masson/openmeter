@@ -8,13 +8,12 @@ class ConvertMeterUnit {
       return split.elementAt(0);
     }
 
-    switch(split.elementAt(1)){
+    switch (split.elementAt(1)) {
       case '3':
         return '${split.elementAt(0)}\u00B3';
       default:
         return '${split.elementAt(0)}\u00B2';
     }
-
   }
 
   Widget getUnitWidget({
@@ -44,7 +43,7 @@ class ConvertMeterUnit {
             offset: const Offset(1, -4),
             child: Text(
               split[1],
-              textScaleFactor: 0.8,
+              textScaler: const TextScaler.linear(0.8),
               style: textStyle,
             ),
           ),
