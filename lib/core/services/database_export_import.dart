@@ -171,35 +171,33 @@ class DatabaseExportImportHelper {
     // Delete all files, except the last one, from the lists
     // If the key is today's date, the entire list is deleted
     filesByDate.forEach((key, value) {
+      if (key == formattedNow) {
+        for (var element in value) {
+          try {
+            element.deleteSync(recursive: true);
+
+            log('$element wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
+          }
+        }
+
+        value.clear();
+      }
+
       if (value.length > 1) {
-        int subList = (key == formattedNow) ? 0 : 1;
+        for (int i = 0; i < value.length - 1; i++) {
+          try {
+            value.elementAt(i).deleteSync(recursive: true);
 
-        if (key == formattedNow) {
-          for (var element in value) {
-            try {
-              element.deleteSync(recursive: true);
-
-              log('$element wurde erfolgreich gelöscht',
-                  name: LogNames.databaseExportImport);
-            } catch (e) {
-              log(e.toString(), name: LogNames.databaseExportImport);
-            }
+            log('${value[i]} wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
           }
 
-          value.clear();
-        } else {
-          for (int i = 0; i < value.length - subList; i++) {
-            try {
-              value.elementAt(i).deleteSync(recursive: true);
-
-              log('${value[i]} wurde erfolgreich gelöscht',
-                  name: LogNames.databaseExportImport);
-            } catch (e) {
-              log(e.toString(), name: LogNames.databaseExportImport);
-            }
-
-            value.removeAt(i);
-          }
+          value.removeAt(i);
         }
       }
     });
@@ -209,17 +207,19 @@ class DatabaseExportImportHelper {
     fileValues.removeWhere((element) => element.isEmpty);
 
     // Delete all files except for the oldest two
-    for (int i = 0; i < fileValues.length - 1; i++) {
-      final value = fileValues.elementAt(i);
+    if (fileValues.length > 1) {
+      for (int i = 0; i < fileValues.length - 1; i++) {
+        final value = fileValues.elementAt(i);
 
-      if (value.isNotEmpty) {
-        try {
-          value.elementAt(0).deleteSync(recursive: true);
+        if (value.isNotEmpty) {
+          try {
+            value.elementAt(0).deleteSync(recursive: true);
 
-          log('${value[0]} wurde erfolgreich gelöscht',
-              name: LogNames.databaseExportImport);
-        } catch (e) {
-          log(e.toString(), name: LogNames.databaseExportImport);
+            log('${value[0]} wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
+          }
         }
       }
     }
