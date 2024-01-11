@@ -65,11 +65,18 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       _loadData = false;
     });
 
-    if (success) {
-      if (mounted) {
+    if (mounted) {
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
             'Datenbank wurde erfolgreich exportiert!',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Datenbank konnte nicht exportiert werden!',
           ),
           behavior: SnackBarBehavior.floating,
         ));

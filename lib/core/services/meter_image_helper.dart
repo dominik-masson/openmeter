@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import '../../utils/log.dart';
 
 class MeterImageHelper {
+  Directory? _saveDir;
+
   final ImagePicker _picker = ImagePicker();
 
   Future<String?> selectAndSaveImage(ImageSource mode) async {
@@ -19,19 +21,17 @@ class MeterImageHelper {
     return await _saveImage(image);
   }
 
-  Future<Directory> _createDirectory() async {
+  Future<void> createDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
 
-    final finalDir = Directory('${appDir.path}/images/');
+    _saveDir = Directory('${appDir.path}/images/');
 
-    if (await finalDir.exists()) {
-      return finalDir;
-    } else {
+    if (!_saveDir!.existsSync()) {
       log(
           name: LogNames.meterImageHelper,
-          'Create image directory on path: ${finalDir.path}');
+          'Create image directory on path: ${_saveDir!.path}');
 
-      return await finalDir.create(recursive: true);
+      _saveDir!.create(recursive: true);
     }
   }
 
@@ -51,10 +51,8 @@ class MeterImageHelper {
       filename = 'metercount_${_getDateTime()}.${fileEnd![1]}';
     }
 
-    final Directory appDir = await _createDirectory();
-
     try {
-      String imagePath = '${appDir.path}$filename';
+      String imagePath = '${_saveDir!.path}$filename';
       await image.saveTo(imagePath);
 
       log(
@@ -88,27 +86,29 @@ class MeterImageHelper {
   }
 
   Future<bool> imagesExists() async {
-    final dir = await _createDirectory();
-
-    final items = dir.listSync();
+    final items = _saveDir!.listSync();
 
     return items.isNotEmpty;
   }
 
-  Future<Directory> getDir() async {
-    return await _createDirectory();
+  Future<Directory?> getDir() async {
+    return _saveDir;
   }
 
   Future<void> deleteFolder() async {
-    final dir = await _createDirectory();
+    if (_saveDir != null) {
+      _saveDir!.deleteSync(recursive: true);
 
-    dir.deleteSync(recursive: true);
+      _saveDir = null;
+    }
   }
 
   Future<int> getFolderSize() async {
-    final dir = await _createDirectory();
+    if (_saveDir == null) {
+      return 0;
+    }
 
-    var files = dir.listSync(recursive: true);
+    var files = _saveDir!.listSync(recursive: true);
 
     int dirSize = 0;
 
@@ -120,9 +120,10 @@ class MeterImageHelper {
   }
 
   Future<int> getFolderLength() async {
-    final dir = await _createDirectory();
-
-    return dir.listSync(recursive: true).length;
+    if (_saveDir == null) {
+      return 0;
+    }
+    return _saveDir!.listSync(recursive: true).length;
   }
 
   saveImageToGallery(File image) async {

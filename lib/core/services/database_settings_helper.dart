@@ -30,6 +30,7 @@ class DatabaseSettingsHelper {
 
   DatabaseSettingsHelper(BuildContext buildContext) {
     context = buildContext;
+    _meterImageHelper.createDirectory();
   }
 
   deleteDB(BuildContext context, LocalDatabase db) async {

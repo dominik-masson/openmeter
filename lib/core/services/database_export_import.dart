@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive_io.dart';
+import 'package:drift/isolate.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -226,7 +228,10 @@ class DatabaseExportImportHelper {
   }
 
   Future _handleExportImages(
-      File dbFile, String fileName, String exportPath) async {
+    File dbFile,
+    String fileName,
+    String exportPath,
+  ) async {
     try {
       final encoder = ZipFileEncoder();
 
@@ -235,7 +240,9 @@ class DatabaseExportImportHelper {
       encoder.create(newPath);
       encoder.addFile(dbFile);
 
-      encoder.addDirectory(await _meterImageHelper.getDir());
+      final dir = await _meterImageHelper.getDir();
+
+      encoder.addDirectory(dir!);
 
       encoder.close();
 
@@ -249,16 +256,17 @@ class DatabaseExportImportHelper {
     }
   }
 
-  Future<bool> exportAsJSON(
+  Future _exportDatabase(
       {required LocalDatabase db,
       required bool isAutoBackup,
       required String path,
-      required bool clearBackupFiles}) async {
-    await _getData(db);
-
-    String jsonResult = convertToJson();
-
+      required bool clearBackupFiles,
+      String cacheDir = ''}) async {
     try {
+      await _getData(db);
+
+      String jsonResult = convertToJson();
+
       String newPath = '';
 
       String fileName = '';
@@ -281,10 +289,8 @@ class DatabaseExportImportHelper {
 
       final hasImages = await _meterImageHelper.imagesExists();
 
-      if (hasImages) {
-        final dir = await getApplicationCacheDirectory();
-
-        newPath = p.join(dir.path, fileName);
+      if (hasImages && cacheDir.isNotEmpty) {
+        newPath = p.join(cacheDir, fileName);
       }
 
       File file = File(newPath);
@@ -299,6 +305,8 @@ class DatabaseExportImportHelper {
         await _handleExportImages(file, fileName, path);
       }
 
+      db.close();
+
       return true;
     } on PlatformException catch (e) {
       log('Error Unsupported operation: ${e.toString()}',
@@ -309,6 +317,28 @@ class DatabaseExportImportHelper {
       log('Error: ${e.toString()}', name: 'Export as JSON');
       return false;
     }
+  }
+
+  Future<bool> exportAsJSON(
+      {required LocalDatabase db,
+      required bool isAutoBackup,
+      required String path,
+      required bool clearBackupFiles}) async {
+    final dbConnection = await db.serializableConnection();
+
+    final cacheDir = await getApplicationCacheDirectory();
+    await _meterImageHelper.createDirectory();
+
+    return await Isolate.run(() async {
+      final currentDB = LocalDatabase(await dbConnection.connect());
+
+      return await _exportDatabase(
+          db: currentDB,
+          isAutoBackup: isAutoBackup,
+          path: path,
+          clearBackupFiles: clearBackupFiles,
+          cacheDir: cacheDir.path);
+    }, debugName: 'Export Database as JSON');
   }
 
   void _clearAllLists() {
@@ -448,6 +478,8 @@ class DatabaseExportImportHelper {
   }
 
   _handleImportZip(String path) async {
+    await _meterImageHelper.createDirectory();
+
     final inputStream = InputFileStream(path);
     final zipData = ZipDecoder().decodeBuffer(inputStream);
 
@@ -461,7 +493,7 @@ class DatabaseExportImportHelper {
           final fileNameArray = fileName.split('/');
 
           final outputStream =
-              OutputFileStream('${saveImagePath.path}/${fileNameArray[1]}');
+              OutputFileStream('${saveImagePath!.path}/${fileNameArray[1]}');
 
           file.writeContent(outputStream);
 
