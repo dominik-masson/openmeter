@@ -121,7 +121,7 @@ class _ImageViewState extends State<ImageView>
 
   _createButtons(IconData icon, String label) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(top: 5),
       child: Column(
         children: [
           Icon(
@@ -141,8 +141,11 @@ class _ImageViewState extends State<ImageView>
   }
 
   _bottomBar() {
-    final databaseSettingsProvider =
-        Provider.of<DatabaseSettingsProvider>(context, listen: false);
+    final buttonStyle = ButtonStyle(
+      foregroundColor: MaterialStateProperty.all(
+        Theme.of(context).textTheme.bodyLarge!.color,
+      ),
+    );
 
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.1,
@@ -151,8 +154,8 @@ class _ImageViewState extends State<ImageView>
           children: [
             TableRow(
               children: [
-                GestureDetector(
-                  onTap: () async {
+                TextButton(
+                  onPressed: () async {
                     bool success = await _meterImageHelper
                         .saveImageToGallery(widget.image);
 
@@ -178,14 +181,14 @@ class _ImageViewState extends State<ImageView>
                       }
                     }
                   },
+                  style: buttonStyle,
                   child: _createButtons(
                     Icons.save_alt,
                     'Speichern',
                   ),
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    databaseSettingsProvider.toggleInAppActionState();
+                TextButton(
+                  onPressed: () async {
                     await Share.shareXFiles([XFile(widget.image.path)]);
                     databaseSettingsProvider.toggleInAppActionState();
                   },
@@ -193,9 +196,10 @@ class _ImageViewState extends State<ImageView>
                     Icons.share,
                     'Teilen',
                   ),
+                  style: buttonStyle,
                 ),
-                GestureDetector(
-                  onTap: () async {
+                TextButton(
+                  onPressed: () async {
                     await _meterImageHelper
                         .deleteImage(widget.image.path)
                         .then((value) => Navigator.of(context).pop(true));
@@ -204,6 +208,7 @@ class _ImageViewState extends State<ImageView>
                     Icons.delete_outline,
                     'Löschen',
                   ),
+                  style: buttonStyle,
                 ),
               ],
             ),
