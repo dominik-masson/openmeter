@@ -243,16 +243,12 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   _indicator(String text, Color color) {
     return Row(
       children: [
-        Container(
-          height: 16,
-          width: 16,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
+        CircleAvatar(
+          backgroundColor: color,
+          radius: 8,
         ),
         const SizedBox(
-          width: 4,
+          width: 8,
         ),
         Text(
           text,
@@ -266,7 +262,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     return Row(
       children: [
         Expanded(
-          flex: 2,
+          flex: 3,
           child: SizedBox(
             height: 150,
             child: PieChart(
@@ -279,7 +275,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
           ),
         ),
         Expanded(
-          flex: _isLargeText ? 2 : 1,
+          flex: _isLargeText ? 3 : 2,
           child: ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

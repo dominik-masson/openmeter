@@ -32,12 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _selectedAppBar(meterProvider, db, autoBackup)
           : _unselectedAppBar(meterProvider),
       body: PopScope(
-        canPop: hasSelectedItems ? false : true,
         onPopInvoked: (bool didPop) async {
           if (hasSelectedItems) {
             meterProvider.removeAllSelectedMeters();
           }
         },
+        canPop: !hasSelectedItems,
         child: Stack(
           children: [
             MeterCardList(

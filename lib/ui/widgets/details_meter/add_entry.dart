@@ -204,6 +204,9 @@ class _AddEntryState extends State<AddEntry> {
   }
 
   _showAddImagePopupMenu(Offset offset, Function setState) {
+    final databaseSettingsProvider =
+        Provider.of<DatabaseSettingsProvider>(context, listen: false);
+
     double left = offset.dx;
     double top = offset.dy; // MediaQuery.sizeOf(context).height * 0.44;
 
@@ -231,8 +234,12 @@ class _AddEntryState extends State<AddEntry> {
             ],
           ),
           onTap: () async {
+            databaseSettingsProvider.toggleInAppActionState();
+
             String? imagePath =
                 await _imageHelper.selectAndSaveImage(ImageSource.camera);
+
+            databaseSettingsProvider.toggleInAppActionState();
 
             setState(() {
               _imagePath = imagePath;
@@ -262,8 +269,12 @@ class _AddEntryState extends State<AddEntry> {
             ],
           ),
           onTap: () async {
+            databaseSettingsProvider.toggleInAppActionState();
+
             String? imagePath =
                 await _imageHelper.selectAndSaveImage(ImageSource.gallery);
+
+            databaseSettingsProvider.toggleInAppActionState();
 
             setState(() {
               _imagePath = imagePath;

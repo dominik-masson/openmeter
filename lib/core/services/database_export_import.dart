@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:archive/archive_io.dart';
+import 'package:drift/isolate.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +35,8 @@ class DatabaseExportImportHelper {
 
   final RegExp clearBackupSearchPattern =
       RegExp(r'meter_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})');
+
+  final RegExp getDateInMeterPattern = RegExp(r'meter_(\d{4}_\d{2}_\d{2})');
 
   Future<bool> askPermission() async {
     var status = await Permission.manageExternalStorage.status;
@@ -149,23 +153,85 @@ class DatabaseExportImportHelper {
         element is! File ||
         clearBackupSearchPattern.firstMatch(element.path) == null);
 
-    files.sort(
-      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
-    );
+    DateTime now = DateTime.now();
+    String formattedNow = DateFormat('yyyy_MM_dd').format(now);
 
-    for (int i = 0; i < files.length - 1; i++) {
-      try {
-        log('Datei ${files[i]} wurde erfolgreich gelöscht',
-            name: LogNames.databaseExportImport);
-        await files[i].delete();
-      } catch (e) {
-        log(e.toString(), name: LogNames.databaseExportImport);
+    Map<String, List<FileSystemEntity>> filesByDate = {};
+
+    // Sort all files with the same date
+    for (FileSystemEntity file in files) {
+      Match? match = getDateInMeterPattern.firstMatch(file.path);
+
+      if (match != null) {
+        String? dateKey = match.group(1);
+
+        filesByDate.putIfAbsent(dateKey ?? '', () => []);
+        filesByDate[dateKey]!.add(file);
+      }
+    }
+
+    // Delete all files, except the last one, from the lists
+    // If the key is today's date, the entire list is deleted
+    filesByDate.forEach((key, value) {
+      if (key == formattedNow) {
+        for (var element in value) {
+          try {
+            element.deleteSync(recursive: true);
+
+            log('$element wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
+          }
+        }
+
+        value.clear();
+      }
+
+      if (value.length > 1) {
+        for (int i = 0; i < value.length - 1; i++) {
+          try {
+            value.elementAt(i).deleteSync(recursive: true);
+
+            log('${value[i]} wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
+          }
+
+          value.removeAt(i);
+        }
+      }
+    });
+
+    List<List<FileSystemEntity>> fileValues = filesByDate.values.toList();
+
+    fileValues.removeWhere((element) => element.isEmpty);
+
+    // Delete all files except for the oldest two
+    if (fileValues.length > 1) {
+      for (int i = 0; i < fileValues.length - 1; i++) {
+        final value = fileValues.elementAt(i);
+
+        if (value.isNotEmpty) {
+          try {
+            value.elementAt(0).deleteSync(recursive: true);
+
+            log('${value[0]} wurde erfolgreich gelöscht',
+                name: LogNames.databaseExportImport);
+          } catch (e) {
+            log(e.toString(), name: LogNames.databaseExportImport);
+          }
+        }
       }
     }
   }
 
   Future _handleExportImages(
-      File dbFile, String fileName, String exportPath) async {
+    File dbFile,
+    String fileName,
+    String exportPath,
+  ) async {
     try {
       final encoder = ZipFileEncoder();
 
@@ -174,7 +240,9 @@ class DatabaseExportImportHelper {
       encoder.create(newPath);
       encoder.addFile(dbFile);
 
-      encoder.addDirectory(await _meterImageHelper.getDir());
+      final dir = await _meterImageHelper.getDir();
+
+      encoder.addDirectory(dir!);
 
       encoder.close();
 
@@ -188,21 +256,22 @@ class DatabaseExportImportHelper {
     }
   }
 
-  Future<bool> exportAsJSON(
+  Future _exportDatabase(
       {required LocalDatabase db,
-      required bool isBackup,
       required String path,
-      required bool clearBackupFiles}) async {
-    await _getData(db);
-
-    String jsonResult = convertToJson();
-
+      bool clearBackupFiles = false,
+      bool isAutoBackup = false,
+      String cacheDir = ''}) async {
     try {
+      await _getData(db);
+
+      String jsonResult = convertToJson();
+
       String newPath = '';
 
       String fileName = '';
 
-      if (isBackup) {
+      if (isAutoBackup) {
         DateTime date = DateTime.now();
         String formattedDate = DateFormat('yyyy_MM_dd_HH_mm_ss').format(date);
 
@@ -220,10 +289,8 @@ class DatabaseExportImportHelper {
 
       final hasImages = await _meterImageHelper.imagesExists();
 
-      if (hasImages) {
-        final dir = await getApplicationCacheDirectory();
-
-        newPath = p.join(dir.path, fileName);
+      if (hasImages && cacheDir.isNotEmpty) {
+        newPath = p.join(cacheDir, fileName);
       }
 
       File file = File(newPath);
@@ -238,6 +305,8 @@ class DatabaseExportImportHelper {
         await _handleExportImages(file, fileName, path);
       }
 
+      db.close();
+
       return true;
     } on PlatformException catch (e) {
       log('Error Unsupported operation: ${e.toString()}',
@@ -248,6 +317,44 @@ class DatabaseExportImportHelper {
       log('Error: ${e.toString()}', name: 'Export as JSON');
       return false;
     }
+  }
+
+  Future<bool> isolateExportAsJson({
+    required LocalDatabase db,
+    required String path,
+    bool clearBackupFiles = false,
+    bool isAutoBackup = false,
+  }) async {
+    final dbConnection = await db.serializableConnection();
+
+    final cacheDir = await getApplicationCacheDirectory();
+    await _meterImageHelper.createDirectory();
+
+    return await Isolate.run(() async {
+      final currentDB = LocalDatabase(await dbConnection.connect());
+
+      return await _exportDatabase(
+          db: currentDB,
+          isAutoBackup: isAutoBackup,
+          path: path,
+          clearBackupFiles: clearBackupFiles,
+          cacheDir: cacheDir.path);
+    }, debugName: 'Export Database as JSON');
+  }
+
+  Future<bool> workmanagerExportAsJson({
+    required LocalDatabase db,
+    required String path,
+    bool clearBackupFiles = false,
+    bool isAutoBackup = false,
+  }) async {
+    final result = await _exportDatabase(
+        db: db,
+        path: path,
+        clearBackupFiles: clearBackupFiles,
+        isAutoBackup: isAutoBackup);
+
+    return result;
   }
 
   void _clearAllLists() {
@@ -387,6 +494,8 @@ class DatabaseExportImportHelper {
   }
 
   _handleImportZip(String path) async {
+    await _meterImageHelper.createDirectory();
+
     final inputStream = InputFileStream(path);
     final zipData = ZipDecoder().decodeBuffer(inputStream);
 
@@ -400,7 +509,7 @@ class DatabaseExportImportHelper {
           final fileNameArray = fileName.split('/');
 
           final outputStream =
-              OutputFileStream('${saveImagePath.path}/${fileNameArray[1]}');
+              OutputFileStream('${saveImagePath!.path}/${fileNameArray[1]}');
 
           file.writeContent(outputStream);
 

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/model/entry_dto.dart';
+import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/services/meter_image_helper.dart';
 import '../../../utils/convert_count.dart';
@@ -189,6 +190,7 @@ class _ImageViewState extends State<ImageView>
                 TextButton(
                   onPressed: () async {
                     await Share.shareXFiles([XFile(widget.image.path)]);
+                    databaseSettingsProvider.toggleInAppActionState();
                   },
                   child: _createButtons(
                     Icons.share,

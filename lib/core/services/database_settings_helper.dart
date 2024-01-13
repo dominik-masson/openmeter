@@ -30,6 +30,7 @@ class DatabaseSettingsHelper {
 
   DatabaseSettingsHelper(BuildContext buildContext) {
     context = buildContext;
+    _meterImageHelper.createDirectory();
   }
 
   deleteDB(BuildContext context, LocalDatabase db) async {
@@ -100,7 +101,11 @@ class DatabaseSettingsHelper {
     }
 
     try {
+      provider.toggleInAppActionState();
+
       String? path = await FilePicker.platform.getDirectoryPath();
+
+      provider.toggleInAppActionState();
 
       if (path == null) {
         return;
@@ -122,9 +127,9 @@ class DatabaseSettingsHelper {
       LocalDatabase db, DatabaseSettingsProvider provider) async {
     try {
       String path = provider.getAutoBackupDirectory;
-      await DatabaseExportImportHelper().exportAsJSON(
+      await DatabaseExportImportHelper().isolateExportAsJson(
         db: db,
-        isBackup: true,
+        isAutoBackup: true,
         path: path,
         clearBackupFiles: provider.getClearBackupFilesState,
       );
