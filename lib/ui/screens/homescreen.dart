@@ -31,22 +31,19 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: hasSelectedItems == true
           ? _selectedAppBar(meterProvider, db, autoBackup)
           : _unselectedAppBar(meterProvider),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        onPopInvoked: (bool didPop) async {
           if (hasSelectedItems) {
             meterProvider.removeAllSelectedMeters();
-            return false;
           }
-
-          return true;
         },
+        canPop: !hasSelectedItems,
         child: Stack(
           children: [
             MeterCardList(
                 stream: db.meterDao.watchAllMeterWithRooms(false),
                 isHomescreen: true),
-            if (hasSelectedItems)
-              _selectedItems(meterProvider, db, autoBackup),
+            if (hasSelectedItems) _selectedItems(meterProvider, db, autoBackup),
           ],
         ),
       ),

@@ -127,7 +127,7 @@ class DatabaseSettingsHelper {
       LocalDatabase db, DatabaseSettingsProvider provider) async {
     try {
       String path = provider.getAutoBackupDirectory;
-      await DatabaseExportImportHelper().exportAsJSON(
+      await DatabaseExportImportHelper().isolateExportAsJson(
         db: db,
         isAutoBackup: true,
         path: path,

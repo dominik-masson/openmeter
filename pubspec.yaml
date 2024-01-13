@@ -62,7 +62,6 @@ dependencies:
   dynamic_color: ^1.6.8
   collection: any
   image_picker: ^1.0.4
-  workmanager: ^0.5.1
   # share and save image
   share_plus: ^7.2.1
   image_gallery_saver: ^2.0.3

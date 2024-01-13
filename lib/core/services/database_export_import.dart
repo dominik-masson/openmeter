@@ -258,9 +258,9 @@ class DatabaseExportImportHelper {
 
   Future _exportDatabase(
       {required LocalDatabase db,
-      required bool isAutoBackup,
       required String path,
-      required bool clearBackupFiles,
+      bool clearBackupFiles = false,
+      bool isAutoBackup = false,
       String cacheDir = ''}) async {
     try {
       await _getData(db);
@@ -319,11 +319,12 @@ class DatabaseExportImportHelper {
     }
   }
 
-  Future<bool> exportAsJSON(
-      {required LocalDatabase db,
-      required bool isAutoBackup,
-      required String path,
-      required bool clearBackupFiles}) async {
+  Future<bool> isolateExportAsJson({
+    required LocalDatabase db,
+    required String path,
+    bool clearBackupFiles = false,
+    bool isAutoBackup = false,
+  }) async {
     final dbConnection = await db.serializableConnection();
 
     final cacheDir = await getApplicationCacheDirectory();
@@ -339,6 +340,21 @@ class DatabaseExportImportHelper {
           clearBackupFiles: clearBackupFiles,
           cacheDir: cacheDir.path);
     }, debugName: 'Export Database as JSON');
+  }
+
+  Future<bool> workmanagerExportAsJson({
+    required LocalDatabase db,
+    required String path,
+    bool clearBackupFiles = false,
+    bool isAutoBackup = false,
+  }) async {
+    final result = await _exportDatabase(
+        db: db,
+        path: path,
+        clearBackupFiles: clearBackupFiles,
+        isAutoBackup: isAutoBackup);
+
+    return result;
   }
 
   void _clearAllLists() {

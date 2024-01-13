@@ -54,7 +54,7 @@ class _DatabaseExportImportState extends State<DatabaseExportImport> {
       _loadData = true;
     });
 
-    bool success = await _exportImportHelper.exportAsJSON(
+    bool success = await _exportImportHelper.isolateExportAsJson(
       db: db,
       isAutoBackup: false,
       path: path,
