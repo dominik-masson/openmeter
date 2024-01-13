@@ -30,7 +30,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   List<double> _itemValues = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
   bool _isLargeText = false;
 
-  final List<Color> _itemColors = const [
+  static const List<Color> _itemColors = [
     Color(0xffC26DBC),
     Color(0xff603F8B),
     Color(0xff189AB4),
@@ -39,7 +39,7 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     Color(0xffF4B183),
   ];
 
-  final List<String> _itemNames = const [
+  static const List<String> _itemNames = [
     'Zähler',
     'Einträge',
     'Räume',
@@ -48,8 +48,10 @@ class _DatabaseStatsState extends State<DatabaseStats> {
     'Bilder'
   ];
 
-  _getDatabaseSize(DatabaseSettingsHelper databaseHelper,
-      DatabaseSettingsProvider provider) async {
+  _getDatabaseSize(
+    DatabaseSettingsHelper databaseHelper,
+    DatabaseSettingsProvider provider,
+  ) async {
     String fullSize = await databaseHelper.getFullSize();
     String dbSize = await databaseHelper.getDatabaseSize();
     String imageSize = await databaseHelper.getImagesSize();
@@ -65,7 +67,9 @@ class _DatabaseStatsState extends State<DatabaseStats> {
   }
 
   _getDatabaseStats(
-      LocalDatabase db, DatabaseSettingsHelper databaseHelper) async {
+    LocalDatabase db,
+    DatabaseSettingsHelper databaseHelper,
+  ) async {
     _databaseStatsDto = await databaseHelper.getDatabaseStats(db);
 
     if (_firstInit == true) {
@@ -117,10 +121,8 @@ class _DatabaseStatsState extends State<DatabaseStats> {
           provider.setItemStatsValues(_itemValues);
           provider.setItemCount(_itemCounts);
         } else {
-          if (provider.getStateHasReset) {
-            _databaseStatsDto = null;
-            provider.setStateHasReset(false);
-          }
+          _databaseStatsDto = null;
+          provider.setStateHasReset(false);
 
           _itemValues = provider.getItemStatsValues;
           _itemCounts = provider.getItemStatsCount;

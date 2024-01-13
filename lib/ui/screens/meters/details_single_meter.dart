@@ -11,6 +11,7 @@ import '../../../core/model/room_dto.dart';
 import '../../../core/provider/chart_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/room_provider.dart';
 import '../../widgets/details_meter/add_entry.dart';
 import '../../widgets/details_meter/charts/count_line_chart.dart';
 import '../../widgets/details_meter/charts/usage_line_chart.dart';
@@ -90,6 +91,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   Widget build(BuildContext context) {
     final entryProvider = Provider.of<EntryCardProvider>(context);
     final chartProvider = Provider.of<ChartProvider>(context);
+    final roomProvider = Provider.of<RoomProvider>(context);
     final db = Provider.of<LocalDatabase>(context);
 
     bool hasSelectedEntries = entryProvider.getHasSelectedEntries;
@@ -105,12 +107,17 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     return Scaffold(
       appBar: hasSelectedEntries
           ? _selectedAppBar(entryProvider)
-          : _unselectedAppBar(entryProvider, _meter),
+          : _unselectedAppBar(
+              entryProvider: entryProvider,
+              meter: _meter,
+              roomProvider: roomProvider),
       body: PopScope(
         canPop: hasSelectedEntries ? false : true,
         onPopInvoked: (bool didPop) async {
           if (hasSelectedEntries) {
             entryProvider.removeAllSelectedEntries();
+          } else {
+            roomProvider.setNewRoom(_room);
           }
         },
         child: Stack(
@@ -224,12 +231,17 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     return SelectedItemsBar(buttons: buttons);
   }
 
-  AppBar _unselectedAppBar(EntryCardProvider entryProvider, MeterDto meter) {
+  AppBar _unselectedAppBar({
+    required EntryCardProvider entryProvider,
+    required MeterDto meter,
+    required RoomProvider roomProvider,
+  }) {
     return AppBar(
       title: SelectableText(_meterName),
       leading: BackButton(
         onPressed: () {
-          Navigator.of(context).pop(_room);
+          roomProvider.setNewRoom(_room);
+          Navigator.of(context).pop();
         },
       ),
       actions: [

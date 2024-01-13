@@ -19,14 +19,14 @@ class DatabaseSettingsProvider extends ChangeNotifier {
   bool _inAppAction = false;
 
   late SharedPreferences _prefs;
-  final keyAutoBackupDir = 'auto-backup-dir';
-  final keyAutoBackupState = 'auto-backup-state';
-  final keyStatsItems = 'database-stats';
-  final keyStatsItemCounts = 'database-item-counts';
-  final keyClearBackupFiles = 'auto-backup-clear-state';
-  final keyDatabaseFullSize = 'database-stats-full-size';
-  final keyDatabaseSize = 'database-stats-database-size';
-  final keyImageSize = 'database-stats-image-size';
+  static const keyAutoBackupDir = 'auto-backup-dir';
+  static const keyAutoBackupState = 'auto-backup-state';
+  static const keyStatsItems = 'database-stats';
+  static const keyStatsItemCounts = 'database-item-counts';
+  static const keyClearBackupFiles = 'auto-backup-clear-state';
+  static const keyDatabaseFullSize = 'database-stats-full-size';
+  static const keyDatabaseSize = 'database-stats-database-size';
+  static const keyImageSize = 'database-stats-image-size';
 
   DatabaseSettingsProvider() {
     _loadFromPrefs();

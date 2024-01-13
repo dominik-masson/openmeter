@@ -30,7 +30,6 @@ class DatabaseSettingsHelper {
 
   DatabaseSettingsHelper(BuildContext buildContext) {
     context = buildContext;
-    _meterImageHelper.createDirectory();
   }
 
   deleteDB(BuildContext context, LocalDatabase db) async {
@@ -47,6 +46,7 @@ class DatabaseSettingsHelper {
           ),
           TextButton(
             onPressed: () async {
+              await _meterImageHelper.createDirectory();
               await _meterImageHelper.deleteFolder();
 
               db.deleteDB().then((value) {
@@ -175,6 +175,8 @@ class DatabaseSettingsHelper {
     final file = File(dbPath);
 
     _databaseSize = await file.length();
+
+    await _meterImageHelper.createDirectory();
     _imagesSize = await _meterImageHelper.getFolderSize();
 
     int fullSize = _databaseSize + _imagesSize;
@@ -196,6 +198,8 @@ class DatabaseSettingsHelper {
     final int? sumContracts = await db.contractDao.getTableLength();
     final int? sumRooms = await db.roomDao.getTableLength();
     final int? sumTags = await db.tagsDao.getTableLength();
+
+    await _meterImageHelper.createDirectory();
     final int sumImages = await _meterImageHelper.getFolderLength();
 
     return DatabaseStatsDto(

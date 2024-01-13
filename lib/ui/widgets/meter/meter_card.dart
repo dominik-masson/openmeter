@@ -121,6 +121,29 @@ class _MeterCardState extends State<MeterCard> {
     );
   }
 
+  Future<Object?> _openDetailsSingleMeter(
+    RoomDto? room,
+    EntryCardProvider entryProvider,
+  ) async {
+    entryProvider.setCurrentCount(widget.count);
+    entryProvider.setOldDate(widget.date ?? DateTime.now());
+    entryProvider.setHasEntries(widget.meter.hasEntry);
+
+    return await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          entryProvider.setMeterUnit(widget.meter.unit);
+
+          return DetailsSingleMeter(
+            meter: widget.meter,
+            room: room,
+            hasTags: hasTags,
+          );
+        },
+      ),
+    );
+  }
+
   _handleOnTapFromMeterCardList({
     required bool hasSelectedItems,
     required MeterProvider meterProvider,
@@ -129,22 +152,7 @@ class _MeterCardState extends State<MeterCard> {
     if (hasSelectedItems == true) {
       meterProvider.toggleSelectedMeter(_meterData);
     } else {
-      entryProvider.setCurrentCount(widget.count);
-      entryProvider.setOldDate(widget.date ?? DateTime.now());
-      entryProvider.setHasEntries(widget.meter.hasEntry);
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) {
-            entryProvider.setMeterUnit(widget.meter.unit);
-
-            return DetailsSingleMeter(
-              meter: widget.meter,
-              room: widget.room,
-              hasTags: hasTags,
-            );
-          },
-        ),
-      ).then((value) {
+      _openDetailsSingleMeter(widget.room, entryProvider).then((value) {
         Provider.of<CostProvider>(context, listen: false).resetValues();
         Provider.of<RoomProvider>(context, listen: false).setHasUpdate(true);
         entryProvider.removeAllSelectedEntries();
@@ -160,35 +168,16 @@ class _MeterCardState extends State<MeterCard> {
     if (roomProvider.getHasSelectedMeters) {
       roomProvider.toggleSelectedMeters(MeterDto.fromData(_meterData, false));
     } else {
-      entryProvider.setCurrentCount(widget.count);
-      entryProvider.setOldDate(widget.date ?? DateTime.now());
-
       room = roomProvider.getCurrentRoom;
 
-      entryProvider.setHasEntries(widget.meter.hasEntry);
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) {
-            entryProvider.setMeterUnit(widget.meter.unit);
-
-            return DetailsSingleMeter(
-              meter: widget.meter,
-              room: room,
-              hasTags: hasTags,
-            );
-          },
-        ),
-      ).then((value) {
+      _openDetailsSingleMeter(room, entryProvider).then((value) {
         Provider.of<CostProvider>(context, listen: false).resetValues();
 
         entryProvider.removeAllSelectedEntries();
 
-        final newRoom = value as RoomDto?;
+        final newRoom = roomProvider.getNewRoom;
 
         if (newRoom == null || room?.id != newRoom.id) {
-          final roomProvider =
-              Provider.of<RoomProvider>(context, listen: false);
           roomProvider.setHasUpdate(true);
           roomProvider.setMeterCount(-1);
         }

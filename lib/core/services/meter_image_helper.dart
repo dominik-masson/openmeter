@@ -108,15 +108,20 @@ class MeterImageHelper {
       return 0;
     }
 
-    var files = _saveDir!.listSync(recursive: true);
+    try {
+      var files = _saveDir!.listSync(recursive: true);
 
-    int dirSize = 0;
+      int dirSize = 0;
 
-    for (var file in files) {
-      dirSize += file.statSync().size;
+      for (var file in files) {
+        dirSize += file.statSync().size;
+      }
+
+      return dirSize;
+    } on PathNotFoundException catch (e) {
+      log(name: LogNames.meterImageHelper, e.toString());
+      return 0;
     }
-
-    return dirSize;
   }
 
   Future<int> getFolderLength() async {

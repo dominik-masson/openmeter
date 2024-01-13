@@ -105,15 +105,13 @@ class _DetailsRoomState extends State<DetailsRoom> {
           ? _selectedAppBar(roomProvider, db)
           : _nonSelectedAppBar(
               db: db, roomProvider: roomProvider, autoBackUp: autoBackUp),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        onPopInvoked: (bool didPop) async {
           if (hasSelectedMeters) {
             roomProvider.removeAllSelectedMetersInRoom();
-            return false;
           }
-
-          return true;
         },
+        canPop: !hasSelectedMeters,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
@@ -274,9 +272,11 @@ class _DetailsRoomState extends State<DetailsRoom> {
                 if (entry == null) {
                   date = null;
                   count = 'none';
+                  data.hasEntry = false;
                 } else {
                   date = entry.date;
                   count = entry.count.toString();
+                  data.hasEntry = true;
                 }
 
                 return GestureDetector(
