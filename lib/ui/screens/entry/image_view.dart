@@ -147,6 +147,9 @@ class _ImageViewState extends State<ImageView>
       ),
     );
 
+    final databaseSettingsProvider =
+        Provider.of<DatabaseSettingsProvider>(context);
+
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.1,
       child: Card(
@@ -189,8 +192,11 @@ class _ImageViewState extends State<ImageView>
                 ),
                 TextButton(
                   onPressed: () async {
-                    await Share.shareXFiles([XFile(widget.image.path)]);
                     databaseSettingsProvider.toggleInAppActionState();
+                    await Share.shareXFiles([XFile(widget.image.path)]).then(
+                      (value) =>
+                          databaseSettingsProvider.toggleInAppActionState(),
+                    );
                   },
                   child: _createButtons(
                     Icons.share,

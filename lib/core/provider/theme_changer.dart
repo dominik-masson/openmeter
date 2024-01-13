@@ -41,8 +41,12 @@ class ThemeChanger extends ChangeNotifier {
   _loadFormPrefs() async {
     await _initPrefs();
 
-    _themeMode = ThemeMode.values
-        .firstWhere((element) => element.name == _pref.getString(keyTheme));
+    final savedThemeMode = _pref.getString(keyTheme) ?? ThemeMode.light;
+
+    _themeMode = ThemeMode.values.firstWhere(
+      (element) => element.name == savedThemeMode,
+      orElse: () => ThemeMode.light,
+    );
 
     _nightMode = _pref.getBool(keyNight) ?? false;
     _useDynamicColor = _pref.getBool(keyDynamicColor) ?? false;
