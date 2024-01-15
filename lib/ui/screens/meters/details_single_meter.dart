@@ -12,11 +12,11 @@ import '../../../core/provider/chart_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_card_provider.dart';
 import '../../../core/provider/room_provider.dart';
-import '../../widgets/details_meter/add_entry.dart';
+import '../../widgets/details_meter/entry/add_entry.dart';
 import '../../widgets/details_meter/charts/count_line_chart.dart';
 import '../../widgets/details_meter/charts/usage_line_chart.dart';
 import '../../widgets/details_meter/cost_card.dart';
-import '../../widgets/details_meter/entry_card.dart';
+import '../../widgets/details_meter/entry/entry_card.dart';
 import '../../widgets/details_meter/charts/usage_bar_chart.dart';
 import '../../widgets/tags/horizontal_tags_list.dart';
 import '../../widgets/utils/selected_items_bar.dart';
@@ -118,6 +118,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             entryProvider.removeAllSelectedEntries();
           } else {
             roomProvider.setNewRoom(_room);
+            entryProvider.resetFilters(notify: false);
           }
         },
         child: Stack(
@@ -241,6 +242,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       leading: BackButton(
         onPressed: () {
           roomProvider.setNewRoom(_room);
+          entryProvider.resetFilters(notify: false);
           Navigator.of(context).pop();
         },
       ),

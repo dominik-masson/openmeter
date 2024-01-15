@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/database/local_database.dart';
-import '../../../core/enums/font_size_value.dart';
-import '../../../core/model/entry_dto.dart';
-import '../../../core/model/meter_dto.dart';
-import '../../../core/provider/cost_provider.dart';
-import '../../../core/provider/entry_card_provider.dart';
-import '../../../core/provider/theme_changer.dart';
-import '../../../utils/convert_count.dart';
-import '../../../utils/convert_meter_unit.dart';
+import '../../../../core/database/local_database.dart';
+import '../../../../core/enums/font_size_value.dart';
+import '../../../../core/model/entry_dto.dart';
+import '../../../../core/model/meter_dto.dart';
+import '../../../../core/provider/cost_provider.dart';
+import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/theme_changer.dart';
+import '../../../../utils/convert_count.dart';
+import '../../../../utils/convert_meter_unit.dart';
 import 'details_entry.dart';
+import 'filter_sheet.dart';
 
 class EntryCard extends StatelessWidget {
   final MeterDto meter;
@@ -40,15 +41,27 @@ class EntryCard extends StatelessWidget {
     bool isLargeText =
         themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
 
+    bool hasFilter = entryProvider.getHasActiveFilters;
+
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(left: 8.0, right: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Zählerstand',
-            style: Theme.of(context).textTheme.headlineMedium,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Zählerstand',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const EntryFilterSheet(),
+            ],
           ),
+          const SizedBox(
+            height: 5,
+          ),
+          if (hasFilter) _showHintHasFilter(context),
           StreamBuilder(
             stream: Provider.of<LocalDatabase>(context)
                 .entryDao
@@ -61,8 +74,23 @@ class EntryCard extends StatelessWidget {
               if (entry != null && hasSelectedEntries == false) {
                 entryProvider.setAllEntries(entry);
               }
+              List<EntryDto> entries = [];
 
-              List<EntryDto> entries = entryProvider.getAllEntries;
+              if (hasFilter) {
+                entries = entryProvider.getFilteredEntries();
+
+                if (entries.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Es wurden keine Einträge mit den Filtern gefunden.',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  );
+                }
+              } else {
+                entries = entryProvider.getAllEntries;
+              }
 
               if (!meter.hasEntry) {
                 return Container(
@@ -154,6 +182,39 @@ class EntryCard extends StatelessWidget {
                 ),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _showHintHasFilter(BuildContext context) {
+    final theme = Theme.of(context).textTheme.labelMedium;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: theme!.fontSize,
+                color: theme.color,
+              ),
+              const SizedBox(
+                width: 5,
+              ),
+              Text(
+                'Einträge gefiltert',
+                style: theme,
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 5,
           ),
         ],
       ),

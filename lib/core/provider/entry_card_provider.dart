@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
+import '../enums/entry_filters.dart';
 import '../model/entry_dto.dart';
 import '../services/entry_serivce.dart';
 import '../services/meter_image_helper.dart';
@@ -25,6 +26,7 @@ class EntryCardProvider extends ChangeNotifier {
   String _unit = '';
   bool _hasEntries = true;
   String _meterNumber = '';
+  Set<EntryFilters?> _activeFilters = {};
 
   String get getCurrentCount => _count;
 
@@ -238,4 +240,52 @@ class EntryCardProvider extends ChangeNotifier {
     _hasEntries = value;
     notifyListeners();
   }
+
+  get getActiveFilters => _activeFilters;
+
+  void setActiveFilters(Set<EntryFilters?> filters) async {
+    _activeFilters = filters;
+    notifyListeners();
+  }
+
+  getFilteredEntries() {
+    if (_activeFilters.isEmpty) {
+      return _entries;
+    }
+
+    List<EntryDto> result = [];
+
+    for (EntryFilters? filter in _activeFilters) {
+      if (filter == EntryFilters.note) {
+        result.addAll(_entries.where(
+            (element) => element.note != null && element.note!.isNotEmpty));
+      }
+      if (filter == EntryFilters.transmitted) {
+        result
+            .addAll(_entries.where((element) => element.transmittedToProvider));
+      }
+      if (filter == EntryFilters.photo) {
+        result.addAll(_entries.where((element) => element.imagePath != null));
+      }
+      if (filter == EntryFilters.reset) {
+        result.addAll(_entries.where((element) => element.isReset));
+      }
+    }
+
+    result.sort(
+      (a, b) => b.date.compareTo(a.date),
+    );
+
+    return result;
+  }
+
+  resetFilters({bool notify = true}) {
+    _activeFilters.clear();
+
+    if (notify) {
+      notifyListeners();
+    }
+  }
+
+  bool get getHasActiveFilters => _activeFilters.isNotEmpty;
 }
