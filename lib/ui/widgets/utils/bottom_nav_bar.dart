@@ -9,7 +9,7 @@ import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/design_provider.dart';
 import '../../../core/provider/meter_provider.dart';
 import '../../../core/provider/room_provider.dart';
-import '../../../core/services/database_settings_helper.dart';
+import '../../../core/helper/database_settings_helper.dart';
 import '../../../utils/custom_icons.dart';
 import '../../../utils/log.dart';
 import '../../screens/homescreen.dart';

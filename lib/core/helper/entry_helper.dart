@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 import '../database/local_database.dart';
 import '../model/entry_dto.dart';
 
-class EntryService {
+class EntryHelper {
   Future updateNewEntryUsage(
       {required EntryDto nextEntry,
       required EntryDto prevEntry,

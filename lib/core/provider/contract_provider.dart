@@ -10,7 +10,7 @@ import '../database/local_database.dart';
 import '../model/compare_costs.dart';
 import '../model/contract_dto.dart';
 import '../model/provider_dto.dart';
-import '../services/provider_helper.dart';
+import '../helper/provider_helper.dart';
 
 class ContractProvider extends ChangeNotifier {
   final ProviderHelper _providerHelper = ProviderHelper();

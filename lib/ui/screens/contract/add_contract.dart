@@ -15,7 +15,7 @@ import '../../../core/provider/contract_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/details_contract_provider.dart';
 import '../../../core/provider/refresh_provider.dart';
-import '../../../core/services/provider_helper.dart';
+import '../../../core/helper/provider_helper.dart';
 import '../../../utils/convert_meter_unit.dart';
 import '../../widgets/meter/meter_circle_avatar.dart';
 import '../../widgets/objects_screen/contract/add_provider.dart';

@@ -12,8 +12,8 @@ import '../../../../core/model/contract_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
-import '../../../../core/services/calc_compare_values.dart';
-import '../../../../core/services/compare_cost_helper.dart';
+import '../../../../core/helper/calc_compare_values.dart';
+import '../../../../core/helper/compare_cost_helper.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'add_costs.dart';
 
@@ -412,7 +412,7 @@ class _CompareContractsState extends State<CompareContracts> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Text(
+                  Text(
                     'Kosten Vergleichen',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),

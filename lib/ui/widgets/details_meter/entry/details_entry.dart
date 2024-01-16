@@ -13,7 +13,7 @@ import '../../../../core/model/entry_dto.dart';
 import '../../../../core/provider/cost_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/entry_card_provider.dart';
-import '../../../../core/services/meter_image_helper.dart';
+import '../../../../core/helper/meter_image_helper.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import '../../../../utils/custom_icons.dart';

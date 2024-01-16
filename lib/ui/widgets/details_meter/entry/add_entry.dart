@@ -13,8 +13,8 @@ import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/entry_card_provider.dart';
 import '../../../../core/provider/torch_provider.dart';
-import '../../../../core/services/meter_image_helper.dart';
-import '../../../../core/services/torch_controller.dart';
+import '../../../../core/helper/meter_image_helper.dart';
+import '../../../../core/helper/torch_controller.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/custom_icons.dart';
 
