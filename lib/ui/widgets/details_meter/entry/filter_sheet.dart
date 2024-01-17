@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:openmeter/utils/custom_colors.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/enums/entry_filters.dart';
@@ -23,14 +22,6 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
   bool _endDateFilterState = false;
   bool _showStartDateHint = false;
   bool _showEndDateHint = false;
-
-  final BoxDecoration _hintBoxDecoration = BoxDecoration(
-    border: Border.all(
-      color: CustomColors.rosa,
-      width: 2,
-    ),
-    borderRadius: BorderRadius.circular(16),
-  );
 
   Future<DateTime?> _showDatePicker(DateTime? initialDate) async {
     final now = DateTime.now();
@@ -181,7 +172,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
             ),
           ),
           const SizedBox(
-            height: 10,
+            height: 15,
           ),
           _createDateTile(provider: entryProvider),
         ],
@@ -192,13 +183,21 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
   _createDateTile({
     required EntryCardProvider provider,
   }) {
+    final BoxDecoration hintBoxDecoration = BoxDecoration(
+      border: Border.all(
+        color: Theme.of(context).colorScheme.error,
+        width: 2,
+      ),
+      borderRadius: BorderRadius.circular(16),
+    );
+
     return StatefulBuilder(
       builder: (context, setState) => Column(
         children: [
           Row(
             children: [
               Container(
-                decoration: _showStartDateHint ? _hintBoxDecoration : null,
+                decoration: _showStartDateHint ? hintBoxDecoration : null,
                 width: MediaQuery.sizeOf(context).width * 0.7,
                 child: ListTile(
                   onTap: () async {
@@ -220,18 +219,20 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       Text('Von', style: Theme.of(context).textTheme.bodyLarge),
                   subtitle: Text(
                     _startDate == null
-                        ? 'Datum wählen'
+                        ? 'Datum auswählen'
                         : DateFormat('dd.MM.yyyy').format(_startDate!),
                   ),
                   subtitleTextStyle: Theme.of(context)
                       .textTheme
                       .bodyMedium!
                       .copyWith(
-                          color: _showStartDateHint ? CustomColors.rosa : null),
+                          color: _showStartDateHint
+                              ? Theme.of(context).colorScheme.error
+                              : null),
                 ),
               ),
               const SizedBox(
-                height: 30,
+                height: 50,
                 child: VerticalDivider(),
               ),
               Switch(
@@ -264,7 +265,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
           Row(
             children: [
               Container(
-                decoration: _showEndDateHint ? _hintBoxDecoration : null,
+                decoration: _showEndDateHint ? hintBoxDecoration : null,
                 width: MediaQuery.sizeOf(context).width * 0.7,
                 child: ListTile(
                   onTap: () async {
@@ -286,18 +287,20 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       Text('Bis', style: Theme.of(context).textTheme.bodyLarge),
                   subtitle: Text(
                     _endDate == null
-                        ? 'Datum wählen'
+                        ? 'Datum auswählen'
                         : DateFormat('dd.MM.yyyy').format(_endDate!),
                   ),
                   subtitleTextStyle: Theme.of(context)
                       .textTheme
                       .bodyMedium!
                       .copyWith(
-                          color: _showEndDateHint ? CustomColors.rosa : null),
+                          color: _showEndDateHint
+                              ? Theme.of(context).colorScheme.error
+                              : null),
                 ),
               ),
               const SizedBox(
-                height: 30,
+                height: 50,
                 child: VerticalDivider(),
               ),
               Switch(
