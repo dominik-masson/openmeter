@@ -11,7 +11,7 @@ import '../../../core/model/tag_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/meter_provider.dart';
 import '../../../core/provider/refresh_provider.dart';
-import '../../../core/services/torch_controller.dart';
+import '../../../core/helper/torch_controller.dart';
 import '../../../../utils/meter_typ.dart';
 import '../../../utils/convert_meter_unit.dart';
 import '../../widgets/meter/meter_circle_avatar.dart';

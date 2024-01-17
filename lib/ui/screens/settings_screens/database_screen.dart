@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/meter_provider.dart';
-import '../../../core/services/database_export_import.dart';
-import '../../../core/services/database_settings_helper.dart';
+import '../../../core/helper/database_export_import.dart';
+import '../../../core/helper/database_settings_helper.dart';
 import '../../widgets/settings_screen/database_stats.dart';
 
 class DatabaseExportImport extends StatefulWidget {

@@ -8,16 +8,16 @@ import 'package:share_plus/share_plus.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:drift/drift.dart' as drift;
 
-import '../../../core/database/local_database.dart';
-import '../../../core/model/entry_dto.dart';
-import '../../../core/provider/cost_provider.dart';
-import '../../../core/provider/database_settings_provider.dart';
-import '../../../core/provider/entry_card_provider.dart';
-import '../../../core/services/meter_image_helper.dart';
-import '../../../utils/convert_count.dart';
-import '../../../utils/convert_meter_unit.dart';
-import '../../../utils/custom_icons.dart';
-import '../../screens/entry/image_view.dart';
+import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_dto.dart';
+import '../../../../core/provider/cost_provider.dart';
+import '../../../../core/provider/database_settings_provider.dart';
+import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/helper/meter_image_helper.dart';
+import '../../../../utils/convert_count.dart';
+import '../../../../utils/convert_meter_unit.dart';
+import '../../../../utils/custom_icons.dart';
+import '../../../screens/entry/image_view.dart';
 
 class DetailsEntry extends StatefulWidget {
   final EntryDto entry;

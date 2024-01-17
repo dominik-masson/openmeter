@@ -7,7 +7,7 @@ import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
-import '../../../../core/services/provider_helper.dart';
+import '../../../../core/helper/provider_helper.dart';
 import 'add_provider.dart';
 
 class ProviderBottomSheet extends StatefulWidget {
