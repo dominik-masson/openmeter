@@ -10,37 +10,6 @@ class FilterEntry {
     _activeFilters = activeFilters;
   }
 
-  // List<EntryDto> getFilteredList(DateTime? filterBegin, DateTime? filterEnd) {
-  //   List<EntryDto> result = [];
-  //
-  //   for (EntryFilters? filter in _activeFilters) {
-  //     if (filter == EntryFilters.note) {
-  //       result.addAll(_entries.where(
-  //           (element) => element.note != null && element.note!.isNotEmpty));
-  //     }
-  //     if (filter == EntryFilters.transmitted) {
-  //       result
-  //           .addAll(_entries.where((element) => element.transmittedToProvider));
-  //     }
-  //     if (filter == EntryFilters.photo) {
-  //       result.addAll(_entries.where((element) => element.imagePath != null));
-  //     }
-  //     if (filter == EntryFilters.reset) {
-  //       result.addAll(_entries.where((element) => element.isReset));
-  //     }
-  //   }
-  //
-  //   if (_activeFilters.contains(EntryFilters.dateBegin) ||
-  //       _activeFilters.contains(EntryFilters.dateEnd)) {
-  //     result = _handleTimeRange(result, filterBegin, filterEnd);
-  //   }
-  //
-  //   result.sort(
-  //     (a, b) => b.date.compareTo(a.date),
-  //   );
-  //
-  //   return result;
-  // }
   List<EntryDto> getFilteredList(DateTime? filterBegin, DateTime? filterEnd) {
     List<EntryDto> result = _entries;
 
