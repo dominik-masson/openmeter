@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/helper/chart_helper.dart';
@@ -86,16 +87,19 @@ class _UsageBarChartState extends State<UsageBarChart> {
     );
   }
 
-  List<BarChartGroupData> _barData(Map<int, int> data) {
+  List<BarChartGroupData> _barData(List<EntryMonthlySums> data) {
     List<BarChartGroupData> barData = [];
 
-    for (int i = 0; i < data.length; i++) {
+    for (EntryMonthlySums entry in data) {
+      DateTime date = DateTime(entry.year, entry.month);
+      final key = date.millisecondsSinceEpoch;
+
       barData.add(
         BarChartGroupData(
-          x: data.keys.elementAt(i),
+          x: key,
           barRods: [
             BarChartRodData(
-              toY: data.values.elementAt(i).toDouble(),
+              toY: entry.usage.toDouble(),
               color: Theme.of(context).primaryColor,
               width: 12,
               borderRadius: const BorderRadius.only(
@@ -150,7 +154,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
     return const FlGridData(show: false);
   }
 
-  Widget _monthlyChart(Map<int, int> data) {
+  Widget _monthlyChart(List<EntryMonthlySums> data) {
     return SizedBox(
       height: 200,
       width: 380,
@@ -177,7 +181,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
       stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
         final List<Entrie>? entries = snapshot.data;
-        Map<int, int> sumMonths = {};
+        List<EntryMonthlySums> sumMonths = [];
         List<Entrie> finalEntries = [];
 
         if (entries == null || entries.isEmpty) {

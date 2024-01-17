@@ -1,38 +1,47 @@
 import '../database/local_database.dart';
+import '../model/entry_monthly_sums.dart';
 
 class ChartHelper {
   ChartHelper();
 
-  Map<int, int> getSumInMonths(List<Entrie> entries) {
-    Map<int, int> result = {};
+  List<EntryMonthlySums> getSumInMonths(List<Entrie> entries) {
+    List<EntryMonthlySums> result = [];
 
     for (int i = 0; i < entries.length;) {
       DateTime date = DateTime.fromMillisecondsSinceEpoch(
           entries[i].date.millisecondsSinceEpoch);
 
       if (entries[i].usage == -1) {
-        result.addAll({date.millisecondsSinceEpoch: 0});
+        result.add(
+            EntryMonthlySums(usage: 0, month: date.month, year: date.year));
       } else {
-        result.addAll({date.millisecondsSinceEpoch: entries[i].usage});
+        result.add(EntryMonthlySums(
+            usage: entries[i].usage, month: date.month, year: date.year));
       }
 
       for (int j = i + 1; j < entries.length; j++) {
         if (entries[i].date.month == entries[j].date.month &&
             entries[i].date.year == entries[j].date.year) {
-          int hasDate = 0;
+          int index = result.indexWhere((element) =>
+              element.year == entries[j].date.year &&
+              element.month == entries[j].date.month);
 
-          result.forEach((key, value) {
-            DateTime date = DateTime.fromMillisecondsSinceEpoch(key);
+          result.elementAt(index).usage += entries[j].usage;
 
-            if (date.month == entries[j].date.month &&
-                date.year == entries[j].date.year) {
-              hasDate = key;
-            }
-          });
+          // int hasDate = 0;
 
-          if (hasDate != 0) {
-            result.update(hasDate, (value) => value += entries[j].usage);
-          }
+          // result.forEach((key, value) {
+          //   DateTime date = DateTime.fromMillisecondsSinceEpoch(key);
+          //
+          //   if (date.month == entries[j].date.month &&
+          //       date.year == entries[j].date.year) {
+          //     hasDate = key;
+          //   }
+          // });
+          //
+          // if (hasDate != 0) {
+          //   result.update(hasDate, (value) => value += entries[j].usage);
+          // }
 
           i++;
         }
