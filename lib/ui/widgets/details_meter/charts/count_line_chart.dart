@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/helper/chart_helper.dart';
 import '../../../../utils/convert_count.dart';
@@ -24,11 +25,13 @@ class _CountLineChartState extends State<CountLineChart> {
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  List<LineChartBarData> _lineData(List<Entrie> entries) {
+  List<LineChartBarData> _lineData(List<EntryMonthlySums> entries) {
     List<FlSpot> spots = entries.map((e) {
+      final date = DateTime(e.year, e.month, e.day ?? 1);
+
       return FlSpot(
-        e.date.millisecondsSinceEpoch.toDouble(),
-        e.count.toDouble(),
+        date.millisecondsSinceEpoch.toDouble(),
+        e.count?.toDouble() ?? 0,
       );
     }).toList();
 
@@ -153,7 +156,7 @@ class _CountLineChartState extends State<CountLineChart> {
     );
   }
 
-  _mainChart(List<Entrie> entries) {
+  _mainChart(List<EntryMonthlySums> entries) {
     return SizedBox(
       height: 200,
       width: 380,
@@ -178,18 +181,16 @@ class _CountLineChartState extends State<CountLineChart> {
       stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
         final List<Entrie> entries = snapshot.data ?? [];
-        List<Entrie> finalEntries = [];
+        List<EntryMonthlySums> finalEntries = [];
 
         if (entries.isEmpty) {
           return Container();
         }
 
         if (_twelveMonths && entries.length > 12) {
-          // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              entries.getRange(entries.length - 12, entries.length).toList();
+          finalEntries = _helper.getLastMonths(entries);
         } else {
-          finalEntries = entries;
+          finalEntries = _helper.convertEntryList(entries);
         }
 
         if (finalEntries.isEmpty || finalEntries.length == 1) {

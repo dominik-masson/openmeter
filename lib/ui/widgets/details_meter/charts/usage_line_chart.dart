@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/helper/chart_helper.dart';
@@ -25,15 +26,21 @@ class _UsageLineChartState extends State<UsageLineChart> {
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  List<LineChartBarData> _lineData(List<Entrie> entries) {
+  List<LineChartBarData> _lineData(List<EntryMonthlySums> entries) {
     List<FlSpot> spots = entries.map((e) {
       double usage = 0.0;
       if (e.usage != -1) {
         usage = e.usage.toDouble();
       }
 
+      DateTime date = DateTime(e.year, e.month);
+
+      if (e.day != null) {
+        date = DateTime(e.year, e.month, e.day!);
+      }
+
       return FlSpot(
-        e.date.millisecondsSinceEpoch.toDouble(),
+        date.millisecondsSinceEpoch.toDouble(),
         usage,
       );
     }).toList();
@@ -159,7 +166,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
     );
   }
 
-  Widget _lastMonths(List<Entrie> entries) {
+  Widget _lastMonths(List<EntryMonthlySums> entries) {
     return SizedBox(
       height: 200,
       width: 380,
@@ -186,18 +193,16 @@ class _UsageLineChartState extends State<UsageLineChart> {
       builder: (context, snapshot) {
         final List<Entrie> entries = snapshot.data ?? [];
 
-        List<Entrie> finalEntries = [];
+        List<EntryMonthlySums> finalEntries = [];
 
         if (entries.isEmpty) {
           return Container();
         }
 
         if (_twelveMonths && entries.length > 12) {
-          // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              entries.getRange(entries.length - 12, entries.length).toList();
+          finalEntries = _helper.getLastMonths(entries);
         } else {
-          finalEntries = entries;
+          finalEntries = _helper.convertEntryList(entries);
         }
 
         if (finalEntries.isEmpty || finalEntries.length == 1) {

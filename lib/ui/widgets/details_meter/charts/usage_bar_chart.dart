@@ -182,24 +182,19 @@ class _UsageBarChartState extends State<UsageBarChart> {
       builder: (context, snapshot) {
         final List<Entrie>? entries = snapshot.data;
         List<EntryMonthlySums> sumMonths = [];
-        List<Entrie> finalEntries = [];
 
         if (entries == null || entries.isEmpty) {
           return Container();
         }
 
         if (_twelveMonths && entries.length > 12) {
-          // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              entries.getRange(entries.length - 12, entries.length).toList();
+          sumMonths = _helper.getLastMonths(entries);
         } else {
-          finalEntries = entries;
+          sumMonths = _helper.getSumInMonths(entries);
         }
 
-        if (finalEntries.isEmpty || finalEntries.length == 1) {
+        if (sumMonths.isEmpty || sumMonths.length == 1) {
           isEmpty = true;
-        } else {
-          sumMonths = _helper.getSumInMonths(finalEntries);
         }
 
         return SizedBox(
@@ -225,7 +220,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
                         children: [
                           TextButton(
                             onPressed: () {
-                              if (finalEntries.length >= 12) {
+                              if (sumMonths.length >= 12) {
                                 setState(() {
                                   _twelveMonths = !_twelveMonths;
                                 });

@@ -12,11 +12,21 @@ class ChartHelper {
           entries[i].date.millisecondsSinceEpoch);
 
       if (entries[i].usage == -1) {
-        result.add(
-            EntryMonthlySums(usage: 0, month: date.month, year: date.year));
+        result.add(EntryMonthlySums(
+          usage: 0,
+          month: date.month,
+          year: date.year,
+          day: entries[i].date.day,
+          count: entries[i].count,
+        ));
       } else {
         result.add(EntryMonthlySums(
-            usage: entries[i].usage, month: date.month, year: date.year));
+          usage: entries[i].usage,
+          month: date.month,
+          year: date.year,
+          day: date.day,
+          count: entries[i].count,
+        ));
       }
 
       for (int j = i + 1; j < entries.length; j++) {
@@ -27,21 +37,8 @@ class ChartHelper {
               element.month == entries[j].date.month);
 
           result.elementAt(index).usage += entries[j].usage;
-
-          // int hasDate = 0;
-
-          // result.forEach((key, value) {
-          //   DateTime date = DateTime.fromMillisecondsSinceEpoch(key);
-          //
-          //   if (date.month == entries[j].date.month &&
-          //       date.year == entries[j].date.year) {
-          //     hasDate = key;
-          //   }
-          // });
-          //
-          // if (hasDate != 0) {
-          //   result.update(hasDate, (value) => value += entries[j].usage);
-          // }
+          result.elementAt(index).day = entries[j].date.day;
+          result.elementAt(index).count = entries[j].count;
 
           i++;
         }
@@ -52,39 +49,34 @@ class ChartHelper {
     return result;
   }
 
-  // getLastMonths(List<Entrie> entries) {
-  //   List<Entrie> newEntries = [];
-  //
-  //   for (int i = 0; i < entries.length;) {
-  //     newEntries.add(entries[i]);
-  //
-  //     for (int j = i + 1; j < entries.length; j++) {
-  //       if (entries[i].date.month == entries[j].date.month &&
-  //           entries[i].date.year == entries[j].date.year) {
-  //         int count = entries[j].count + entries[i].usage;
-  //         int usage = entries[j].usage + entries[i].usage;
-  //
-  //         print(newEntries);
-  //         print(j - 1);
-  //
-  //         newEntries.add(Entrie(
-  //             id: entries[j].id,
-  //             meter: entries[j].meter,
-  //             count: count,
-  //             usage: usage,
-  //             date: entries[j].date,
-  //             days: entries[j].days));
-  //
-  //         newEntries.removeAt(j - 1);
-  //
-  //         i++;
-  //       }
-  //     }
-  //     i++;
-  //   }
-  //
-  //   return newEntries;
-  // }
+  List<EntryMonthlySums> getLastMonths(List<Entrie> entries) {
+    List<EntryMonthlySums> sumOfMonths = getSumInMonths(entries);
+
+    DateTime now = DateTime.now();
+    DateTime border = DateTime(now.year, now.month - 12);
+
+    return sumOfMonths.where((element) {
+      DateTime elementDate =
+          DateTime(element.year, element.month, element.day ?? 1);
+
+      if (elementDate.isAfter(border)) {
+        return true;
+      } else {
+        return false;
+      }
+    }).toList();
+  }
+
+  List<EntryMonthlySums> convertEntryList(List<Entrie> entries) {
+    return entries
+        .map((e) => EntryMonthlySums(
+            usage: e.usage,
+            month: e.date.month,
+            year: e.date.year,
+            day: e.date.day,
+            count: e.count))
+        .toList();
+  }
 
   String getTitleMonths(int month) {
     switch (month) {
