@@ -117,6 +117,8 @@ class _UsageBarChartState extends State<UsageBarChart> {
   }
 
   BarTouchData _barTouchData() {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return BarTouchData(
       touchTooltipData: BarTouchTooltipData(
         tooltipBgColor: Theme.of(context).primaryColor,
@@ -139,6 +141,18 @@ class _UsageBarChartState extends State<UsageBarChart> {
           );
         },
       ),
+      touchCallback: (event, touchResponse) {
+        if (event is FlLongPressStart ||
+            event is FlTapDownEvent ||
+            event is FlPanStartEvent) {
+          chartProvider.setFocusDiagram(true);
+        }
+        if (event is FlLongPressEnd ||
+            event is FlTapUpEvent ||
+            event is FlPanEndEvent) {
+          chartProvider.setFocusDiagram(false);
+        }
+      },
     );
   }
 

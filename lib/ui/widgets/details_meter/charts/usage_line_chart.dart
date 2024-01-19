@@ -144,6 +144,8 @@ class _UsageLineChartState extends State<UsageLineChart> {
   }
 
   LineTouchData _touchData() {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return LineTouchData(
       enabled: true,
       touchTooltipData: LineTouchTooltipData(
@@ -165,6 +167,18 @@ class _UsageLineChartState extends State<UsageLineChart> {
           }).toList();
         },
       ),
+      touchCallback: (event, touchResponse) {
+        if (event is FlLongPressStart ||
+            event is FlTapDownEvent ||
+            event is FlPanStartEvent) {
+          chartProvider.setFocusDiagram(true);
+        }
+        if (event is FlLongPressEnd ||
+            event is FlTapUpEvent ||
+            event is FlPanEndEvent) {
+          chartProvider.setFocusDiagram(false);
+        }
+      },
     );
   }
 

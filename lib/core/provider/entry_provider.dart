@@ -12,7 +12,7 @@ import '../helper/entry_helper.dart';
 import '../helper/meter_image_helper.dart';
 import '../model/entry_filter.dart';
 
-class EntryCardProvider extends ChangeNotifier {
+class EntryProvider extends ChangeNotifier {
   final EntryHelper entryService = EntryHelper();
   final MeterImageHelper _meterImageHelper = MeterImageHelper();
 

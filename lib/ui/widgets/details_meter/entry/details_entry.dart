@@ -12,7 +12,7 @@ import '../../../../core/database/local_database.dart';
 import '../../../../core/model/entry_dto.dart';
 import '../../../../core/provider/cost_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
-import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/entry_provider.dart';
 import '../../../../core/helper/meter_image_helper.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
@@ -36,7 +36,7 @@ class _DetailsEntryState extends State<DetailsEntry> {
   final ConvertMeterUnit convertMeterUnit = ConvertMeterUnit();
 
   late EntryDto _entry;
-  late EntryCardProvider _entryProvider;
+  late EntryProvider _entryProvider;
 
   final GlobalKey _iconKey = GlobalKey();
 
@@ -64,7 +64,7 @@ class _DetailsEntryState extends State<DetailsEntry> {
     _noteFocus.dispose();
   }
 
-  _saveNote(EntryCardProvider entryProvider) async {
+  _saveNote(EntryProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     final newEntry = EntriesCompanion(
@@ -589,7 +589,7 @@ class _DetailsEntryState extends State<DetailsEntry> {
 
   @override
   Widget build(BuildContext context) {
-    _entryProvider = Provider.of<EntryCardProvider>(context);
+    _entryProvider = Provider.of<EntryProvider>(context);
     final costProvider = Provider.of<CostProvider>(context, listen: false);
 
     if (_entry.note == null || _entry.note!.isEmpty) {

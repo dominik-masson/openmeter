@@ -11,7 +11,7 @@ import 'core/provider/cost_provider.dart';
 import 'core/provider/database_settings_provider.dart';
 import 'core/provider/design_provider.dart';
 import 'core/provider/details_contract_provider.dart';
-import 'core/provider/entry_card_provider.dart';
+import 'core/provider/entry_provider.dart';
 import 'core/provider/meter_provider.dart';
 import 'core/provider/room_provider.dart';
 import 'core/provider/small_feature_provider.dart';
@@ -78,8 +78,7 @@ class MyApp extends StatelessWidget {
             value: ReminderProvider()),
         ChangeNotifierProvider<SmallFeatureProvider>.value(
             value: SmallFeatureProvider()),
-        ChangeNotifierProvider<EntryCardProvider>.value(
-            value: EntryCardProvider()),
+        ChangeNotifierProvider<EntryProvider>.value(value: EntryProvider()),
         ChangeNotifierProvider<ChartProvider>.value(value: ChartProvider()),
         ChangeNotifierProvider<StatsProvider>.value(value: StatsProvider()),
         ChangeNotifierProvider<DatabaseSettingsProvider>.value(

@@ -8,7 +8,7 @@ import '../../../../core/model/entry_dto.dart';
 import '../../../../core/model/entry_filter.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/cost_provider.dart';
-import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/entry_provider.dart';
 import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../core/provider/theme_changer.dart';
 import '../../../../utils/convert_count.dart';
@@ -25,7 +25,7 @@ class EntryCard extends StatelessWidget {
     required BuildContext context,
     required EntryDto item,
     required int usage,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
     required CostProvider costProvider,
   }) async {
     return showDialog(
@@ -36,7 +36,7 @@ class EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final entryProvider = Provider.of<EntryProvider>(context);
     final costProvider = Provider.of<CostProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeChanger>(context);
     final entryFilterProvider = Provider.of<EntryFilterProvider>(context);
@@ -268,7 +268,7 @@ class EntryCard extends StatelessWidget {
     required EntryDto item,
     required String unit,
     required int usage,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
     required BuildContext context,
   }) {
     return Row(

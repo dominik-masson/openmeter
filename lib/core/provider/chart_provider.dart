@@ -7,6 +7,7 @@ class ChartProvider extends ChangeNotifier {
 
   bool _lineChart = false;
   int _barYear = DateTime.now().year;
+  bool _focusDiagram = false;
 
   ChartProvider() {
     _loadFromPrefs();
@@ -36,6 +37,14 @@ class ChartProvider extends ChangeNotifier {
 
   void setBarYear(int year) {
     _barYear = year;
+    notifyListeners();
+  }
+
+  bool get getFocusDiagram => _focusDiagram;
+
+  void setFocusDiagram(bool value) {
+    _focusDiagram = value;
+
     notifyListeners();
   }
 }

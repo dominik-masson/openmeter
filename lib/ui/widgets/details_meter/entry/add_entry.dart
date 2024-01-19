@@ -11,7 +11,7 @@ import '../../../../core/database/local_database.dart';
 import '../../../../core/model/entry_dto.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/database_settings_provider.dart';
-import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/entry_provider.dart';
 import '../../../../core/provider/torch_provider.dart';
 import '../../../../core/helper/meter_image_helper.dart';
 import '../../../../core/helper/torch_controller.dart';
@@ -92,8 +92,7 @@ class _AddEntryState extends State<AddEntry> {
     return newDate.difference(oldDate).inDays;
   }
 
-  _saveEntry(
-      TorchProvider torchProvider, EntryCardProvider entryProvider) async {
+  _saveEntry(TorchProvider torchProvider, EntryProvider entryProvider) async {
     final db = Provider.of<LocalDatabase>(context, listen: false);
 
     EntryDto? newestEntry = entryProvider.getNewestEntry;
@@ -475,7 +474,7 @@ class _AddEntryState extends State<AddEntry> {
   }
 
   _showBottomModel(
-    EntryCardProvider entryProvider,
+    EntryProvider entryProvider,
     TorchProvider torchProvider,
   ) {
     _torchController.setStateTorch(torchProvider.getStateIsTorchOn);
@@ -555,7 +554,7 @@ class _AddEntryState extends State<AddEntry> {
 
   @override
   Widget build(BuildContext context) {
-    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final entryProvider = Provider.of<EntryProvider>(context);
     final torchProvider = Provider.of<TorchProvider>(context);
 
     return IconButton(

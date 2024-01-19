@@ -8,6 +8,7 @@ import '../../../../core/model/entry_dto.dart';
 import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/helper/chart_helper.dart';
+import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
@@ -134,6 +135,8 @@ class _CountLineChartState extends State<CountLineChart> {
   }
 
   LineTouchData _touchData() {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return LineTouchData(
       enabled: true,
       touchTooltipData: LineTouchTooltipData(
@@ -155,6 +158,18 @@ class _CountLineChartState extends State<CountLineChart> {
           }).toList();
         },
       ),
+      touchCallback: (event, touchResponse) {
+        if (event is FlLongPressStart ||
+            event is FlTapDownEvent ||
+            event is FlPanStartEvent) {
+          chartProvider.setFocusDiagram(true);
+        }
+        if (event is FlLongPressEnd ||
+            event is FlTapUpEvent ||
+            event is FlPanEndEvent) {
+          chartProvider.setFocusDiagram(false);
+        }
+      },
     );
   }
 

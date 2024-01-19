@@ -8,7 +8,7 @@ import '../../../core/model/meter_dto.dart';
 import '../../../core/model/meter_typ.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/cost_provider.dart';
-import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/entry_provider.dart';
 import '../../../core/provider/meter_provider.dart';
 import '../../../core/provider/room_provider.dart';
 import '../../../core/provider/small_feature_provider.dart';
@@ -123,7 +123,7 @@ class _MeterCardState extends State<MeterCard> {
 
   Future<Object?> _openDetailsSingleMeter(
     RoomDto? room,
-    EntryCardProvider entryProvider,
+    EntryProvider entryProvider,
   ) async {
     entryProvider.setCurrentCount(widget.count);
     entryProvider.setOldDate(widget.date ?? DateTime.now());
@@ -147,7 +147,7 @@ class _MeterCardState extends State<MeterCard> {
   _handleOnTapFromMeterCardList({
     required bool hasSelectedItems,
     required MeterProvider meterProvider,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
   }) {
     if (hasSelectedItems == true) {
       meterProvider.toggleSelectedMeter(_meterData);
@@ -163,7 +163,7 @@ class _MeterCardState extends State<MeterCard> {
 
   _handleOnTapFromDetailsRoom({
     required RoomProvider roomProvider,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
   }) {
     if (roomProvider.getHasSelectedMeters) {
       roomProvider.toggleSelectedMeters(MeterDto.fromData(_meterData, false));
@@ -196,8 +196,7 @@ class _MeterCardState extends State<MeterCard> {
 
     String roomName = widget.room == null ? '' : widget.room!.name;
 
-    final entryProvider =
-        Provider.of<EntryCardProvider>(context, listen: false);
+    final entryProvider = Provider.of<EntryProvider>(context, listen: false);
 
     String dateText = 'none';
 
