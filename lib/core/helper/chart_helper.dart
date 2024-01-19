@@ -1,10 +1,10 @@
-import '../database/local_database.dart';
+import '../model/entry_dto.dart';
 import '../model/entry_monthly_sums.dart';
 
 class ChartHelper {
   ChartHelper();
 
-  List<EntryMonthlySums> getSumInMonths(List<Entrie> entries) {
+  List<EntryMonthlySums> getSumInMonths(List<EntryDto> entries) {
     List<EntryMonthlySums> result = [];
 
     for (int i = 0; i < entries.length;) {
@@ -49,7 +49,7 @@ class ChartHelper {
     return result;
   }
 
-  List<EntryMonthlySums> getLastMonths(List<Entrie> entries) {
+  List<EntryMonthlySums> getLastMonths(List<EntryDto> entries) {
     List<EntryMonthlySums> sumOfMonths = getSumInMonths(entries);
 
     DateTime now = DateTime.now();
@@ -67,7 +67,7 @@ class ChartHelper {
     }).toList();
   }
 
-  List<EntryMonthlySums> convertEntryList(List<Entrie> entries) {
+  List<EntryMonthlySums> convertEntryList(List<EntryDto> entries) {
     return entries
         .map((e) => EntryMonthlySums(
             usage: e.usage,

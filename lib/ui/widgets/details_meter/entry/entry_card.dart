@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/database/local_database.dart';
 import '../../../../core/enums/font_size_value.dart';
 import '../../../../core/model/entry_dto.dart';
+import '../../../../core/model/entry_filter.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/cost_provider.dart';
 import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../core/provider/theme_changer.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
@@ -37,11 +39,12 @@ class EntryCard extends StatelessWidget {
     final entryProvider = Provider.of<EntryCardProvider>(context);
     final costProvider = Provider.of<CostProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeChanger>(context);
+    final entryFilterProvider = Provider.of<EntryFilterProvider>(context);
 
     bool isLargeText =
         themeProvider.getFontSizeValue == FontSizeValue.large ? true : false;
 
-    bool hasFilter = entryProvider.getHasActiveFilters;
+    bool hasFilter = entryFilterProvider.getHasActiveFilters;
 
     return Padding(
       padding: const EdgeInsets.only(left: 8.0, right: 8),
@@ -77,7 +80,10 @@ class EntryCard extends StatelessWidget {
               List<EntryDto> entries = [];
 
               if (hasFilter) {
-                entries = entryProvider.getFilteredEntries();
+                final EntryFilterModel entryFilter =
+                    entryFilterProvider.getEntryFilter;
+
+                entries = entryProvider.getFilteredEntries(entryFilter);
 
                 if (entries.isEmpty) {
                   return Padding(

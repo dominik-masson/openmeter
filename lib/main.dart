@@ -1,6 +1,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:openmeter/core/provider/entry_filter_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
@@ -91,6 +92,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<DetailsContractProvider>.value(
             value: DetailsContractProvider()),
         ChangeNotifierProvider<DesignProvider>.value(value: DesignProvider()),
+        ChangeNotifierProvider<EntryFilterProvider>.value(
+            value: EntryFilterProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) => DynamicColorBuilder(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:openmeter/core/provider/entry_filter_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -90,6 +91,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
   @override
   Widget build(BuildContext context) {
     final entryProvider = Provider.of<EntryCardProvider>(context);
+    final entryFilterProvider = Provider.of<EntryFilterProvider>(context);
     final chartProvider = Provider.of<ChartProvider>(context);
     final roomProvider = Provider.of<RoomProvider>(context);
     final db = Provider.of<LocalDatabase>(context);
@@ -110,7 +112,8 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
           : _unselectedAppBar(
               entryProvider: entryProvider,
               meter: _meter,
-              roomProvider: roomProvider),
+              roomProvider: roomProvider,
+              entryFilterProvider: entryFilterProvider),
       body: PopScope(
         canPop: hasSelectedEntries ? false : true,
         onPopInvoked: (bool didPop) async {
@@ -118,7 +121,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             entryProvider.removeAllSelectedEntries();
           } else {
             roomProvider.setNewRoom(_room);
-            entryProvider.resetFilters(notify: false);
+            entryFilterProvider.resetFilters(notify: false);
           }
         },
         child: Stack(
@@ -234,6 +237,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   AppBar _unselectedAppBar({
     required EntryCardProvider entryProvider,
+    required EntryFilterProvider entryFilterProvider,
     required MeterDto meter,
     required RoomProvider roomProvider,
   }) {
@@ -242,7 +246,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       leading: BackButton(
         onPressed: () {
           roomProvider.setNewRoom(_room);
-          entryProvider.resetFilters(notify: false);
+          entryFilterProvider.resetFilters(notify: false);
           Navigator.of(context).pop();
         },
       ),
