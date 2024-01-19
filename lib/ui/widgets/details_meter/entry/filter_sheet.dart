@@ -207,6 +207,10 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       () {
                         _startDate;
                         _showStartDateHint = false;
+
+                        if (_startDate == null) {
+                          _startDateFilterState = false;
+                        }
                       },
                     );
 
@@ -275,6 +279,10 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       () {
                         _endDate;
                         _showEndDateHint = false;
+
+                        if (_endDate == null) {
+                          _endDateFilterState = false;
+                        }
                       },
                     );
 
