@@ -25,16 +25,23 @@ class UsageBarChart extends StatefulWidget {
 
 class _UsageBarChartState extends State<UsageBarChart> {
   final NoEntry _noData = NoEntry();
-  bool _twelveMonths = true;
+  bool _showOnlyLastTwelveMonths = true;
 
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
   AxisTitles _bottomTitles() {
+    int handleBottomTiles = 0;
+
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
         getTitlesWidget: (value, meta) {
+          handleBottomTiles++;
+          if (handleBottomTiles % 3 != 0 && !_showOnlyLastTwelveMonths) {
+            return Container();
+          }
+
           DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
           String title = _helper.getTitleMonths(date.month);
           return SideTitleWidget(
@@ -213,17 +220,19 @@ class _UsageBarChartState extends State<UsageBarChart> {
           entries = entryFilterProvider.getFilteredEntriesForChart(entries);
         }
 
-        if (_twelveMonths && entries.length > 12) {
+        if (_showOnlyLastTwelveMonths) {
           sumMonths = _helper.getLastMonths(entries);
         } else {
-          sumMonths = _helper.getSumInMonths(entries);
+          final cache = _helper.getSumInMonths(entries);
+          sumMonths = cache.skip(cache.length - 24).toList();
         }
 
         if (sumMonths.isEmpty) {
           isEmpty = true;
         } else {
           chartProvider.calcAverageCountUsage(
-              entries: sumMonths, length: !_twelveMonths ? entries.length : 12);
+              entries: sumMonths,
+              length: !_showOnlyLastTwelveMonths ? entries.length : 12);
         }
 
         return SizedBox(
@@ -298,13 +307,13 @@ class _UsageBarChartState extends State<UsageBarChart> {
                   padding: const EdgeInsets.only(left: 8.0),
                   child: FilterChip(
                     label: const Text('letzte 12 Monate'),
-                    selected: _twelveMonths,
+                    selected: _showOnlyLastTwelveMonths,
                     showCheckmark: false,
                     labelStyle: textTheme,
                     onSelected: (value) {
-                      if (sumMonths.length >= 12) {
+                      if (entries.length > 12) {
                         setState(() {
-                          _twelveMonths = value;
+                          _showOnlyLastTwelveMonths = value;
                         });
                       }
                     },

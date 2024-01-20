@@ -65,10 +65,17 @@ class _UsageLineChartState extends State<UsageLineChart> {
   }
 
   AxisTitles _bottomTitles() {
+    int handleBottomTiles = 0;
+
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
         getTitlesWidget: (value, meta) {
+          handleBottomTiles++;
+          if (handleBottomTiles % 2 != 0 && !_twelveMonths) {
+            return Container();
+          }
+
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
 
@@ -225,7 +232,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
           entries = entryFilterProvider.getFilteredEntriesForChart(entries);
         }
 
-        if (_twelveMonths && entries.length > 12) {
+        if (_twelveMonths) {
           finalEntries = _helper.getLastMonths(entries);
         } else {
           finalEntries = _helper.convertEntryList(entries);
@@ -319,7 +326,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
                     showCheckmark: false,
                     labelStyle: textTheme,
                     onSelected: (value) {
-                      if (finalEntries.length >= 12) {
+                      if (entries.length > 12) {
                         setState(() {
                           _twelveMonths = value;
                         });

@@ -56,10 +56,17 @@ class _CountLineChartState extends State<CountLineChart> {
   }
 
   AxisTitles _bottomTitles() {
+    int handleBottomTiles = 0;
+
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
         getTitlesWidget: (value, meta) {
+          handleBottomTiles++;
+          if (handleBottomTiles % 2 != 0 && !_twelveMonths) {
+            return Container();
+          }
+
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
 
@@ -213,7 +220,7 @@ class _CountLineChartState extends State<CountLineChart> {
           entries = entryProvider.getFilteredEntriesForChart(entries);
         }
 
-        if (_twelveMonths && entries.length > 12) {
+        if (_twelveMonths) {
           finalEntries = _helper.getLastMonths(entries);
         } else {
           finalEntries = _helper.convertEntryList(entries);
@@ -264,7 +271,7 @@ class _CountLineChartState extends State<CountLineChart> {
                     showCheckmark: false,
                     labelStyle: Theme.of(context).textTheme.bodySmall!,
                     onSelected: (value) {
-                      if (finalEntries.length >= 12) {
+                      if (entries.length > 12) {
                         setState(() {
                           _twelveMonths = value;
                         });

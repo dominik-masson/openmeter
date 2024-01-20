@@ -52,8 +52,8 @@ class ChartHelper {
   List<EntryMonthlySums> getLastMonths(List<EntryDto> entries) {
     List<EntryMonthlySums> sumOfMonths = getSumInMonths(entries);
 
-    DateTime now = DateTime.now();
-    DateTime border = DateTime(now.year, now.month - 12);
+    DateTime lastDate = entries.last.date;
+    DateTime border = DateTime(lastDate.year, lastDate.month - 12);
 
     return sumOfMonths.where((element) {
       DateTime elementDate =
