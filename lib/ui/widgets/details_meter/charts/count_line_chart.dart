@@ -231,40 +231,14 @@ class _CountLineChartState extends State<CountLineChart> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(
-                    left: 8.0,
-                    right: 8,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Zählerstand',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          if (finalEntries.length >= 12) {
-                            setState(() {
-                              _twelveMonths = !_twelveMonths;
-                            });
-                          }
-                        },
-                        child: Text(
-                          'letzte 12 Monate',
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: _twelveMonths
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey,
-                                  ),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.only(left: 15, right: 8, top: 8),
+                  child: Text(
+                    'Zählerstand',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
                 const SizedBox(
-                  height: 20,
+                  height: 37,
                 ),
                 if (isEmpty)
                   NoEntry().getNoData(
@@ -279,6 +253,25 @@ class _CountLineChartState extends State<CountLineChart> {
                     ),
                   ),
                 if (!isEmpty) _mainChart(finalEntries),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: FilterChip(
+                    label: const Text('letzte 12 Monate'),
+                    selected: _twelveMonths,
+                    showCheckmark: false,
+                    labelStyle: Theme.of(context).textTheme.bodySmall!,
+                    onSelected: (value) {
+                      if (finalEntries.length >= 12) {
+                        setState(() {
+                          _twelveMonths = value;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),

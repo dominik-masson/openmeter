@@ -239,7 +239,6 @@ class _UsageBarChartState extends State<UsageBarChart> {
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 4,
-                        left: 8.0,
                         right: 8,
                       ),
                       child: Column(
@@ -251,7 +250,7 @@ class _UsageBarChartState extends State<UsageBarChart> {
                           Row(
                             children: [
                               const SizedBox(
-                                width: 5,
+                                width: 10,
                               ),
                               Icon(
                                 Icons.functions,
@@ -267,34 +266,12 @@ class _UsageBarChartState extends State<UsageBarChart> {
                         ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            if (sumMonths.length >= 12) {
-                              setState(() {
-                                _twelveMonths = !_twelveMonths;
-                              });
-                            }
-                          },
-                          child: Text(
-                            'letzte 12 Monate',
-                            style:
-                                Theme.of(context).textTheme.bodySmall!.copyWith(
-                                      color: _twelveMonths
-                                          ? Theme.of(context).primaryColor
-                                          : Colors.grey,
-                                    ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            chartProvider.setLineChart(true);
-                          },
-                          icon: Icon(Icons.stacked_line_chart,
-                              color: Theme.of(context).hintColor),
-                        ),
-                      ],
+                    IconButton(
+                      onPressed: () {
+                        chartProvider.setLineChart(true);
+                      },
+                      icon: Icon(Icons.stacked_line_chart,
+                          color: Theme.of(context).hintColor),
                     ),
                   ],
                 ),
@@ -314,6 +291,25 @@ class _UsageBarChartState extends State<UsageBarChart> {
                 if (isEmpty)
                   _noData.getNoData(
                       'Es sind keine oder zu wenige Einträge vorhanden'),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: FilterChip(
+                    label: const Text('letzte 12 Monate'),
+                    selected: _twelveMonths,
+                    showCheckmark: false,
+                    labelStyle: textTheme,
+                    onSelected: (value) {
+                      if (sumMonths.length >= 12) {
+                        setState(() {
+                          _twelveMonths = value;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),

@@ -252,7 +252,6 @@ class _UsageLineChartState extends State<UsageLineChart> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(
-                        left: 8.0,
                         right: 8,
                         top: 4,
                       ),
@@ -265,7 +264,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
                           Row(
                             children: [
                               const SizedBox(
-                                width: 5,
+                                width: 10,
                               ),
                               Icon(
                                 Icons.functions,
@@ -281,37 +280,15 @@ class _UsageLineChartState extends State<UsageLineChart> {
                         ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            if (finalEntries.length >= 12) {
-                              setState(() {
-                                _twelveMonths = !_twelveMonths;
-                              });
-                            }
-                          },
-                          child: Text(
-                            'letzte 12 Monate',
-                            style:
-                                Theme.of(context).textTheme.bodySmall!.copyWith(
-                                      color: _twelveMonths
-                                          ? Theme.of(context).primaryColor
-                                          : Colors.grey,
-                                    ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            Provider.of<ChartProvider>(context, listen: false)
-                                .setLineChart(false);
-                          },
-                          icon: Icon(
-                            Icons.bar_chart,
-                            color: Theme.of(context).hintColor,
-                          ),
-                        ),
-                      ],
+                    IconButton(
+                      onPressed: () {
+                        Provider.of<ChartProvider>(context, listen: false)
+                            .setLineChart(false);
+                      },
+                      icon: Icon(
+                        Icons.bar_chart,
+                        color: Theme.of(context).hintColor,
+                      ),
                     ),
                   ],
                 ),
@@ -331,6 +308,25 @@ class _UsageLineChartState extends State<UsageLineChart> {
                 if (isEmpty)
                   NoEntry().getNoData(
                       'Es sind keine oder zu wenige Einträge vorhanden'),
+                const SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: FilterChip(
+                    label: const Text('letzte 12 Monate'),
+                    selected: _twelveMonths,
+                    showCheckmark: false,
+                    labelStyle: textTheme,
+                    onSelected: (value) {
+                      if (finalEntries.length >= 12) {
+                        setState(() {
+                          _twelveMonths = value;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),
