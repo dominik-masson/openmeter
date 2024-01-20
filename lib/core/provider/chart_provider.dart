@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../model/entry_monthly_sums.dart';
+
 class ChartProvider extends ChangeNotifier {
   late SharedPreferences _prefs;
   final String keyLineChart = 'show_line_chart';
@@ -8,6 +10,7 @@ class ChartProvider extends ChangeNotifier {
   bool _lineChart = false;
   int _barYear = DateTime.now().year;
   bool _focusDiagram = false;
+  double _averageUsage = 0.0;
 
   ChartProvider() {
     _loadFromPrefs();
@@ -46,5 +49,20 @@ class ChartProvider extends ChangeNotifier {
     _focusDiagram = value;
 
     notifyListeners();
+  }
+
+  double get averageUsage => _averageUsage;
+
+  calcAverageCountUsage(
+      {required List<EntryMonthlySums> entries, required int length}) {
+    double usage = 0.0;
+
+    for (var entry in entries) {
+      if (entry.usage != -1) {
+        usage += entry.usage;
+      }
+    }
+
+    _averageUsage = usage / length;
   }
 }

@@ -202,9 +202,12 @@ class _UsageLineChartState extends State<UsageLineChart> {
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
     final entryFilterProvider = Provider.of<EntryFilterProvider>(context);
+    final chartProvider = Provider.of<ChartProvider>(context);
 
     bool isEmpty = false;
     bool hasActiveFilters = entryFilterProvider.hasChartFilter;
+
+    final textTheme = Theme.of(context).textTheme.bodySmall!;
 
     return StreamBuilder(
       stream: db.entryDao.watchAllEntries(widget.meter.id!),
@@ -230,6 +233,11 @@ class _UsageLineChartState extends State<UsageLineChart> {
 
         if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
+        } else {
+          chartProvider.calcAverageCountUsage(
+            entries: finalEntries,
+            length: !_twelveMonths ? entries.length : 12,
+          );
         }
 
         return SizedBox(
@@ -239,51 +247,73 @@ class _UsageLineChartState extends State<UsageLineChart> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Verbrauch',
-                        style: TextStyle(fontSize: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 8.0,
+                        right: 8,
+                        top: 4,
                       ),
-                      Row(
+                      child: Column(
                         children: [
-                          TextButton(
-                            onPressed: () {
-                              if (finalEntries.length >= 12) {
-                                setState(() {
-                                  _twelveMonths = !_twelveMonths;
-                                });
-                              }
-                            },
-                            child: Text(
-                              'letzte 12 Monate',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(
-                                    color: _twelveMonths
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey,
-                                  ),
-                            ),
+                          Text(
+                            'Verbrauch',
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
-                          IconButton(
-                            onPressed: () {
-                              Provider.of<ChartProvider>(context, listen: false)
-                                  .setLineChart(false);
-                            },
-                            icon: Icon(
-                              Icons.bar_chart,
-                              color: Theme.of(context).hintColor,
-                            ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 5,
+                              ),
+                              Icon(
+                                Icons.functions,
+                                size: textTheme.fontSize! + 2,
+                                color: textTheme.color!,
+                              ),
+                              Text(
+                                '${chartProvider.averageUsage.toStringAsFixed(2)} ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
+                                style: textTheme,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            if (finalEntries.length >= 12) {
+                              setState(() {
+                                _twelveMonths = !_twelveMonths;
+                              });
+                            }
+                          },
+                          child: Text(
+                            'letzte 12 Monate',
+                            style:
+                                Theme.of(context).textTheme.bodySmall!.copyWith(
+                                      color: _twelveMonths
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.grey,
+                                    ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Provider.of<ChartProvider>(context, listen: false)
+                                .setLineChart(false);
+                          },
+                          icon: Icon(
+                            Icons.bar_chart,
+                            color: Theme.of(context).hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(
                   height: 20,

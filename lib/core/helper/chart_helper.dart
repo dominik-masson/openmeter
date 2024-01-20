@@ -59,11 +59,7 @@ class ChartHelper {
       DateTime elementDate =
           DateTime(element.year, element.month, element.day ?? 1);
 
-      if (elementDate.isAfter(border)) {
-        return true;
-      } else {
-        return false;
-      }
+      return elementDate.isAfter(border);
     }).toList();
   }
 
