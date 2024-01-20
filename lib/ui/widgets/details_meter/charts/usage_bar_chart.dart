@@ -224,7 +224,12 @@ class _UsageBarChartState extends State<UsageBarChart> {
           sumMonths = _helper.getLastMonths(entries);
         } else {
           final cache = _helper.getSumInMonths(entries);
-          sumMonths = cache.skip(cache.length - 24).toList();
+
+          if (cache.length > 25) {
+            sumMonths = cache.skip(cache.length - 24).toList();
+          } else {
+            sumMonths = cache;
+          }
         }
 
         if (sumMonths.isEmpty) {
