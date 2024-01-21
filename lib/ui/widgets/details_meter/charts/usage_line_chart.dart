@@ -296,51 +296,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        right: 8,
-                        top: 4,
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Verbrauch',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          Row(
-                            children: [
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Icon(
-                                Icons.functions,
-                                size: textTheme.fontSize! + 2,
-                                color: textTheme.color!,
-                              ),
-                              Text(
-                                '${chartProvider.averageUsage.toStringAsFixed(2)} ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
-                                style: textTheme,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        Provider.of<ChartProvider>(context, listen: false)
-                            .setLineChart(false);
-                      },
-                      icon: Icon(
-                        Icons.bar_chart,
-                        color: Theme.of(context).hintColor,
-                      ),
-                    ),
-                  ],
-                ),
+                _headLine(chartProvider, textTheme),
                 const SizedBox(
                   height: 20,
                 ),
@@ -360,27 +316,83 @@ class _UsageLineChartState extends State<UsageLineChart> {
                 const SizedBox(
                   height: 20,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: FilterChip(
-                    label: const Text('letzte 12 Monate'),
-                    selected: _twelveMonths,
-                    showCheckmark: false,
-                    labelStyle: textTheme,
-                    onSelected: (value) {
-                      if (entries.length > 12) {
-                        setState(() {
-                          _twelveMonths = value;
-                        });
-                      }
-                    },
-                  ),
-                ),
+                _filterActions(textTheme, entries),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _headLine(ChartProvider chartProvider, TextStyle textTheme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            right: 8,
+            top: 4,
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Verbrauch',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Icon(
+                    Icons.functions,
+                    size: textTheme.fontSize! + 2,
+                    color: textTheme.color!,
+                  ),
+                  Text(
+                    '${chartProvider.averageUsage.toStringAsFixed(2)} ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
+                    style: textTheme,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            Provider.of<ChartProvider>(context, listen: false)
+                .setLineChart(false);
+          },
+          icon: Icon(
+            Icons.bar_chart,
+            color: Theme.of(context).hintColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _filterActions(TextStyle textTheme, List entries) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('letzte 12 Monate'),
+            selected: _twelveMonths,
+            showCheckmark: false,
+            labelStyle: textTheme,
+            onSelected: (value) {
+              if (entries.length > 12) {
+                setState(() {
+                  _twelveMonths = value;
+                });
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

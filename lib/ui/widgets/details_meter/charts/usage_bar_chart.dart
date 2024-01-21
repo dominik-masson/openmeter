@@ -39,10 +39,13 @@ class _UsageBarChartState extends State<UsageBarChart> {
           String title = _helper.getTitleMonths(date.month);
           return SideTitleWidget(
             axisSide: meta.axisSide,
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
+            child: Transform.rotate(
+              angle: -45,
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                ),
               ),
             ),
           );

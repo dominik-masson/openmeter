@@ -33,7 +33,6 @@ class _CountLineChartState extends State<CountLineChart> {
   List<LineChartBarData> _lineData(List entries) {
     final List<LineChartBarData> chartData = [];
 
-    print(entries.runtimeType);
     if (entries is List<List<EntryMonthlySums>>) {
       for (List<EntryMonthlySums> entry in entries) {
         List<FlSpot> spots = entry.map((e) {
