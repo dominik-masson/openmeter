@@ -24,58 +24,93 @@ class UsageLineChart extends StatefulWidget {
 }
 
 class _UsageLineChartState extends State<UsageLineChart> {
-  bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  List<LineChartBarData> _lineData(List<EntryMonthlySums> entries) {
-    List<FlSpot> spots = entries.map((e) {
-      double usage = 0.0;
-      if (e.usage != -1) {
-        usage = e.usage.toDouble();
+  bool _twelveMonths = true;
+  bool _hasResetEntries = false;
+
+  List<LineChartBarData> _lineData(List entries) {
+    final List<LineChartBarData> chartData = [];
+
+    if (entries[0] is List) {
+      for (List<EntryMonthlySums> entry in entries) {
+        List<FlSpot> spots = entry.map((e) {
+          double usage = 0.0;
+          if (e.usage != -1) {
+            usage = e.usage.toDouble();
+          }
+
+          DateTime date = DateTime(e.year, e.month);
+
+          if (e.day != null) {
+            date = DateTime(e.year, e.month, e.day!);
+          }
+
+          return FlSpot(
+            date.millisecondsSinceEpoch.toDouble(),
+            usage,
+          );
+        }).toList();
+
+        chartData.add(
+          LineChartBarData(
+            spots: spots,
+            color: Theme.of(context).primaryColor,
+            barWidth: 4,
+            shadow: const Shadow(
+              blurRadius: 0.2,
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
+            ),
+          ),
+        );
       }
+    } else {
+      List<FlSpot> spots = entries.map((e) {
+        double usage = 0.0;
+        if (e.usage != -1) {
+          usage = e.usage.toDouble();
+        }
 
-      DateTime date = DateTime(e.year, e.month);
+        DateTime date = DateTime(e.year, e.month);
 
-      if (e.day != null) {
-        date = DateTime(e.year, e.month, e.day!);
-      }
+        if (e.day != null) {
+          date = DateTime(e.year, e.month, e.day!);
+        }
 
-      return FlSpot(
-        date.millisecondsSinceEpoch.toDouble(),
-        usage,
+        return FlSpot(
+          date.millisecondsSinceEpoch.toDouble(),
+          usage,
+        );
+      }).toList();
+
+      chartData.add(
+        LineChartBarData(
+          spots: spots,
+          color: Theme.of(context).primaryColor,
+          barWidth: 4,
+          shadow: const Shadow(
+            blurRadius: 0.2,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+          ),
+        ),
       );
-    }).toList();
+    }
 
-    return [
-      LineChartBarData(
-        spots: spots,
-        isCurved: true,
-        color: Theme.of(context).primaryColor,
-        barWidth: 4,
-        shadow: const Shadow(
-          blurRadius: 0.2,
-        ),
-        belowBarData: BarAreaData(
-          show: true,
-          color: Theme.of(context).primaryColor.withOpacity(0.2),
-        ),
-      )
-    ];
+    return chartData;
   }
 
   AxisTitles _bottomTitles() {
-    int handleBottomTiles = 0;
-
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
         getTitlesWidget: (value, meta) {
-          handleBottomTiles++;
-          if (handleBottomTiles % 2 != 0 && !_twelveMonths) {
-            return Container();
-          }
-
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
 
@@ -189,7 +224,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
     );
   }
 
-  Widget _lastMonths(List<EntryMonthlySums> entries) {
+  Widget _lastMonths(List entries) {
     return SizedBox(
       height: 200,
       width: 380,
@@ -222,7 +257,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
         List<Entrie> data = snapshot.data ?? [];
         List<EntryDto> entries = data.map((e) => EntryDto.fromData(e)).toList();
 
-        List<EntryMonthlySums> finalEntries = [];
+        List<dynamic> finalEntries = [];
 
         if (entries.isEmpty) {
           return Container();
@@ -242,9 +277,16 @@ class _UsageLineChartState extends State<UsageLineChart> {
           isEmpty = true;
         } else {
           chartProvider.calcAverageCountUsage(
-            entries: finalEntries,
+            entries: finalEntries as List<EntryMonthlySums>,
             length: !_twelveMonths ? entries.length : 12,
           );
+        }
+
+        _hasResetEntries = entries.any((element) => element.isReset);
+
+        if (_hasResetEntries) {
+          finalEntries =
+              _helper.splitListByReset(finalEntries as List<EntryMonthlySums>);
         }
 
         return SizedBox(
@@ -313,8 +355,8 @@ class _UsageLineChartState extends State<UsageLineChart> {
                   ),
                 if (!isEmpty) _lastMonths(finalEntries),
                 if (isEmpty)
-                  NoEntry().getNoData(
-                      'Es sind keine oder zu wenige Einträge vorhanden'),
+                  const NoEntry(
+                      text: 'Es sind keine oder zu wenige Einträge vorhanden'),
                 const SizedBox(
                   height: 20,
                 ),

@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../model/entry_dto.dart';
 import '../model/entry_monthly_sums.dart';
 
@@ -18,6 +20,7 @@ class ChartHelper {
           year: date.year,
           day: entries[i].date.day,
           count: entries[i].count,
+          isReset: entries[i].isReset,
         ));
       } else {
         result.add(EntryMonthlySums(
@@ -26,6 +29,7 @@ class ChartHelper {
           year: date.year,
           day: date.day,
           count: entries[i].count,
+          isReset: entries[i].isReset,
         ));
       }
 
@@ -65,12 +69,16 @@ class ChartHelper {
 
   List<EntryMonthlySums> convertEntryList(List<EntryDto> entries) {
     return entries
-        .map((e) => EntryMonthlySums(
+        .map(
+          (e) => EntryMonthlySums(
             usage: e.usage,
             month: e.date.month,
             year: e.date.year,
             day: e.date.day,
-            count: e.count))
+            count: e.count,
+            isReset: e.isReset,
+          ),
+        )
         .toList();
   }
 
@@ -101,5 +109,13 @@ class ChartHelper {
       default:
         return 'DEZ';
     }
+  }
+
+  List<List<EntryMonthlySums>> splitListByReset(List<EntryMonthlySums> data) {
+    return data
+        .splitBefore(
+          (element) => element.isReset,
+        )
+        .toList();
   }
 }

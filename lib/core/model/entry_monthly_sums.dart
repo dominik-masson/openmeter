@@ -4,6 +4,7 @@ class EntryMonthlySums {
   int month = 0;
   int year = 0;
   int? count;
+  bool isReset = false;
 
   EntryMonthlySums({
     required this.usage,
@@ -11,5 +12,6 @@ class EntryMonthlySums {
     required this.year,
     this.day,
     this.count,
+    required this.isReset,
   });
 }
