@@ -118,4 +118,20 @@ class ChartHelper {
         )
         .toList();
   }
+
+  Map<int, int> splitListInYears(List<EntryMonthlySums> data) {
+    final Map<int, int> result = {};
+
+    for (EntryMonthlySums element in data) {
+      if (element.month != 1) {
+        result.update(
+          element.year,
+          (value) => value + element.usage,
+          ifAbsent: () => element.usage,
+        );
+      }
+    }
+
+    return result;
+  }
 }

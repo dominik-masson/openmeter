@@ -379,7 +379,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
       child: Row(
         children: [
           FilterChip(
-            label: const Text('letzte 12 Monate'),
+            label: const Text('12 Monate'),
             selected: _twelveMonths,
             showCheckmark: false,
             labelStyle: textTheme,

@@ -18,7 +18,7 @@ import '../../widgets/details_meter/charts/count_line_chart.dart';
 import '../../widgets/details_meter/charts/usage_line_chart.dart';
 import '../../widgets/details_meter/cost_card.dart';
 import '../../widgets/details_meter/entry/entry_card.dart';
-import '../../widgets/details_meter/charts/usage_bar_chart.dart';
+import '../../widgets/details_meter/charts/usage_bar_charts/card.dart';
 import '../../widgets/tags/horizontal_tags_list.dart';
 import '../../widgets/utils/selected_items_bar.dart';
 import 'add_meter.dart';
@@ -181,7 +181,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
             },
             children: [
               if (!chartProvider.getLineChart)
-                UsageBarChart(
+                UsageBarCard(
                   meter: _meter,
                 ),
               if (chartProvider.getLineChart) UsageLineChart(meter: _meter),

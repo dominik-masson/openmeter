@@ -299,7 +299,7 @@ class _CountLineChartState extends State<CountLineChart> {
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: FilterChip(
-                    label: const Text('letzte 12 Monate'),
+                    label: const Text('12 Monate'),
                     selected: _twelveMonths,
                     showCheckmark: false,
                     labelStyle: Theme.of(context).textTheme.bodySmall!,
