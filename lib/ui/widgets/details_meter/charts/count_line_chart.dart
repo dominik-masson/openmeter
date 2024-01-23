@@ -209,7 +209,7 @@ class _CountLineChartState extends State<CountLineChart> {
   _mainChart(List entries) {
     return SizedBox(
       height: 200,
-      width: 380,
+      width: MediaQuery.sizeOf(context).width - 35,
       child: LineChart(
         LineChartData(
           lineBarsData: _lineData(entries),

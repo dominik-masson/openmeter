@@ -61,12 +61,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
         if (_showOnlyLastTwelveMonths) {
           sumMonths = _helper.getLastMonths(entries);
         } else {
-          if (totalSumMonths.length > 25) {
-            sumMonths =
-                totalSumMonths.skip(totalSumMonths.length - 24).toList();
-          } else {
-            sumMonths = totalSumMonths;
-          }
+          sumMonths = totalSumMonths;
         }
 
         if (sumMonths.isEmpty) {
@@ -83,7 +78,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
         }
 
         return SizedBox(
-          height: 300,
+          height: 200,
           width: 400,
           child: Card(
             child: Column(
@@ -94,7 +89,10 @@ class _UsageBarCardState extends State<UsageBarCard> {
                   height: 15,
                 ),
                 if (!isEmpty && !_compareYears)
-                  SimpleUsageBarChart(data: sumMonths, meter: widget.meter),
+                  SimpleUsageBarChart(
+                      data: sumMonths,
+                      meter: widget.meter,
+                      showTwelveMonths: _showOnlyLastTwelveMonths),
                 if (!isEmpty && _compareYears)
                   YearBarChart(
                       data: _helper.getSumInMonths(entries),

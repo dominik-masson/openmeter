@@ -153,6 +153,8 @@ class YearBarChart extends StatelessWidget {
 
     final primaryColor = Theme.of(context).primaryColor;
 
+    final mediaWidth = MediaQuery.sizeOf(context).width - 35;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,7 +168,7 @@ class YearBarChart extends StatelessWidget {
         ),
         SizedBox(
           height: 200,
-          width: 380,
+          width: mediaWidth,
           child: BarChart(
             BarChartData(
               barGroups: _barGroups(primaryColor, finalData),

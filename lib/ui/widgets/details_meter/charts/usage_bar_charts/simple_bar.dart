@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,14 +18,20 @@ class SimpleUsageBarChart extends StatelessWidget {
 
   final List<EntryMonthlySums> data;
   final MeterDto meter;
+  final bool showTwelveMonths;
 
-  SimpleUsageBarChart({super.key, required this.data, required this.meter});
+  SimpleUsageBarChart(
+      {super.key,
+      required this.data,
+      required this.meter,
+      required this.showTwelveMonths});
 
   AxisTitles _bottomTitles() {
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
         interval: 0.5,
+        reservedSize: 30,
         getTitlesWidget: (value, meta) {
           DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
           String title = _helper.getTitleMonths(date.month);
@@ -113,6 +121,7 @@ class SimpleUsageBarChart extends StatelessWidget {
       touchTooltipData: BarTouchTooltipData(
         tooltipBgColor: Theme.of(context).primaryColor,
         fitInsideHorizontally: true,
+        fitInsideVertically: true,
         getTooltipItem: (group, groupIndex, rod, rodIndex) {
           DateTime date = DateTime.fromMillisecondsSinceEpoch(group.x.toInt());
 
@@ -162,6 +171,10 @@ class SimpleUsageBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
+    final mediaWidth = MediaQuery.sizeOf(context).width - 35;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -175,14 +188,26 @@ class SimpleUsageBarChart extends StatelessWidget {
         ),
         SizedBox(
           height: 200,
-          width: 380,
-          child: BarChart(
-            BarChartData(
-              barGroups: _barData(context, data),
-              titlesData: _titlesData(),
-              barTouchData: _barTouchData(context),
-              borderData: _borderData(context),
-              gridData: _gridData(),
+          width: 440,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: chartProvider.getFocusDiagram
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            child: Container(
+              padding: const EdgeInsets.only(top: 4),
+              width: showTwelveMonths
+                  ? mediaWidth
+                  : max((data.length + 2) * 24, mediaWidth),
+              child: BarChart(
+                BarChartData(
+                  barGroups: _barData(context, data),
+                  titlesData: _titlesData(),
+                  barTouchData: _barTouchData(context),
+                  borderData: _borderData(context),
+                  gridData: _gridData(),
+                ),
+              ),
             ),
           ),
         ),
