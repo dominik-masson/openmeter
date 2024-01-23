@@ -56,6 +56,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
 
         if (hasActiveFilters) {
           entries = entryFilterProvider.getFilteredEntriesForChart(entries);
+          _compareYears = false;
         }
 
         if (_showOnlyLastTwelveMonths) {
