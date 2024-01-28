@@ -29,6 +29,8 @@ class _CountLineChartState extends State<CountLineChart> {
 
   bool _twelveMonths = true;
   bool _hasResetEntries = false;
+  int _lastTime = 0;
+  int _entryLength = 0;
 
   List<LineChartBarData> _lineData(List entries) {
     final List<LineChartBarData> chartData = [];
@@ -92,6 +94,9 @@ class _CountLineChartState extends State<CountLineChart> {
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
+        interval: !_twelveMonths && _entryLength > 24
+            ? _lastTime / _entryLength / 3.5
+            : null,
         getTitlesWidget: (value, meta) {
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
@@ -208,7 +213,7 @@ class _CountLineChartState extends State<CountLineChart> {
 
   _mainChart(List entries) {
     return SizedBox(
-      height: 200,
+      height: 220,
       width: MediaQuery.sizeOf(context).width - 35,
       child: LineChart(
         LineChartData(
@@ -220,6 +225,11 @@ class _CountLineChartState extends State<CountLineChart> {
         ),
       ),
     );
+  }
+
+  _getTimeValues(List<EntryDto> entries) {
+    _lastTime = entries.last.date.millisecondsSinceEpoch;
+    _entryLength = entries.length;
   }
 
   @override
@@ -236,11 +246,13 @@ class _CountLineChartState extends State<CountLineChart> {
         List<Entrie> data = snapshot.data ?? [];
         List<EntryDto> entries = data.map((e) => EntryDto.fromData(e)).toList();
 
-        List<dynamic> finalEntries = [];
-
         if (entries.isEmpty) {
           return Container();
         }
+
+        List<dynamic> finalEntries = [];
+
+        _getTimeValues(entries);
 
         if (hasActiveFilters) {
           entries = entryProvider.getFilteredEntriesForChart(entries);
@@ -293,11 +305,9 @@ class _CountLineChartState extends State<CountLineChart> {
                     ),
                   ),
                 if (!isEmpty) _mainChart(finalEntries),
-                const SizedBox(
-                  height: 20,
-                ),
+                const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 4),
                   child: FilterChip(
                     label: const Text('12 Monate'),
                     selected: _twelveMonths,

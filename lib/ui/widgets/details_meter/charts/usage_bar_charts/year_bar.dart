@@ -167,7 +167,7 @@ class YearBarChart extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 200,
+          height: 220,
           width: mediaWidth,
           child: BarChart(
             BarChartData(

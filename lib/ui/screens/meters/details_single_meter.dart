@@ -169,7 +169,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          height: 400,
+          height: 410,
           child: PageView(
             physics: chartProvider.getFocusDiagram
                 ? const NeverScrollableScrollPhysics()

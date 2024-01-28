@@ -30,19 +30,21 @@ class SimpleUsageBarChart extends StatelessWidget {
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
-        interval: 0.5,
-        reservedSize: 30,
+        reservedSize: 35,
         getTitlesWidget: (value, meta) {
           DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-          String title = _helper.getTitleMonths(date.month);
+          String month = _helper.getTitleMonths(date.month);
+
+          String text = showTwelveMonths ? month : '$month ${date.year % 100}';
+
           return SideTitleWidget(
             axisSide: meta.axisSide,
             child: Transform.rotate(
               angle: -45,
               child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
+                text,
+                style: TextStyle(
+                  fontSize: showTwelveMonths ? 12 : 10,
                 ),
               ),
             ),
@@ -187,7 +189,7 @@ class SimpleUsageBarChart extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 200,
+          height: 220,
           width: 440,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,

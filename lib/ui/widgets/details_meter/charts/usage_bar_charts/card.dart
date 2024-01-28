@@ -101,9 +101,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
                 if (isEmpty)
                   const NoEntry(
                       text: 'Es sind keine oder zu wenige Einträge vorhanden'),
-                const SizedBox(
-                  height: 20,
-                ),
+                const Spacer(),
                 _filterActions(
                     textTheme: textTheme,
                     entriesLength: entries.length,
@@ -167,7 +165,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
       required int entriesLength,
       bool hasFilters = false}) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8.0),
+      padding: const EdgeInsets.only(left: 8.0, bottom: 4),
       child: Row(
         children: [
           FilterChip(
