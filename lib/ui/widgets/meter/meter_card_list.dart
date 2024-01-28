@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:openmeter/core/provider/entry_card_provider.dart';
+import 'package:openmeter/core/provider/entry_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:grouped_list/grouped_list.dart';
 
@@ -78,8 +78,7 @@ class _MeterCardListState extends State<MeterCardList> {
     final meterProvider = Provider.of<MeterProvider>(context);
     final databaseSettingsProvider =
         Provider.of<DatabaseSettingsProvider>(context, listen: false);
-    final entryProvider =
-        Provider.of<EntryCardProvider>(context, listen: false);
+    final entryProvider = Provider.of<EntryProvider>(context, listen: false);
 
     final sortBy = sortProvider.getSort;
     final orderBy = sortProvider.getOrder;
@@ -231,7 +230,7 @@ class _MeterCardListState extends State<MeterCardList> {
     required MeterProvider meterProvider,
     required DatabaseSettingsProvider databaseSettingsProvider,
     required bool hasSelectedItems,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
   }) {
     String label = isHomescreen ? 'Archivieren' : 'Wiederherstellen';
     IconData icon = isHomescreen ? Icons.archive : Icons.unarchive;
@@ -289,7 +288,7 @@ class _MeterCardListState extends State<MeterCardList> {
     required String count,
     required bool isSelected,
     required bool hasSelectedItems,
-    required EntryCardProvider entryProvider,
+    required EntryProvider entryProvider,
     required MeterProvider meterProvider,
   }) {
     return MeterCard(

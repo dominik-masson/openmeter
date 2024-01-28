@@ -1,6 +1,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:openmeter/core/provider/entry_filter_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'core/database/local_database.dart';
@@ -10,7 +11,7 @@ import 'core/provider/cost_provider.dart';
 import 'core/provider/database_settings_provider.dart';
 import 'core/provider/design_provider.dart';
 import 'core/provider/details_contract_provider.dart';
-import 'core/provider/entry_card_provider.dart';
+import 'core/provider/entry_provider.dart';
 import 'core/provider/meter_provider.dart';
 import 'core/provider/room_provider.dart';
 import 'core/provider/small_feature_provider.dart';
@@ -77,8 +78,7 @@ class MyApp extends StatelessWidget {
             value: ReminderProvider()),
         ChangeNotifierProvider<SmallFeatureProvider>.value(
             value: SmallFeatureProvider()),
-        ChangeNotifierProvider<EntryCardProvider>.value(
-            value: EntryCardProvider()),
+        ChangeNotifierProvider<EntryProvider>.value(value: EntryProvider()),
         ChangeNotifierProvider<ChartProvider>.value(value: ChartProvider()),
         ChangeNotifierProvider<StatsProvider>.value(value: StatsProvider()),
         ChangeNotifierProvider<DatabaseSettingsProvider>.value(
@@ -91,6 +91,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<DetailsContractProvider>.value(
             value: DetailsContractProvider()),
         ChangeNotifierProvider<DesignProvider>.value(value: DesignProvider()),
+        ChangeNotifierProvider<EntryFilterProvider>.value(
+            value: EntryFilterProvider()),
       ],
       child: Consumer<ThemeChanger>(
         builder: (context, themeChanger, child) => DynamicColorBuilder(

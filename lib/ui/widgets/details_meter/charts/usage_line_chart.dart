@@ -4,9 +4,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_dto.dart';
+import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/chart_provider.dart';
 import '../../../../core/helper/chart_helper.dart';
+import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
@@ -21,44 +24,97 @@ class UsageLineChart extends StatefulWidget {
 }
 
 class _UsageLineChartState extends State<UsageLineChart> {
-  bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  List<LineChartBarData> _lineData(List<Entrie> entries) {
-    List<FlSpot> spots = entries.map((e) {
-      double usage = 0.0;
-      if (e.usage != -1) {
-        usage = e.usage.toDouble();
+  bool _twelveMonths = true;
+  bool _hasResetEntries = false;
+  int _lastTime = 0;
+  int _entryLength = 0;
+
+  List<LineChartBarData> _lineData(List entries) {
+    final List<LineChartBarData> chartData = [];
+
+    if (entries[0] is List) {
+      for (List<EntryMonthlySums> entry in entries) {
+        List<FlSpot> spots = entry.map((e) {
+          double usage = 0.0;
+          if (e.usage != -1) {
+            usage = e.usage.toDouble();
+          }
+
+          DateTime date = DateTime(e.year, e.month);
+
+          if (e.day != null) {
+            date = DateTime(e.year, e.month, e.day!);
+          }
+
+          return FlSpot(
+            date.millisecondsSinceEpoch.toDouble(),
+            usage,
+          );
+        }).toList();
+
+        chartData.add(
+          LineChartBarData(
+            spots: spots,
+            color: Theme.of(context).primaryColor,
+            barWidth: 4,
+            shadow: const Shadow(
+              blurRadius: 0.2,
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
+            ),
+          ),
+        );
       }
+    } else {
+      List<FlSpot> spots = entries.map((e) {
+        double usage = 0.0;
+        if (e.usage != -1) {
+          usage = e.usage.toDouble();
+        }
 
-      return FlSpot(
-        e.date.millisecondsSinceEpoch.toDouble(),
-        usage,
+        DateTime date = DateTime(e.year, e.month);
+
+        if (e.day != null) {
+          date = DateTime(e.year, e.month, e.day!);
+        }
+
+        return FlSpot(
+          date.millisecondsSinceEpoch.toDouble(),
+          usage,
+        );
+      }).toList();
+
+      chartData.add(
+        LineChartBarData(
+          spots: spots,
+          color: Theme.of(context).primaryColor,
+          barWidth: 4,
+          shadow: const Shadow(
+            blurRadius: 0.2,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+          ),
+        ),
       );
-    }).toList();
+    }
 
-    return [
-      LineChartBarData(
-        spots: spots,
-        isCurved: true,
-        color: Theme.of(context).primaryColor,
-        barWidth: 4,
-        shadow: const Shadow(
-          blurRadius: 0.2,
-        ),
-        belowBarData: BarAreaData(
-          show: true,
-          color: Theme.of(context).primaryColor.withOpacity(0.2),
-        ),
-      )
-    ];
+    return chartData;
   }
 
   AxisTitles _bottomTitles() {
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
+        interval: !_twelveMonths && _entryLength > 24
+            ? _lastTime / _entryLength / 3.5
+            : null,
         getTitlesWidget: (value, meta) {
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
@@ -135,6 +191,8 @@ class _UsageLineChartState extends State<UsageLineChart> {
   }
 
   LineTouchData _touchData() {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return LineTouchData(
       enabled: true,
       touchTooltipData: LineTouchTooltipData(
@@ -156,13 +214,25 @@ class _UsageLineChartState extends State<UsageLineChart> {
           }).toList();
         },
       ),
+      touchCallback: (event, touchResponse) {
+        if (event is FlLongPressStart ||
+            event is FlTapDownEvent ||
+            event is FlPanStartEvent) {
+          chartProvider.setFocusDiagram(true);
+        }
+        if (event is FlLongPressEnd ||
+            event is FlTapUpEvent ||
+            event is FlPanEndEvent) {
+          chartProvider.setFocusDiagram(false);
+        }
+      },
     );
   }
 
-  Widget _lastMonths(List<Entrie> entries) {
+  Widget _lastMonths(List entries) {
     return SizedBox(
-      height: 200,
-      width: 380,
+      height: 220,
+      width: MediaQuery.sizeOf(context).width - 35,
       child: LineChart(
         LineChartData(
           lineBarsData: _lineData(entries),
@@ -175,33 +245,60 @@ class _UsageLineChartState extends State<UsageLineChart> {
     );
   }
 
+  _getTimeValues(List<EntryDto> entries) {
+    _lastTime = entries.last.date.millisecondsSinceEpoch;
+    _entryLength = entries.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
+    final entryFilterProvider = Provider.of<EntryFilterProvider>(context);
+    final chartProvider = Provider.of<ChartProvider>(context);
 
     bool isEmpty = false;
+    bool hasActiveFilters = entryFilterProvider.hasChartFilter;
+
+    final textTheme = Theme.of(context).textTheme.bodySmall!;
 
     return StreamBuilder(
       stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
-        final List<Entrie> entries = snapshot.data ?? [];
-
-        List<Entrie> finalEntries = [];
+        List<Entrie> data = snapshot.data ?? [];
+        List<EntryDto> entries = data.map((e) => EntryDto.fromData(e)).toList();
 
         if (entries.isEmpty) {
           return Container();
         }
 
-        if (_twelveMonths && entries.length > 12) {
-          // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              entries.getRange(entries.length - 12, entries.length).toList();
+        List<dynamic> finalEntries = [];
+
+        _getTimeValues(entries);
+
+        if (hasActiveFilters) {
+          entries = entryFilterProvider.getFilteredEntriesForChart(entries);
+        }
+
+        if (_twelveMonths) {
+          finalEntries = _helper.getLastMonths(entries);
         } else {
-          finalEntries = entries;
+          finalEntries = _helper.convertEntryList(entries);
         }
 
         if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
+        } else {
+          chartProvider.calcAverageCountUsage(
+            entries: finalEntries as List<EntryMonthlySums>,
+            length: !_twelveMonths ? entries.length : 12,
+          );
+        }
+
+        _hasResetEntries = entries.any((element) => element.isReset);
+
+        if (_hasResetEntries) {
+          finalEntries =
+              _helper.splitListByReset(finalEntries as List<EntryMonthlySums>);
         }
 
         return SizedBox(
@@ -211,52 +308,7 @@ class _UsageLineChartState extends State<UsageLineChart> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Verbrauch',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              if (finalEntries.length >= 12) {
-                                setState(() {
-                                  _twelveMonths = !_twelveMonths;
-                                });
-                              }
-                            },
-                            child: Text(
-                              'letzte 12 Monate',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(
-                                    color: _twelveMonths
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey,
-                                  ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              Provider.of<ChartProvider>(context, listen: false)
-                                  .setLineChart(false);
-                            },
-                            icon: Icon(
-                              Icons.bar_chart,
-                              color: Theme.of(context).hintColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                _headLine(chartProvider, textTheme),
                 const SizedBox(
                   height: 20,
                 ),
@@ -271,13 +323,86 @@ class _UsageLineChartState extends State<UsageLineChart> {
                   ),
                 if (!isEmpty) _lastMonths(finalEntries),
                 if (isEmpty)
-                  NoEntry().getNoData(
-                      'Es sind keine oder zu wenige Einträge vorhanden'),
+                  const NoEntry(
+                      text: 'Es sind keine oder zu wenige Einträge vorhanden'),
+                const Spacer(),
+                _filterActions(textTheme, entries),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _headLine(ChartProvider chartProvider, TextStyle textTheme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            right: 8,
+            top: 4,
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Verbrauch',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Icon(
+                    Icons.functions,
+                    size: textTheme.fontSize! + 2,
+                    color: textTheme.color!,
+                  ),
+                  Text(
+                    '${chartProvider.averageUsage.toStringAsFixed(2)} ${_convertMeterUnit.getUnitString(widget.meter.unit)}',
+                    style: textTheme,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            Provider.of<ChartProvider>(context, listen: false)
+                .setLineChart(false);
+          },
+          icon: Icon(
+            Icons.bar_chart,
+            color: Theme.of(context).hintColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _filterActions(TextStyle textTheme, List entries) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0, bottom: 4),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('12 Monate'),
+            selected: _twelveMonths,
+            showCheckmark: false,
+            labelStyle: textTheme,
+            onSelected: (value) {
+              if (entries.length > 12) {
+                setState(() {
+                  _twelveMonths = value;
+                });
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

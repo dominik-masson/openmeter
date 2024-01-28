@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/model/meter_dto.dart';
 import '../../../core/provider/cost_provider.dart';
-import '../../../core/provider/entry_card_provider.dart';
+import '../../../core/provider/entry_provider.dart';
 
 class CostBar extends StatefulWidget {
   final MeterDto meter;
@@ -147,7 +147,7 @@ class _CostBarState extends State<CostBar> {
     final costProvider = Provider.of<CostProvider>(context);
     final db = Provider.of<LocalDatabase>(context);
     final entryCardProvider =
-        Provider.of<EntryCardProvider>(context, listen: false);
+        Provider.of<EntryProvider>(context, listen: false);
 
     final months = _calcDifferenceMont();
 

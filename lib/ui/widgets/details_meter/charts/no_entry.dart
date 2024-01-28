@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-class NoEntry {
-  NoEntry();
+class NoEntry extends StatelessWidget {
+  final String text;
+  const NoEntry({super.key, required this.text});
 
-  Widget getNoData(String text) {
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

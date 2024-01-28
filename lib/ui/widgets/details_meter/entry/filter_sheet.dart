@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/enums/entry_filters.dart';
-import '../../../../core/provider/entry_card_provider.dart';
+import '../../../../core/provider/entry_filter_provider.dart';
 
 class EntryFilterSheet extends StatefulWidget {
   const EntryFilterSheet({super.key});
@@ -62,7 +62,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
     });
   }
 
-  _clearFilters(Function setState, EntryCardProvider provider) {
+  _clearFilters(Function setState, EntryFilterProvider provider) {
     provider.resetFilters();
     _startDate = null;
     _endDate = null;
@@ -86,7 +86,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
   }
 
   Widget _sheetContent() {
-    final entryProvider = Provider.of<EntryCardProvider>(context);
+    final entryProvider = Provider.of<EntryFilterProvider>(context);
 
     return StatefulBuilder(
       builder: (context, setState) => Column(
@@ -181,7 +181,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
   }
 
   _createDateTile({
-    required EntryCardProvider provider,
+    required EntryFilterProvider provider,
   }) {
     final BoxDecoration hintBoxDecoration = BoxDecoration(
       border: Border.all(
@@ -207,6 +207,10 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       () {
                         _startDate;
                         _showStartDateHint = false;
+
+                        if (_startDate == null) {
+                          _startDateFilterState = false;
+                        }
                       },
                     );
 
@@ -275,6 +279,10 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
                       () {
                         _endDate;
                         _showEndDateHint = false;
+
+                        if (_endDate == null) {
+                          _endDateFilterState = false;
+                        }
                       },
                     );
 

@@ -4,8 +4,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/model/entry_dto.dart';
+import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/helper/chart_helper.dart';
+import '../../../../core/provider/chart_provider.dart';
+import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'no_entry.dart';
@@ -20,39 +24,79 @@ class CountLineChart extends StatefulWidget {
 }
 
 class _CountLineChartState extends State<CountLineChart> {
-  bool _twelveMonths = true;
   final ChartHelper _helper = ChartHelper();
   final ConvertMeterUnit _convertMeterUnit = ConvertMeterUnit();
 
-  List<LineChartBarData> _lineData(List<Entrie> entries) {
-    List<FlSpot> spots = entries.map((e) {
-      return FlSpot(
-        e.date.millisecondsSinceEpoch.toDouble(),
-        e.count.toDouble(),
-      );
-    }).toList();
+  bool _twelveMonths = true;
+  bool _hasResetEntries = false;
+  int _lastTime = 0;
+  int _entryLength = 0;
 
-    return [
-      LineChartBarData(
-        spots: spots,
-        isCurved: true,
-        color: Theme.of(context).primaryColor,
-        barWidth: 4,
-        shadow: const Shadow(
-          blurRadius: 0.2,
+  List<LineChartBarData> _lineData(List entries) {
+    final List<LineChartBarData> chartData = [];
+
+    if (entries is List<List<EntryMonthlySums>>) {
+      for (List<EntryMonthlySums> entry in entries) {
+        List<FlSpot> spots = entry.map((e) {
+          final date = DateTime(e.year, e.month, e.day ?? 1);
+
+          return FlSpot(
+            date.millisecondsSinceEpoch.toDouble(),
+            e.count?.toDouble() ?? 0,
+          );
+        }).toList();
+
+        chartData.add(
+          LineChartBarData(
+            spots: spots,
+            color: Theme.of(context).primaryColor,
+            barWidth: 4,
+            shadow: const Shadow(
+              blurRadius: 0.2,
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
+            ),
+          ),
+        );
+      }
+    } else if (entries is List<EntryMonthlySums>) {
+      List<FlSpot> spots = entries.map((e) {
+        final date = DateTime(e.year, e.month, e.day ?? 1);
+
+        return FlSpot(
+          date.millisecondsSinceEpoch.toDouble(),
+          e.count?.toDouble() ?? 0,
+        );
+      }).toList();
+
+      chartData.add(
+        LineChartBarData(
+          spots: spots,
+          color: Theme.of(context).primaryColor,
+          barWidth: 4,
+          shadow: const Shadow(
+            blurRadius: 0.2,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: Theme.of(context).primaryColor.withOpacity(0.2),
+          ),
         ),
-        belowBarData: BarAreaData(
-          show: true,
-          color: Theme.of(context).primaryColor.withOpacity(0.2),
-        ),
-      ),
-    ];
+      );
+    }
+
+    return chartData;
   }
 
   AxisTitles _bottomTitles() {
     return AxisTitles(
       sideTitles: SideTitles(
         showTitles: true,
+        interval: !_twelveMonths && _entryLength > 24
+            ? _lastTime / _entryLength / 3.5
+            : null,
         getTitlesWidget: (value, meta) {
           final DateTime date =
               DateTime.fromMillisecondsSinceEpoch(value.toInt());
@@ -129,6 +173,8 @@ class _CountLineChartState extends State<CountLineChart> {
   }
 
   LineTouchData _touchData() {
+    final chartProvider = Provider.of<ChartProvider>(context);
+
     return LineTouchData(
       enabled: true,
       touchTooltipData: LineTouchTooltipData(
@@ -150,13 +196,25 @@ class _CountLineChartState extends State<CountLineChart> {
           }).toList();
         },
       ),
+      touchCallback: (event, touchResponse) {
+        if (event is FlLongPressStart ||
+            event is FlTapDownEvent ||
+            event is FlPanStartEvent) {
+          chartProvider.setFocusDiagram(true);
+        }
+        if (event is FlLongPressEnd ||
+            event is FlTapUpEvent ||
+            event is FlPanEndEvent) {
+          chartProvider.setFocusDiagram(false);
+        }
+      },
     );
   }
 
-  _mainChart(List<Entrie> entries) {
+  _mainChart(List entries) {
     return SizedBox(
-      height: 200,
-      width: 380,
+      height: 220,
+      width: MediaQuery.sizeOf(context).width - 35,
       child: LineChart(
         LineChartData(
           lineBarsData: _lineData(entries),
@@ -169,31 +227,52 @@ class _CountLineChartState extends State<CountLineChart> {
     );
   }
 
+  _getTimeValues(List<EntryDto> entries) {
+    _lastTime = entries.last.date.millisecondsSinceEpoch;
+    _entryLength = entries.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final db = Provider.of<LocalDatabase>(context);
+    final entryProvider = Provider.of<EntryFilterProvider>(context);
+
     bool isEmpty = false;
+    bool hasActiveFilters = entryProvider.hasChartFilter;
 
     return StreamBuilder(
       stream: db.entryDao.watchAllEntries(widget.meter.id!),
       builder: (context, snapshot) {
-        final List<Entrie> entries = snapshot.data ?? [];
-        List<Entrie> finalEntries = [];
+        List<Entrie> data = snapshot.data ?? [];
+        List<EntryDto> entries = data.map((e) => EntryDto.fromData(e)).toList();
 
         if (entries.isEmpty) {
           return Container();
         }
 
-        if (_twelveMonths && entries.length > 12) {
-          // List<Entrie> newEntries = _helper.getLastMonths(entries);
-          finalEntries =
-              entries.getRange(entries.length - 12, entries.length).toList();
+        List<dynamic> finalEntries = [];
+
+        _getTimeValues(entries);
+
+        if (hasActiveFilters) {
+          entries = entryProvider.getFilteredEntriesForChart(entries);
+        }
+
+        if (_twelveMonths) {
+          finalEntries = _helper.getLastMonths(entries);
         } else {
-          finalEntries = entries;
+          finalEntries = _helper.convertEntryList(entries);
         }
 
         if (finalEntries.isEmpty || finalEntries.length == 1) {
           isEmpty = true;
+        }
+
+        _hasResetEntries = entries.any((element) => element.isReset);
+
+        if (_hasResetEntries) {
+          finalEntries =
+              _helper.splitListByReset(finalEntries as List<EntryMonthlySums>);
         }
 
         return SizedBox(
@@ -204,43 +283,18 @@ class _CountLineChartState extends State<CountLineChart> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Zählerstand',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          if (finalEntries.length >= 12) {
-                            setState(() {
-                              _twelveMonths = !_twelveMonths;
-                            });
-                          }
-                        },
-                        child: Text(
-                          'letzte 12 Monate',
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: _twelveMonths
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey,
-                                  ),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.only(left: 15, right: 8, top: 8),
+                  child: Text(
+                    'Zählerstand',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
                 const SizedBox(
-                  height: 20,
+                  height: 37,
                 ),
                 if (isEmpty)
-                  NoEntry().getNoData(
-                      'Es sind keine oder zu wenige Einträge vorhanden'),
+                  const NoEntry(
+                      text: 'Es sind keine oder zu wenige Einträge vorhanden'),
                 if (!isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0, bottom: 5),
@@ -251,6 +305,23 @@ class _CountLineChartState extends State<CountLineChart> {
                     ),
                   ),
                 if (!isEmpty) _mainChart(finalEntries),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 4),
+                  child: FilterChip(
+                    label: const Text('12 Monate'),
+                    selected: _twelveMonths,
+                    showCheckmark: false,
+                    labelStyle: Theme.of(context).textTheme.bodySmall!,
+                    onSelected: (value) {
+                      if (entries.length > 12) {
+                        setState(() {
+                          _twelveMonths = value;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ],
             ),
           ),

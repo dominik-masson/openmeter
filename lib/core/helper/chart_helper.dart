@@ -1,38 +1,48 @@
-import '../database/local_database.dart';
+import 'package:collection/collection.dart';
+
+import '../model/entry_dto.dart';
+import '../model/entry_monthly_sums.dart';
 
 class ChartHelper {
   ChartHelper();
 
-  Map<int, int> getSumInMonths(List<Entrie> entries) {
-    Map<int, int> result = {};
+  List<EntryMonthlySums> getSumInMonths(List<EntryDto> entries) {
+    List<EntryMonthlySums> result = [];
 
     for (int i = 0; i < entries.length;) {
       DateTime date = DateTime.fromMillisecondsSinceEpoch(
           entries[i].date.millisecondsSinceEpoch);
 
       if (entries[i].usage == -1) {
-        result.addAll({date.millisecondsSinceEpoch: 0});
+        result.add(EntryMonthlySums(
+          usage: 0,
+          month: date.month,
+          year: date.year,
+          day: entries[i].date.day,
+          count: entries[i].count,
+          isReset: entries[i].isReset,
+        ));
       } else {
-        result.addAll({date.millisecondsSinceEpoch: entries[i].usage});
+        result.add(EntryMonthlySums(
+          usage: entries[i].usage,
+          month: date.month,
+          year: date.year,
+          day: date.day,
+          count: entries[i].count,
+          isReset: entries[i].isReset,
+        ));
       }
 
       for (int j = i + 1; j < entries.length; j++) {
         if (entries[i].date.month == entries[j].date.month &&
             entries[i].date.year == entries[j].date.year) {
-          int hasDate = 0;
+          int index = result.indexWhere((element) =>
+              element.year == entries[j].date.year &&
+              element.month == entries[j].date.month);
 
-          result.forEach((key, value) {
-            DateTime date = DateTime.fromMillisecondsSinceEpoch(key);
-
-            if (date.month == entries[j].date.month &&
-                date.year == entries[j].date.year) {
-              hasDate = key;
-            }
-          });
-
-          if (hasDate != 0) {
-            result.update(hasDate, (value) => value += entries[j].usage);
-          }
+          result.elementAt(index).usage += entries[j].usage;
+          result.elementAt(index).day = entries[j].date.day;
+          result.elementAt(index).count = entries[j].count;
 
           i++;
         }
@@ -43,39 +53,34 @@ class ChartHelper {
     return result;
   }
 
-  // getLastMonths(List<Entrie> entries) {
-  //   List<Entrie> newEntries = [];
-  //
-  //   for (int i = 0; i < entries.length;) {
-  //     newEntries.add(entries[i]);
-  //
-  //     for (int j = i + 1; j < entries.length; j++) {
-  //       if (entries[i].date.month == entries[j].date.month &&
-  //           entries[i].date.year == entries[j].date.year) {
-  //         int count = entries[j].count + entries[i].usage;
-  //         int usage = entries[j].usage + entries[i].usage;
-  //
-  //         print(newEntries);
-  //         print(j - 1);
-  //
-  //         newEntries.add(Entrie(
-  //             id: entries[j].id,
-  //             meter: entries[j].meter,
-  //             count: count,
-  //             usage: usage,
-  //             date: entries[j].date,
-  //             days: entries[j].days));
-  //
-  //         newEntries.removeAt(j - 1);
-  //
-  //         i++;
-  //       }
-  //     }
-  //     i++;
-  //   }
-  //
-  //   return newEntries;
-  // }
+  List<EntryMonthlySums> getLastMonths(List<EntryDto> entries) {
+    List<EntryMonthlySums> sumOfMonths = getSumInMonths(entries);
+
+    DateTime lastDate = entries.last.date;
+    DateTime border = DateTime(lastDate.year, lastDate.month - 12);
+
+    return sumOfMonths.where((element) {
+      DateTime elementDate =
+          DateTime(element.year, element.month, element.day ?? 1);
+
+      return elementDate.isAfter(border);
+    }).toList();
+  }
+
+  List<EntryMonthlySums> convertEntryList(List<EntryDto> entries) {
+    return entries
+        .map(
+          (e) => EntryMonthlySums(
+            usage: e.usage,
+            month: e.date.month,
+            year: e.date.year,
+            day: e.date.day,
+            count: e.count,
+            isReset: e.isReset,
+          ),
+        )
+        .toList();
+  }
 
   String getTitleMonths(int month) {
     switch (month) {
@@ -104,5 +109,29 @@ class ChartHelper {
       default:
         return 'DEZ';
     }
+  }
+
+  List<List<EntryMonthlySums>> splitListByReset(List<EntryMonthlySums> data) {
+    return data
+        .splitBefore(
+          (element) => element.isReset,
+        )
+        .toList();
+  }
+
+  Map<int, int> splitListInYears(List<EntryMonthlySums> data) {
+    final Map<int, int> result = {};
+
+    for (EntryMonthlySums element in data) {
+      if (element.month != 1) {
+        result.update(
+          element.year,
+          (value) => value + element.usage,
+          ifAbsent: () => element.usage,
+        );
+      }
+    }
+
+    return result;
   }
 }
