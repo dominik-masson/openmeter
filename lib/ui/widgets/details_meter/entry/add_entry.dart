@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -409,21 +410,29 @@ class _AddEntryState extends State<AddEntry> {
           height: 10,
         ),
         TextFormField(
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if ((value == null || value.isEmpty) && !_isReset) {
-              return 'Bitte geben sie den Zählerstand an!';
-            }
-            if (value == null || (value.isNotEmpty && int.parse(value) < 0)) {
-              return 'Bitte gebe eine positive Zahl an!';
-            }
-            return null;
-          },
-          controller: _countercontroller,
-          focusNode: _countFocus,
-          decoration: const InputDecoration(
-              icon: Icon(Icons.onetwothree), label: Text('Zählerstand')),
-        ),
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value == null) {
+                return 'Bitte geben sie den Zählerstand an!';
+              }
+              if (value.isEmpty && !_isReset) {
+                return 'Bitte geben sie den Zählerstand an!';
+              }
+              if (value.contains(',') || value.contains('.')) {
+                return 'Bitte nutze keine Sonderzeichen!';
+              }
+              if (value.isNotEmpty && int.parse(value) < 0) {
+                return 'Bitte gebe eine positive Zahl an!';
+              }
+
+              return null;
+            },
+            controller: _countercontroller,
+            focusNode: _countFocus,
+            decoration: const InputDecoration(
+              icon: Icon(Icons.onetwothree),
+              label: Text('Zählerstand'),
+            )),
         const SizedBox(
           height: 20,
         ),
@@ -444,7 +453,7 @@ class _AddEntryState extends State<AddEntry> {
     return Column(
       children: [
         SizedBox(
-          height: 300,
+          height: 325,
           child: PageView(
             controller: _pageController,
             onPageChanged: (value) {
@@ -508,7 +517,7 @@ class _AddEntryState extends State<AddEntry> {
                           ),
                           _mainView(setState),
                           const SizedBox(
-                            height: 30,
+                            height: 20,
                           ),
                           Align(
                             alignment: Alignment.bottomRight,
