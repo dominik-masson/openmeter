@@ -18,6 +18,8 @@ class MeterImageHelper {
 
     if (image == null) return null;
 
+    await createDirectory();
+
     return await _saveImage(image);
   }
 

@@ -33,28 +33,18 @@ class _ArchivedMetersState extends State<ArchivedMeters> {
           ? _selectedAppBar(meterProvider, db, autoBackup)
           : AppBar(
               title: const Text('Archivierte Zähler'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.of(context).pushReplacementNamed('/');
-                },
-              ),
             ),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        canPop: !hasSelectedItems,
+        onPopInvoked: (didPop) {
           if (hasSelectedItems) {
             meterProvider.removeAllSelectedMeters();
-            return false;
-          } else {
-            Navigator.of(context).pushReplacementNamed('/');
-            return true;
           }
         },
         child: Stack(
           children: [
             MeterCardList(stream: stream, isHomescreen: false),
-            if (hasSelectedItems)
-              _selectedItems(meterProvider, db, autoBackup),
+            if (hasSelectedItems) _selectedItems(meterProvider, db, autoBackup),
           ],
         ),
       ),

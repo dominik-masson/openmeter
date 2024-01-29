@@ -204,7 +204,7 @@ class _MeterCardListState extends State<MeterCardList> {
                     if (hasSelectedItems) {
                       meterProvider.removeAllSelectedMeters(notify: false);
                     }
-                    Navigator.of(context).pushReplacementNamed('archive');
+                    Navigator.of(context).pushNamed('archive');
                   },
                   child: Text(
                     'Archivierte Zähler ($_archivLength)',
