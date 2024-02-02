@@ -1,99 +1,103 @@
 import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+
+import '../database/local_database.dart';
+import '../model/entry_dto.dart';
 
 class CostProvider extends ChangeNotifier {
-  late SharedPreferences _pref;
+  static const String boxSelectedContracts = 'selected_contracts';
   final String keyFirstDate = 'costFromDate';
   final String keyLastDate = 'costUntilDate';
-  int _firstDate = 0;
-  int _lastDate = 0;
-  int _sumMonth = 0;
-  int _lastCount = 0;
-  int _firstCount = 0;
+
+  List<EntryDto> _entries = [];
+
+  late Box _selectedContracts;
+
+  int _meterId = 0;
+
   double _basicPrice = 0.0;
   double _energyPrice = 0.0;
   double _discount = 0.0;
-  double _finalCost = 0.0;
-  double _finalPayedDiscount = 0.0;
 
-  int get getFirstDate => _firstDate;
-
-  int get getLastDate => _lastDate;
+  double _totalCosts = 0.0;
+  double _averageMonth = 0.0;
+  double _totalPaid = 0.0;
+  double _difference = 0.0;
+  int _months = 0;
 
   CostProvider() {
-    _loadFromPref();
+    _initPrefs();
   }
 
   _initPrefs() async {
-    _pref = await SharedPreferences.getInstance();
+    _selectedContracts = await Hive.openBox(boxSelectedContracts);
   }
 
-  saveFistDate(int firstDate) async {
-    _firstDate = firstDate;
-    await _initPrefs();
-    _pref.setInt(keyFirstDate, _firstDate);
+  void setMeterId(int value) {
+    _meterId = value;
   }
 
-  saveLastDate(int lastDate) async {
-    _lastDate = lastDate;
-    await _initPrefs();
-    _pref.setInt(keyLastDate, _lastDate);
-  }
-
-  setSumMont(int month) {
-    _sumMonth = month;
-  }
-
-  _loadFromPref() async {
-    await _initPrefs();
-
-    _firstDate = _pref.getInt(keyFirstDate) ?? 0;
-    _lastDate = _pref.getInt(keyLastDate) ?? 0;
-
+  void saveSelectedContract(int contractId) async {
+    await _selectedContracts.put(_meterId, contractId);
     notifyListeners();
   }
 
-  setCount(int firstCount, int lastCount) {
-    _firstCount = firstCount;
-    _lastCount = lastCount;
+  int? get getSelectedContract => _selectedContracts.get(_meterId);
+
+  void setEntries(List<Entrie> entries) {
+    _entries = entries.map((e) => EntryDto.fromData(e)).toList();
   }
 
-  setValues(double basicPrice, double energyPrice, double discount) {
+  void setValues(double basicPrice, double energyPrice, double discount) {
     _basicPrice = basicPrice; // Grundpreis
     _energyPrice = energyPrice; // Arbeitspreis
     _discount = discount; // Abschlag
   }
 
-  String calcCost() {
-    int count = _lastCount - _firstCount;
-    double wastageNet = _energyPrice * count / 100;
-    double wastage = wastageNet + _basicPrice;
-    double tax = wastageNet * 0.19;
-
-    _finalCost = wastage + tax;
-    return _finalCost.toStringAsFixed(2);
-  }
-
-  String calcPayedDiscount() {
-    _finalPayedDiscount = _sumMonth * _discount;
-    return _finalPayedDiscount.toStringAsFixed(2);
-  }
-
-  double calcRest() {
-    return _finalPayedDiscount - _finalCost;
+  void resetValues() {
+    _basicPrice = 0;
+    _energyPrice = 0;
+    _discount = 0;
   }
 
   double calcUsage(int usage) {
     return (usage * _energyPrice) / 100;
   }
 
-  void resetValues() {
-    _firstCount = 0;
-    _lastCount = 0;
-    _basicPrice = 0;
-    _energyPrice = 0;
-    _discount = 0;
-    _finalPayedDiscount = 0;
-    _finalCost = 0;
+  double get getTotalCosts => _totalCosts;
+
+  double get getAverageMonth => _averageMonth;
+
+  double get getTotalPaid => _totalPaid;
+
+  double get getDifference => _difference;
+
+  void _getSumOfMonths() {
+    _months =
+        _entries.map((e) => '${e.date.year} ${e.date.month}').toSet().length;
+  }
+
+  void _calcTotalCosts() {
+    final entry = _entries.first;
+
+    _getSumOfMonths();
+
+    double basicPrice = _basicPrice / 365 * _months;
+    double countPrice = (entry.count * _energyPrice) / 100;
+
+    _totalCosts = basicPrice + countPrice;
+
+    _averageMonth = _totalCosts / _months;
+  }
+
+  void _calcTotalPaid() {
+    _totalPaid = _discount * _months;
+  }
+
+  void initialCalc() {
+    _calcTotalPaid();
+    _calcTotalCosts();
+
+    _difference = _totalPaid - _totalCosts;
   }
 }

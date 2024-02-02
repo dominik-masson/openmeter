@@ -12,6 +12,7 @@ import '../../../../core/helper/chart_helper.dart';
 import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
+import '../../../../utils/custom_icons.dart';
 import 'no_entry.dart';
 
 class UsageLineChart extends StatefulWidget {
@@ -356,8 +357,8 @@ class _UsageLineChartState extends State<UsageLineChart> {
                     width: 10,
                   ),
                   Icon(
-                    Icons.functions,
-                    size: textTheme.fontSize! + 2,
+                    CustomIcons.empty_set,
+                    size: textTheme.fontSize!,
                     color: textTheme.color!,
                   ),
                   Text(

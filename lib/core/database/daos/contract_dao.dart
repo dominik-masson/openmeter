@@ -69,10 +69,41 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
         .go();
   }
 
-  Future<ContractData> getContractByTyp(String meterTyp) async {
-    return await (db.select(db.contract)
-          ..where((tbl) => tbl.meterTyp.equals(meterTyp)))
-        .getSingle();
+  Future<List<ContractDto>> getContractByTyp(String meterTyp) async {
+    final query = db.select(db.contract).join(
+      [
+        leftOuterJoin(
+          db.provider,
+          contract.provider.equalsExp(provider.id),
+        ),
+      ],
+    )..where(
+        contract.isArchived.equals(false) & contract.meterTyp.equals(meterTyp));
+
+    return await query
+        .map(
+          (row) => ContractDto.fromData(
+              row.readTable(contract), row.readTableOrNull(provider)),
+        )
+        .get();
+  }
+
+  Future<ContractDto?> getContractById(int id) {
+    final query = db.select(db.contract).join(
+      [
+        leftOuterJoin(
+          db.provider,
+          contract.provider.equalsExp(provider.id),
+        ),
+      ],
+    )..where(contract.id.equals(id));
+
+    return query
+        .map(
+          (row) => ContractDto.fromData(
+              row.readTable(contract), row.readTableOrNull(provider)),
+        )
+        .getSingleOrNull();
   }
 
   Future<bool> updateContract(ContractData contractData) async {

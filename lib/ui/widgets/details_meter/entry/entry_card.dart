@@ -76,7 +76,9 @@ class EntryCard extends StatelessWidget {
 
               if (entry != null && hasSelectedEntries == false) {
                 entryProvider.setAllEntries(entry);
+                costProvider.setEntries(entry);
               }
+
               List<EntryDto> entries = [];
 
               if (hasFilter) {

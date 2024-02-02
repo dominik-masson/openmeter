@@ -61,10 +61,10 @@ class CalcCompareValues {
     double total = _calcTotalDifference();
 
     return ContractCosts(
-      basicPrice: basicPrice,
-      energyPrice: energyPrice,
-      bonus: bonus,
-      total: total,
-    );
+        basicPrice: basicPrice,
+        energyPrice: energyPrice,
+        bonus: bonus,
+        total: total,
+        discount: 0.0);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openmeter/utils/custom_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/database/local_database.dart';
@@ -136,8 +137,8 @@ class _UsageBarCardState extends State<UsageBarCard> {
                     width: 10,
                   ),
                   Icon(
-                    Icons.functions,
-                    size: textTheme.fontSize! + 2,
+                    CustomIcons.empty_set,
+                    size: textTheme.fontSize!,
                     color: textTheme.color!,
                   ),
                   Text(
