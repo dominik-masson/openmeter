@@ -369,7 +369,7 @@ class _CompareContractsState extends State<CompareContracts> {
       ],
       icon: Icon(
         Icons.more_horiz,
-        color: Theme.of(context).iconTheme.color!.withAlpha(175),
+        color: Theme.of(context).indicatorColor,
       ),
     );
   }

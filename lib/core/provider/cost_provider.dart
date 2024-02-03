@@ -80,8 +80,6 @@ class CostProvider extends ChangeNotifier {
   void _calcTotalCosts() {
     final entry = _entries.first;
 
-    _getSumOfMonths();
-
     double basicPrice = _basicPrice / 365 * _months;
     double countPrice = (entry.count * _energyPrice) / 100;
 
@@ -95,8 +93,9 @@ class CostProvider extends ChangeNotifier {
   }
 
   void initialCalc() {
-    _calcTotalPaid();
+    _getSumOfMonths();
     _calcTotalCosts();
+    _calcTotalPaid();
 
     _difference = _totalPaid - _totalCosts;
   }

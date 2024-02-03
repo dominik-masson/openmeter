@@ -159,7 +159,7 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // _diagramWidgets(chartProvider),
+        _diagramWidgets(chartProvider),
         const SizedBox(
           height: 15,
         ),
