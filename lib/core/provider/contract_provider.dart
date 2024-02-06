@@ -7,10 +7,11 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../utils/log.dart';
 import '../database/local_database.dart';
+import '../helper/provider_helper.dart';
 import '../model/compare_costs.dart';
 import '../model/contract_dto.dart';
 import '../model/provider_dto.dart';
-import '../helper/provider_helper.dart';
+import 'cost_provider.dart';
 
 class ContractProvider extends ChangeNotifier {
   final ProviderHelper _providerHelper = ProviderHelper();
@@ -254,7 +255,8 @@ class ContractProvider extends ChangeNotifier {
 
   _deleteContracts(
       {required List<ContractDto> currentList,
-      required LocalDatabase db}) async {
+      required LocalDatabase db,
+      required CostProvider costProvider}) async {
     for (ContractDto data in currentList) {
       if (data.isSelected! == true) {
         if (data.provider != null) {
@@ -262,17 +264,25 @@ class ContractProvider extends ChangeNotifier {
         }
 
         await db.contractDao.deleteContract(data.id!);
+
+        costProvider.deleteContractFromBox(data.id!);
       }
     }
 
     currentList.removeWhere((element) => element.isSelected == true);
   }
 
-  deleteAllSelectedContracts(LocalDatabase db, bool isArchiv) async {
+  deleteAllSelectedContracts({
+    required LocalDatabase db,
+    bool isArchiv = false,
+    required CostProvider costProvider,
+  }) async {
     if (isArchiv) {
-      await _deleteContracts(currentList: _archivedContracts, db: db);
+      await _deleteContracts(
+          currentList: _archivedContracts, db: db, costProvider: costProvider);
     } else {
-      await _deleteContracts(currentList: _contracts, db: db);
+      await _deleteContracts(
+          currentList: _contracts, db: db, costProvider: costProvider);
       splitContracts();
     }
 

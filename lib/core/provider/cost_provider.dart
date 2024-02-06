@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -207,5 +208,21 @@ class CostProvider extends ChangeNotifier {
 
   void setMeterUnit(String value) {
     _meterUnit = value;
+  }
+
+  deleteContractFromBox(int contractId) {
+    final indices = _selectedContracts.values.mapIndexed(
+      (index, element) {
+        if (element == contractId) {
+          return index;
+        }
+      },
+    );
+
+    for (var index in indices) {
+      if (index != null) {
+        _selectedContracts.deleteAt(index);
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/model/contract_dto.dart';
 import '../../../core/provider/contract_provider.dart';
+import '../../../core/provider/cost_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../widgets/objects_screen/contract/contract_card.dart';
@@ -32,14 +33,12 @@ class _ArchiveContractState extends State<ArchiveContract> {
           : AppBar(
               title: const Text('Archivierte Verträge'),
             ),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        canPop: !contractProvider.getHasSelectedItems,
+        onPopInvoked: (bool didPop) async {
           if (contractProvider.getHasSelectedItems == true) {
             contractProvider.removeAllSelectedItems(true);
-            return false;
           }
-
-          return true;
         },
         child: Stack(
           children: [
@@ -177,7 +176,10 @@ class _ArchiveContractState extends State<ArchiveContract> {
       ),
       TextButton(
         onPressed: () {
-          contractProvider.deleteAllSelectedContracts(db, true);
+          final costProvider =
+              Provider.of<CostProvider>(context, listen: false);
+          contractProvider.deleteAllSelectedContracts(
+              db: db, isArchiv: true, costProvider: costProvider);
           backupProvider.setHasUpdate(true);
         },
         style: buttonStyle,
