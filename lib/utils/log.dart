@@ -15,4 +15,5 @@ class LogNames {
   static const String databaseSettingsProvider = 'Database Settings Provider';
   static const String compareCostHelper = 'Compare Cost Helper';
   static const String meterImageHelper = 'Meter Image Helper';
+  static const String costProvider = 'Cost Provider';
 }

@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:openmeter/utils/log.dart';
 
 import '../database/local_database.dart';
 import '../model/entry_dto.dart';
@@ -109,44 +112,52 @@ class CostProvider extends ChangeNotifier {
   }
 
   void _calcTotalCosts() {
-    final EntryDto lastEntry;
-    final EntryDto firstEntry;
+    try {
+      final EntryDto lastEntry;
+      final EntryDto firstEntry;
 
-    if (_entries.isNotEmpty) {
-      lastEntry = _entries.first;
-      firstEntry = _entries.last;
-    } else {
-      lastEntry = _cachedEntries
-          .firstWhere((element) => element.date.isBefore(_costFrom!));
-      firstEntry = _cachedEntries
-          .firstWhere((element) => element.date.isBefore(_costUntil!));
+      if (_entries.isNotEmpty) {
+        lastEntry = _entries.first;
+        firstEntry = _entries.last;
+      } else {
+        lastEntry = _cachedEntries
+            .firstWhere((element) => element.date.isBefore(_costFrom!));
+        firstEntry = _cachedEntries
+            .firstWhere((element) => element.date.isBefore(_costUntil!));
+      }
+
+      int lastCount = lastEntry.count;
+      int firstCount = firstEntry.count;
+
+      double totalAverageUsage = _getTotalAverageUsage();
+
+      if (_costUntil != null && _costUntil!.isAfter(lastEntry.date)) {
+        int diffDays = _costUntil!.difference(lastEntry.date).inDays;
+        lastCount += (totalAverageUsage * diffDays).toInt();
+        _isPredicted = true;
+      }
+
+      if (_costFrom != null && _costFrom!.isBefore(firstEntry.date)) {
+        int diffDays = _costFrom!.difference(firstEntry.date).inDays.abs();
+        firstCount -= (totalAverageUsage * diffDays).toInt();
+        _isPredicted = true;
+      }
+
+      double basicPrice = _basicPrice / 365 * _months;
+      double countPrice = ((lastCount - firstCount) * _energyPrice) / 100;
+
+      _averageUsage = lastCount - firstCount;
+
+      _totalCosts = basicPrice + countPrice;
+      _averageMonth = _totalCosts / _months;
+    } catch (e) {
+      _averageUsage = 0;
+      _totalCosts = 0;
+      _averageMonth = 0;
+
+      log('Error while calculate total coasts: ${e.toString()}',
+          name: LogNames.costProvider);
     }
-
-    int lastCount = lastEntry.count;
-    int firstCount = firstEntry.count;
-
-    double totalAverageUsage = _getTotalAverageUsage();
-
-    if (_costUntil != null && _costUntil!.isAfter(lastEntry.date)) {
-      int diffDays = _costUntil!.difference(lastEntry.date).inDays;
-      lastCount += (totalAverageUsage * diffDays).toInt();
-      _isPredicted = true;
-    }
-
-    if (_costFrom != null && _costFrom!.isBefore(firstEntry.date)) {
-      int diffDays = _costFrom!.difference(firstEntry.date).inDays.abs();
-      firstCount -= (totalAverageUsage * diffDays).toInt();
-      _isPredicted = true;
-    }
-
-    double basicPrice = _basicPrice / 365 * _months;
-    double countPrice = ((lastCount - firstCount) * _energyPrice) / 100;
-
-    _averageUsage = lastCount - firstCount;
-
-    _totalCosts = basicPrice + countPrice;
-
-    _averageMonth = _totalCosts / _months;
   }
 
   void _calcTotalPaid() {
