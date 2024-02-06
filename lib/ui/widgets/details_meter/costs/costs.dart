@@ -39,7 +39,7 @@ class _MainViewCostsState extends State<MainViewCosts> {
     _costProvider.setMeterId(widget.meter.id ?? -1);
     _costProvider.setMeterUnit(widget.meter.unit);
 
-    _selectedContractId = _costProvider.getSelectedContract;
+    _selectedContractId = _costProvider.getSelectedContractId;
     _costFrom = _costProvider.getCostFrom;
     _costUntil = _costProvider.getCostUntil;
 
@@ -212,6 +212,7 @@ class _MainViewCostsState extends State<MainViewCosts> {
     final entries = await db.entryDao.getAllEntries(_costProvider.getMeterId);
 
     _costProvider.setEntries(entries.reversed.toList());
+    _costProvider.setStateIsPredicted(false);
 
     setState(() {});
   }

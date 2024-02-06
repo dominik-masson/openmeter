@@ -1,19 +1,19 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:drift/drift.dart' as drift;
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/helper/meter_image_helper.dart';
 import '../../../../core/model/entry_dto.dart';
 import '../../../../core/provider/cost_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/entry_provider.dart';
-import '../../../../core/helper/meter_image_helper.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import '../../../../utils/custom_icons.dart';
@@ -297,7 +297,7 @@ class _DetailsEntryState extends State<DetailsEntry> {
     required String unit,
     required CostProvider costProvider,
   }) {
-    bool contract = _entryProvider.getContractData;
+    bool contract = costProvider.getSelectedContractId == null ? false : true;
 
     return Column(
       children: [

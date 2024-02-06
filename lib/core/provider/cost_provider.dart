@@ -52,7 +52,7 @@ class CostProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  int? get getSelectedContract => _selectedContracts.get(_meterId);
+  int? get getSelectedContractId => _selectedContracts.get(_meterId);
 
   void setEntries(List<Entrie> entries) {
     _entries = entries.map((e) => EntryDto.fromData(e)).toList();
