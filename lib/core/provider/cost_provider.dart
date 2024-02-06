@@ -109,8 +109,18 @@ class CostProvider extends ChangeNotifier {
   }
 
   void _calcTotalCosts() {
-    final lastEntry = _entries.first;
-    final firstEntry = _entries.last;
+    final EntryDto lastEntry;
+    final EntryDto firstEntry;
+
+    if (_entries.isNotEmpty) {
+      lastEntry = _entries.first;
+      firstEntry = _entries.last;
+    } else {
+      lastEntry = _cachedEntries
+          .firstWhere((element) => element.date.isBefore(_costFrom!));
+      firstEntry = _cachedEntries
+          .firstWhere((element) => element.date.isBefore(_costUntil!));
+    }
 
     int lastCount = lastEntry.count;
     int firstCount = firstEntry.count;
