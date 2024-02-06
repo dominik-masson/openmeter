@@ -31,10 +31,10 @@ class CompareCosts {
         usage = costs.usage,
         parentId = costs.parentId,
         costs = ContractCosts(
-          basicPrice: costs.basicPrice,
-          energyPrice: costs.energyPrice,
-          bonus: costs.bonus,
-        );
+            basicPrice: costs.basicPrice,
+            energyPrice: costs.energyPrice,
+            bonus: costs.bonus,
+            discount: 0.0);
 
   CostCompareData toData() {
     return CostCompareData(
@@ -62,6 +62,7 @@ class CompareCosts {
           basicPrice: json['basicPrice'],
           energyPrice: json['energyPrice'],
           bonus: json['bonus'],
+          discount: 0.0,
         ),
         usage = json['usage'],
         id = json['id'];

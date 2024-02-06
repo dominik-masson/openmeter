@@ -3,13 +3,13 @@ class ContractCosts {
   double energyPrice;
   int? bonus;
   double? total;
-  double? discount;
+  double discount;
 
   ContractCosts({
     required this.basicPrice,
     required this.energyPrice,
     this.bonus,
     this.total,
-    this.discount,
+    required this.discount,
   });
 }

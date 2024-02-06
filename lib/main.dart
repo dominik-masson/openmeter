@@ -1,6 +1,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:openmeter/core/provider/entry_filter_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -31,8 +32,10 @@ import 'ui/screens/settings_screens/tags_screen.dart';
 import 'ui/widgets/utils/bottom_nav_bar.dart';
 import 'ui/screens/settings_screens/database_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
 
   runApp(
     Provider<LocalDatabase>(

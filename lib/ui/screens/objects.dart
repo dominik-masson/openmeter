@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/database/local_database.dart';
 import '../../core/provider/contract_provider.dart';
+import '../../core/provider/cost_provider.dart';
 import '../../core/provider/database_settings_provider.dart';
 import '../../core/provider/details_contract_provider.dart';
 import '../../core/provider/room_provider.dart';
-import '../widgets/objects_screen/room/add_room.dart';
 import '../widgets/objects_screen/contract/contract_grid_view.dart';
+import '../widgets/objects_screen/room/add_room.dart';
 import '../widgets/objects_screen/room/room_card.dart';
 import '../widgets/utils/selected_items_bar.dart';
 import 'contract/add_contract.dart';
@@ -81,19 +82,17 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
           ? _hasSelectedItems(
               roomProvider: roomProvider, contractProvider: contractProvider)
           : _noSelectedItems(),
-      body: WillPopScope(
-        onWillPop: () async {
+      body: PopScope(
+        canPop: !roomProvider.getStateHasSelected &&
+            !contractProvider.getHasSelectedItems,
+        onPopInvoked: (bool didPop) async {
           if (roomProvider.getStateHasSelected == true) {
             roomProvider.removeAllSelected();
-            return false;
           }
 
           if (contractProvider.getHasSelectedItems == true) {
             contractProvider.removeAllSelectedItems(true);
-            return false;
           }
-
-          return true;
         },
         child: Stack(
           children: [
@@ -244,7 +243,12 @@ class _ObjectsScreenState extends State<ObjectsScreen> {
       ),
       TextButton(
         onPressed: () {
-          contractProvider.deleteAllSelectedContracts(db, false);
+          final costProvider =
+              Provider.of<CostProvider>(context, listen: false);
+
+          contractProvider.deleteAllSelectedContracts(
+              db: db, costProvider: costProvider);
+
           Provider.of<DatabaseSettingsProvider>(context, listen: false)
               .setHasUpdate(true);
         },

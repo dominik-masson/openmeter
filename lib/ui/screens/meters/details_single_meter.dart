@@ -13,10 +13,10 @@ import '../../../core/provider/chart_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/entry_provider.dart';
 import '../../../core/provider/room_provider.dart';
+import '../../widgets/details_meter/costs/costs.dart';
 import '../../widgets/details_meter/entry/add_entry.dart';
 import '../../widgets/details_meter/charts/count_line_chart.dart';
 import '../../widgets/details_meter/charts/usage_line_chart.dart';
-import '../../widgets/details_meter/cost_card.dart';
 import '../../widgets/details_meter/entry/entry_card.dart';
 import '../../widgets/details_meter/charts/usage_bar_charts/card.dart';
 import '../../widgets/tags/horizontal_tags_list.dart';
@@ -157,9 +157,13 @@ class _DetailsSingleMeterState extends State<DetailsSingleMeter> {
 
   Widget _detailsWidgets(ChartProvider chartProvider) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _diagramWidgets(chartProvider),
-        CostBar(meter: _meter),
+        const SizedBox(
+          height: 15,
+        ),
+        MainViewCosts(meter: _meter),
       ],
     );
   }

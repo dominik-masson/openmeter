@@ -78,10 +78,10 @@ class _AddCostsState extends State<AddCosts> {
       int bonus = _bonus.text.isEmpty ? 0 : int.parse(_bonus.text);
 
       ContractCosts costs = ContractCosts(
-        basicPrice: double.parse(_basicPrice.text),
-        energyPrice: _convertEnergyPrice(),
-        bonus: bonus,
-      );
+          basicPrice: double.parse(_basicPrice.text),
+          energyPrice: _convertEnergyPrice(),
+          bonus: bonus,
+          discount: 0.0);
 
       CompareCosts compareCosts = CompareCosts(
         costs: costs,

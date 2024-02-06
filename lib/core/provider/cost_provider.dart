@@ -1,99 +1,249 @@
-import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer';
+
+import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:openmeter/utils/log.dart';
+
+import '../database/local_database.dart';
+import '../model/entry_dto.dart';
 
 class CostProvider extends ChangeNotifier {
-  late SharedPreferences _pref;
-  final String keyFirstDate = 'costFromDate';
-  final String keyLastDate = 'costUntilDate';
-  int _firstDate = 0;
-  int _lastDate = 0;
-  int _sumMonth = 0;
-  int _lastCount = 0;
-  int _firstCount = 0;
+  static const String boxSelectedContracts = 'selected_contracts';
+  final String keyFirstDate = 'costFromDate_';
+  final String keyLastDate = 'costUntilDate_';
+
+  List<EntryDto> _entries = [];
+  List<EntryDto> _cachedEntries = [];
+
+  late Box _selectedContracts;
+
+  int _meterId = 0;
+  String _meterUnit = 'kWh';
+
   double _basicPrice = 0.0;
   double _energyPrice = 0.0;
   double _discount = 0.0;
-  double _finalCost = 0.0;
-  double _finalPayedDiscount = 0.0;
 
-  int get getFirstDate => _firstDate;
+  double _totalCosts = 0.0;
+  double _averageMonth = 0.0;
+  double _totalPaid = 0.0;
+  double _difference = 0.0;
+  int _months = 0;
 
-  int get getLastDate => _lastDate;
+  DateTime? _costFrom;
+  DateTime? _costUntil;
+
+  bool _isPredicted = false;
+  int _averageUsage = 0;
 
   CostProvider() {
-    _loadFromPref();
+    _initPrefs();
   }
 
   _initPrefs() async {
-    _pref = await SharedPreferences.getInstance();
+    _selectedContracts = await Hive.openBox(boxSelectedContracts);
   }
 
-  saveFistDate(int firstDate) async {
-    _firstDate = firstDate;
-    await _initPrefs();
-    _pref.setInt(keyFirstDate, _firstDate);
+  void setMeterId(int value) {
+    _meterId = value;
   }
 
-  saveLastDate(int lastDate) async {
-    _lastDate = lastDate;
-    await _initPrefs();
-    _pref.setInt(keyLastDate, _lastDate);
-  }
+  int get getMeterId => _meterId;
 
-  setSumMont(int month) {
-    _sumMonth = month;
-  }
-
-  _loadFromPref() async {
-    await _initPrefs();
-
-    _firstDate = _pref.getInt(keyFirstDate) ?? 0;
-    _lastDate = _pref.getInt(keyLastDate) ?? 0;
-
+  void saveSelectedContract(int contractId) async {
+    await _selectedContracts.put(_meterId, contractId);
     notifyListeners();
   }
 
-  setCount(int firstCount, int lastCount) {
-    _firstCount = firstCount;
-    _lastCount = lastCount;
+  int? get getSelectedContractId => _selectedContracts.get(_meterId);
+
+  void setEntries(List<Entrie> entries) {
+    _entries = entries.map((e) => EntryDto.fromData(e)).toList();
   }
 
-  setValues(double basicPrice, double energyPrice, double discount) {
+  void setCachedEntries(List<Entrie> entries) {
+    _cachedEntries = entries.map((e) => EntryDto.fromData(e)).toList();
+  }
+
+  void setValues(double basicPrice, double energyPrice, double discount) {
     _basicPrice = basicPrice; // Grundpreis
     _energyPrice = energyPrice; // Arbeitspreis
     _discount = discount; // Abschlag
   }
 
-  String calcCost() {
-    int count = _lastCount - _firstCount;
-    double wastageNet = _energyPrice * count / 100;
-    double wastage = wastageNet + _basicPrice;
-    double tax = wastageNet * 0.19;
-
-    _finalCost = wastage + tax;
-    return _finalCost.toStringAsFixed(2);
-  }
-
-  String calcPayedDiscount() {
-    _finalPayedDiscount = _sumMonth * _discount;
-    return _finalPayedDiscount.toStringAsFixed(2);
-  }
-
-  double calcRest() {
-    return _finalPayedDiscount - _finalCost;
+  void resetValues() {
+    _basicPrice = 0;
+    _energyPrice = 0;
+    _discount = 0;
   }
 
   double calcUsage(int usage) {
     return (usage * _energyPrice) / 100;
   }
 
-  void resetValues() {
-    _firstCount = 0;
-    _lastCount = 0;
-    _basicPrice = 0;
-    _energyPrice = 0;
-    _discount = 0;
-    _finalPayedDiscount = 0;
-    _finalCost = 0;
+  double get getTotalCosts => _totalCosts;
+
+  double get getAverageMonth => _averageMonth;
+
+  double get getTotalPaid => _totalPaid;
+
+  double get getDifference => _difference;
+
+  int _getSumOfMonthsByEntry() {
+    return _entries.map((e) => '${e.date.year} ${e.date.month}').toSet().length;
+  }
+
+  int _getSumOfMonthsBySelectedDate() {
+    int monthDiff = _costUntil!.month - _costFrom!.month;
+    int yearDiff = _costUntil!.year - _costFrom!.year;
+
+    return yearDiff * 12 + monthDiff;
+  }
+
+  double _getTotalAverageUsage() {
+    final firstEntry = _cachedEntries.last;
+    final lastEntry = _cachedEntries.first;
+
+    int usage = lastEntry.count - firstEntry.count;
+    int days = lastEntry.date.difference(firstEntry.date).inDays;
+
+    return usage / days;
+  }
+
+  void _calcTotalCosts() {
+    try {
+      final EntryDto lastEntry;
+      final EntryDto firstEntry;
+
+      if (_entries.isNotEmpty) {
+        lastEntry = _entries.first;
+        firstEntry = _entries.last;
+      } else {
+        lastEntry = _cachedEntries
+            .firstWhere((element) => element.date.isBefore(_costFrom!));
+        firstEntry = _cachedEntries
+            .firstWhere((element) => element.date.isBefore(_costUntil!));
+      }
+
+      int lastCount = lastEntry.count;
+      int firstCount = firstEntry.count;
+
+      double totalAverageUsage = _getTotalAverageUsage();
+
+      if (_costUntil != null && _costUntil!.isAfter(lastEntry.date)) {
+        int diffDays = _costUntil!.difference(lastEntry.date).inDays;
+        lastCount += (totalAverageUsage * diffDays).toInt();
+        _isPredicted = true;
+      }
+
+      if (_costFrom != null && _costFrom!.isBefore(firstEntry.date)) {
+        int diffDays = _costFrom!.difference(firstEntry.date).inDays.abs();
+        firstCount -= (totalAverageUsage * diffDays).toInt();
+        _isPredicted = true;
+      }
+
+      double basicPrice = _basicPrice / 365 * _months;
+      double countPrice = ((lastCount - firstCount) * _energyPrice) / 100;
+
+      _averageUsage = lastCount - firstCount;
+
+      _totalCosts = basicPrice + countPrice;
+      _averageMonth = _totalCosts / _months;
+    } catch (e) {
+      _averageUsage = 0;
+      _totalCosts = 0;
+      _averageMonth = 0;
+
+      log('Error while calculate total coasts: ${e.toString()}',
+          name: LogNames.costProvider);
+    }
+  }
+
+  void _calcTotalPaid() {
+    _totalPaid = _discount * _months;
+  }
+
+  _trimEntriesByDate() {
+    _entries.removeWhere((element) =>
+        element.date.isAfter(_costUntil!) || element.date.isBefore(_costFrom!));
+  }
+
+  void initialCalc() {
+    if (_costFrom != null && _costUntil != null) {
+      _trimEntriesByDate();
+      _months = _getSumOfMonthsBySelectedDate();
+    } else {
+      _months = _getSumOfMonthsByEntry();
+    }
+
+    _calcTotalCosts();
+    _calcTotalPaid();
+
+    _difference = _totalPaid - _totalCosts;
+  }
+
+  void saveSelectedDates(DateTimeRange dateRange) async {
+    _costFrom = dateRange.start;
+    _costUntil = dateRange.end;
+
+    _selectedContracts.putAll({
+      '$keyFirstDate$_meterId': _costFrom,
+      '$keyLastDate$_meterId': _costUntil,
+    });
+
+    notifyListeners();
+  }
+
+  DateTime? get getCostFrom {
+    _costFrom = _selectedContracts.get('$keyFirstDate$_meterId');
+    return _costFrom;
+  }
+
+  DateTime? get getCostUntil {
+    _costUntil = _selectedContracts.get('$keyLastDate$_meterId');
+    return _costUntil;
+  }
+
+  int get getSumOfMonths => _months;
+
+  Future<void> deleteTimeRange(LocalDatabase db) async {
+    _selectedContracts.delete('$keyFirstDate$_meterId');
+    _selectedContracts.delete('$keyLastDate$_meterId');
+
+    _costFrom = null;
+    _costUntil = null;
+
+    notifyListeners();
+  }
+
+  void setStateIsPredicted(bool value) {
+    _isPredicted = value;
+  }
+
+  bool get getStateIsPredicted => _isPredicted;
+
+  int get getAverageUsage => _averageUsage;
+
+  String get getMeterUnit => _meterUnit;
+
+  void setMeterUnit(String value) {
+    _meterUnit = value;
+  }
+
+  deleteContractFromBox(int contractId) {
+    final indices = _selectedContracts.values.mapIndexed(
+      (index, element) {
+        if (element == contractId) {
+          return index;
+        }
+      },
+    );
+
+    for (var index in indices) {
+      if (index != null) {
+        _selectedContracts.deleteAt(index);
+      }
+    }
   }
 }
