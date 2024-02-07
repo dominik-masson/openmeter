@@ -3,11 +3,11 @@ import 'package:openmeter/utils/custom_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/database/local_database.dart';
+import '../../../../../core/helper/chart_helper.dart';
 import '../../../../../core/model/entry_dto.dart';
 import '../../../../../core/model/entry_monthly_sums.dart';
 import '../../../../../core/model/meter_dto.dart';
 import '../../../../../core/provider/chart_provider.dart';
-import '../../../../../core/helper/chart_helper.dart';
 import '../../../../../core/provider/entry_filter_provider.dart';
 import '../../../../../utils/convert_meter_unit.dart';
 import '../no_entry.dart';
@@ -66,7 +66,7 @@ class _UsageBarCardState extends State<UsageBarCard> {
           sumMonths = totalSumMonths;
         }
 
-        if (sumMonths.isEmpty) {
+        if (sumMonths.isEmpty || sumMonths.length == 1) {
           isEmpty = true;
         } else {
           final totalMonths = _compareYears ? totalSumMonths : sumMonths;

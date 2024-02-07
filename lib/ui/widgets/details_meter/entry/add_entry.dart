@@ -1,20 +1,20 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/helper/meter_image_helper.dart';
+import '../../../../core/helper/torch_controller.dart';
 import '../../../../core/model/entry_dto.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/entry_provider.dart';
 import '../../../../core/provider/torch_provider.dart';
-import '../../../../core/helper/meter_image_helper.dart';
-import '../../../../core/helper/torch_controller.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/custom_icons.dart';
 
@@ -30,13 +30,12 @@ class AddEntry extends StatefulWidget {
 class _AddEntryState extends State<AddEntry> {
   final MeterImageHelper _imageHelper = MeterImageHelper();
 
+  final _iconKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   final FocusNode _countFocus = FocusNode();
 
-  final _iconKey = GlobalKey();
-
-  final TextEditingController _datecontroller = TextEditingController();
-  final TextEditingController _countercontroller = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _counterController = TextEditingController();
   final TorchController _torchController = TorchController();
   final PageController _pageController = PageController();
 
@@ -48,12 +47,13 @@ class _AddEntryState extends State<AddEntry> {
   int _selectedWidgetView = 0;
   String? _imagePath;
   bool _saved = false;
+  int _firstOpen = 0;
 
   @override
   void dispose() {
     super.dispose();
-    _datecontroller.dispose();
-    _countercontroller.dispose();
+    _dateController.dispose();
+    _counterController.dispose();
     _countFocus.dispose();
   }
 
@@ -70,7 +70,7 @@ class _AddEntryState extends State<AddEntry> {
       }
 
       _selectedDate = pickedDate;
-      _datecontroller.text = DateFormat('dd.MM.yyyy').format(_selectedDate!);
+      _dateController.text = DateFormat('dd.MM.yyyy').format(_selectedDate!);
     });
   }
 
@@ -83,7 +83,7 @@ class _AddEntryState extends State<AddEntry> {
       count = ConvertCount.convertString(currentCount);
     }
 
-    final countController = int.parse(_countercontroller.text);
+    final countController = int.parse(_counterController.text);
 
     return countController - count;
   }
@@ -109,7 +109,7 @@ class _AddEntryState extends State<AddEntry> {
       late EntriesCompanion entry;
 
       if (oldDate != null && _selectedDate!.isBefore(oldDate)) {
-        int count = int.parse(_countercontroller.text);
+        int count = int.parse(_counterController.text);
         String usageCount = '0';
         DateTime date = DateTime.now();
 
@@ -140,9 +140,9 @@ class _AddEntryState extends State<AddEntry> {
         entry = EntriesCompanion(
           meter: drift.Value(widget.meter.id!),
           date: drift.Value(_selectedDate!),
-          count: drift.Value(_countercontroller.text.isEmpty
+          count: drift.Value(_counterController.text.isEmpty
               ? 0
-              : int.parse(_countercontroller.text)),
+              : int.parse(_counterController.text)),
           usage: drift.Value(_isReset ? -1 : _calcUsage(currentCount)),
           days: drift.Value(_isReset || oldDate == null
               ? -1
@@ -152,7 +152,7 @@ class _AddEntryState extends State<AddEntry> {
           imagePath: drift.Value(_imagePath),
         );
 
-        entryProvider.setCurrentCount(_countercontroller.text);
+        entryProvider.setCurrentCount(_counterController.text);
         entryProvider.setOldDate(_selectedDate!);
       }
 
@@ -171,7 +171,7 @@ class _AddEntryState extends State<AddEntry> {
 
         Navigator.pop(context, true);
 
-        _countercontroller.clear();
+        _counterController.clear();
         _selectedDate = DateTime.now();
       });
     }
@@ -392,12 +392,16 @@ class _AddEntryState extends State<AddEntry> {
   }
 
   _addView(Function setState) {
+    if (_firstOpen < 2) {
+      _firstOpen++;
+    }
+
     return Column(
       children: [
         TextFormField(
           readOnly: true,
           textInputAction: TextInputAction.next,
-          controller: _datecontroller
+          controller: _dateController
             ..text = _selectedDate != null
                 ? DateFormat('dd.MM.yyyy').format(_selectedDate!)
                 : '',
@@ -409,6 +413,7 @@ class _AddEntryState extends State<AddEntry> {
           height: 10,
         ),
         TextFormField(
+            autofocus: _firstOpen <= 1,
             keyboardType: TextInputType.number,
             validator: (value) {
               if (value == null) {
@@ -426,7 +431,7 @@ class _AddEntryState extends State<AddEntry> {
 
               return null;
             },
-            controller: _countercontroller,
+            controller: _counterController,
             focusNode: _countFocus,
             decoration: const InputDecoration(
               icon: Icon(Icons.onetwothree),
@@ -486,6 +491,7 @@ class _AddEntryState extends State<AddEntry> {
     TorchProvider torchProvider,
   ) {
     _torchController.setStateTorch(torchProvider.getStateIsTorchOn);
+    _counterController.text = entryProvider.getPredictedCount;
 
     return showModalBottomSheet(
       shape: const RoundedRectangleBorder(
@@ -548,10 +554,11 @@ class _AddEntryState extends State<AddEntry> {
   _resetFields() async {
     _isReset = false;
     _selectedDate = DateTime.now();
-    _countercontroller.clear();
+    _counterController.clear();
     _stateTorch = false;
     _isTransmitted = false;
     _selectedWidgetView = 0;
+    _firstOpen = 0;
 
     if (_imagePath != null && !_saved) {
       await _imageHelper.deleteImage(_imagePath!);

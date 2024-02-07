@@ -1,24 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:openmeter/core/provider/entry_filter_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../core/database/local_database.dart';
-
 import '../../../core/model/meter_dto.dart';
 import '../../../core/model/room_dto.dart';
 import '../../../core/provider/chart_provider.dart';
 import '../../../core/provider/database_settings_provider.dart';
+import '../../../core/provider/entry_filter_provider.dart';
 import '../../../core/provider/entry_provider.dart';
 import '../../../core/provider/room_provider.dart';
+import '../../widgets/details_meter/charts/count_line_chart.dart';
+import '../../widgets/details_meter/charts/usage_bar_charts/card.dart';
+import '../../widgets/details_meter/charts/usage_line_chart.dart';
 import '../../widgets/details_meter/costs/costs.dart';
 import '../../widgets/details_meter/entry/add_entry.dart';
-import '../../widgets/details_meter/charts/count_line_chart.dart';
-import '../../widgets/details_meter/charts/usage_line_chart.dart';
 import '../../widgets/details_meter/entry/entry_card.dart';
-import '../../widgets/details_meter/charts/usage_bar_charts/card.dart';
 import '../../widgets/tags/horizontal_tags_list.dart';
 import '../../widgets/utils/selected_items_bar.dart';
 import 'add_meter.dart';

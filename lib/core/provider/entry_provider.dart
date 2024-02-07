@@ -1,15 +1,15 @@
 import 'package:collection/collection.dart';
-
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/convert_count.dart';
 import '../database/local_database.dart';
-import '../helper/filter_entry.dart';
-import '../model/entry_dto.dart';
 import '../helper/entry_helper.dart';
+import '../helper/filter_entry.dart';
 import '../helper/meter_image_helper.dart';
+import '../helper/usage_helper.dart';
+import '../model/entry_dto.dart';
 import '../model/entry_filter.dart';
 
 class EntryProvider extends ChangeNotifier {
@@ -27,6 +27,8 @@ class EntryProvider extends ChangeNotifier {
   String _unit = '';
   bool _hasEntries = true;
   String _meterNumber = '';
+
+  String _predictCount = '';
 
   String get getCurrentCount => _count;
 
@@ -252,5 +254,35 @@ class EntryProvider extends ChangeNotifier {
 
     return filterHelper.getFilteredList(
         filter.filterByDateBegin, filter.filterByDateEnd);
+  }
+
+  predictCount() {
+    UsageHelper usageHelper = UsageHelper();
+    DateTime now = DateTime.now();
+
+    _predictCount = '';
+
+    final lastEntry = _entries.first;
+
+    int currentCount = lastEntry.count;
+    double predictedUsage =
+        usageHelper.getTotalAverageUsage(_entries.last, lastEntry);
+
+    int diffDays = now.difference(lastEntry.date).inDays;
+    double predictedCount = currentCount + (predictedUsage * diffDays);
+
+    String predicted = predictedCount.ceil().toString();
+
+    int stringLength = predicted.length;
+
+    if (stringLength > 1) {
+      _predictCount = predicted.substring(0, stringLength ~/ 2);
+    }
+  }
+
+  String get getPredictedCount => _predictCount;
+
+  void resetPredictedCount() {
+    _predictCount = '';
   }
 }

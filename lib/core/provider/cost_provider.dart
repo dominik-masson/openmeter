@@ -3,15 +3,18 @@ import 'dart:developer';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:openmeter/utils/log.dart';
 
+import '../../utils/log.dart';
 import '../database/local_database.dart';
+import '../helper/usage_helper.dart';
 import '../model/entry_dto.dart';
 
 class CostProvider extends ChangeNotifier {
   static const String boxSelectedContracts = 'selected_contracts';
   final String keyFirstDate = 'costFromDate_';
   final String keyLastDate = 'costUntilDate_';
+
+  final UsageHelper _usageHelper = UsageHelper();
 
   List<EntryDto> _entries = [];
   List<EntryDto> _cachedEntries = [];
@@ -90,25 +93,11 @@ class CostProvider extends ChangeNotifier {
 
   double get getDifference => _difference;
 
-  int _getSumOfMonthsByEntry() {
-    return _entries.map((e) => '${e.date.year} ${e.date.month}').toSet().length;
-  }
-
   int _getSumOfMonthsBySelectedDate() {
     int monthDiff = _costUntil!.month - _costFrom!.month;
     int yearDiff = _costUntil!.year - _costFrom!.year;
 
     return yearDiff * 12 + monthDiff;
-  }
-
-  double _getTotalAverageUsage() {
-    final firstEntry = _cachedEntries.last;
-    final lastEntry = _cachedEntries.first;
-
-    int usage = lastEntry.count - firstEntry.count;
-    int days = lastEntry.date.difference(firstEntry.date).inDays;
-
-    return usage / days;
   }
 
   void _calcTotalCosts() {
@@ -129,7 +118,8 @@ class CostProvider extends ChangeNotifier {
       int lastCount = lastEntry.count;
       int firstCount = firstEntry.count;
 
-      double totalAverageUsage = _getTotalAverageUsage();
+      double totalAverageUsage = _usageHelper.getTotalAverageUsage(
+          _cachedEntries.last, _cachedEntries.first);
 
       if (_costUntil != null && _costUntil!.isAfter(lastEntry.date)) {
         int diffDays = _costUntil!.difference(lastEntry.date).inDays;
@@ -174,7 +164,7 @@ class CostProvider extends ChangeNotifier {
       _trimEntriesByDate();
       _months = _getSumOfMonthsBySelectedDate();
     } else {
-      _months = _getSumOfMonthsByEntry();
+      _months = _usageHelper.getSumOfMonthsByEntry(_entries);
     }
 
     _calcTotalCosts();
