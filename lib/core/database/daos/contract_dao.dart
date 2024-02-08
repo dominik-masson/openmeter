@@ -25,6 +25,7 @@ class ContractDao extends DatabaseAccessor<LocalDatabase>
 
   Stream<List<ContractData>> watchAllContracts(bool isArchived) {
     return (select(db.contract)
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.meterTyp)])
           ..where((tbl) => tbl.isArchived.equals(isArchived)))
         .watch();
   }

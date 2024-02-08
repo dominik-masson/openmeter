@@ -36,11 +36,16 @@ class RoomDao extends DatabaseAccessor<LocalDatabase> with _$RoomDaoMixin {
   }
 
   Stream<List<RoomData>> watchAllRooms() {
-    return select(db.room).watch();
+    return (select(db.room)
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.name)]))
+        .watch();
   }
 
   Future<List<RoomDto>> getAllRooms() async {
-    return await select(db.room).map((r) => RoomDto.fromData(r)).get();
+    return await (select(db.room)
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.name)]))
+        .map((r) => RoomDto.fromData(r))
+        .get();
   }
 
   Future<int> createMeterInRoom(MeterInRoomCompanion entity) async {
