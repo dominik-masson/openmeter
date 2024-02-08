@@ -40,6 +40,7 @@ class _EntryFilterSheetState extends State<EntryFilterSheet> {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),

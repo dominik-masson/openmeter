@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../../../core/database/local_database.dart';
 import '../../../core/enums/font_size_value.dart';
+import '../../../core/helper/database_settings_helper.dart';
 import '../../../core/model/database_stats_dto.dart';
 import '../../../core/provider/database_settings_provider.dart';
 import '../../../core/provider/theme_changer.dart';
-import '../../../core/helper/database_settings_helper.dart';
 
 class DatabaseStats extends StatefulWidget {
   final DatabaseSettingsHelper databaseSettingsHelper;

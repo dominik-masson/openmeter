@@ -208,6 +208,8 @@ class _MeterCardState extends State<MeterCard> {
         .firstWhere((element) => element.meterTyp == widget.meter.typ)
         .avatar;
 
+    final themeContext = Theme.of(context);
+
     return GestureDetector(
       onTap: () {
         switch (widget.currentScreen) {
@@ -231,10 +233,10 @@ class _MeterCardState extends State<MeterCard> {
       child: Padding(
         padding: const EdgeInsets.only(left: 4.0, right: 4),
         child: Card(
-          elevation: 3,
+          elevation: themeContext.cardTheme.elevation,
           color: widget.isSelected == true
-              ? Theme.of(context).highlightColor
-              : null,
+              ? themeContext.highlightColor
+              : themeContext.cardTheme.color,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -253,14 +255,14 @@ class _MeterCardState extends State<MeterCard> {
                         ),
                         Text(
                           widget.meter.typ,
-                          style: Theme.of(context).textTheme.bodyLarge,
+                          style: themeContext.textTheme.bodyLarge,
                         ),
                       ],
                     ),
                     if (sortProvider.getSort == 'meter')
                       Text(
                         roomName,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: themeContext.textTheme.bodyMedium,
                       ),
                   ],
                 ),
@@ -281,7 +283,7 @@ class _MeterCardState extends State<MeterCard> {
                 ),
                 Text(
                   'zuletzt geändert: $dateText',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: themeContext.textTheme.bodyMedium,
                 ),
               ],
             ),

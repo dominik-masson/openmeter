@@ -6,14 +6,14 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
 import '../../../../core/enums/compare_costs_menu.dart';
+import '../../../../core/helper/calc_compare_values.dart';
+import '../../../../core/helper/compare_cost_helper.dart';
 import '../../../../core/model/compare_costs.dart';
 import '../../../../core/model/contract_costs.dart';
 import '../../../../core/model/contract_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
-import '../../../../core/helper/calc_compare_values.dart';
-import '../../../../core/helper/compare_cost_helper.dart';
 import '../../../../utils/convert_meter_unit.dart';
 import 'add_costs.dart';
 

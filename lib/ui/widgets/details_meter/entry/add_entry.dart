@@ -494,6 +494,7 @@ class _AddEntryState extends State<AddEntry> {
     _counterController.text = entryProvider.getPredictedCount;
 
     return showModalBottomSheet(
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(20),

@@ -168,7 +168,7 @@ class _SelectContractDialogState extends State<SelectContractDialog> {
             },
             child: const Text(
               'Abbrechen',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: Colors.grey),
             ),
           ),
           TextButton(

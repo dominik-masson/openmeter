@@ -4,11 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/helper/chart_helper.dart';
 import '../../../../core/model/entry_dto.dart';
 import '../../../../core/model/entry_monthly_sums.dart';
 import '../../../../core/model/meter_dto.dart';
 import '../../../../core/provider/chart_provider.dart';
-import '../../../../core/helper/chart_helper.dart';
 import '../../../../core/provider/entry_filter_provider.dart';
 import '../../../../utils/convert_count.dart';
 import '../../../../utils/convert_meter_unit.dart';

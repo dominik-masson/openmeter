@@ -128,9 +128,8 @@ class _MainViewCostsState extends State<MainViewCosts> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-      icon: Icon(
+      icon: const Icon(
         Icons.more_horiz,
-        color: Theme.of(context).indicatorColor,
       ),
       itemBuilder: (context) => [
         PopupMenuItem(

@@ -160,9 +160,6 @@ class EntryCard extends StatelessWidget {
                       child: SizedBox(
                         width: isLargeText ? 300 : 240,
                         child: Card(
-                          color: item.isSelected
-                              ? Theme.of(context).highlightColor
-                              : null,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(

@@ -3,9 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/custom_colors.dart';
 import '../enums/font_size_value.dart';
+import '../helper/color_adjuster.dart';
 
 class ThemeChanger extends ChangeNotifier {
   late SharedPreferences _pref;
+  final ColorAdjuster _colorAdjuster = ColorAdjuster();
 
   final String keyTheme = 'theme';
   final String keyNight = 'night';
@@ -147,7 +149,10 @@ class ThemeChanger extends ChangeNotifier {
       brightness: Brightness.light,
     );
 
-    ThemeData light = ThemeData(
+    final primaryColor =
+        _useDynamicColor ? _dynamicDark?.primary : CustomColors.primaryColor;
+
+    return ThemeData(
       brightness: Brightness.light,
       useMaterial3: true,
       primaryColor:
@@ -159,10 +164,13 @@ class ThemeChanger extends ChangeNotifier {
           ? null
           : const FloatingActionButtonThemeData(
               backgroundColor: CustomColors.primaryColorLight),
-      highlightColor: Colors.white60,
+      cardTheme: CardTheme(
+        elevation: 1,
+        color: _colorAdjuster.makeLight(primaryColor!, 100),
+      ),
+      indicatorColor: CustomColors.charcoal,
+      highlightColor: Colors.black12,
     );
-
-    return light;
   }
 
   getDarkTheme() {
@@ -170,8 +178,7 @@ class ThemeChanger extends ChangeNotifier {
       seedColor: CustomColors.primaryColor,
       brightness: Brightness.dark,
     );
-
-    ThemeData dark = ThemeData(
+    return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
       colorScheme: _useDynamicColor ? _dynamicDark : scheme,
@@ -183,29 +190,32 @@ class ThemeChanger extends ChangeNotifier {
         color: CustomColors.darkColor,
       ),
       textTheme: _getTextTheme(),
+      cardTheme: const CardTheme(elevation: 0, color: CustomColors.darkGrey),
     );
-
-    return dark;
   }
 
   getNightTheme() {
     final scheme = ColorScheme.fromSeed(
         seedColor: CustomColors.primaryColor, brightness: Brightness.dark);
 
-    ThemeData night = ThemeData(
+    final primaryColor =
+        _useDynamicColor ? _dynamicDark?.primary : CustomColors.primaryColor;
+
+    return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
       colorScheme: _useDynamicColor ? _dynamicDark : scheme,
-      primaryColor:
-          _useDynamicColor ? _dynamicDark?.primary : CustomColors.primaryColor,
+      primaryColor: primaryColor,
       primaryColorLight: CustomColors.primaryColorDark,
       scaffoldBackgroundColor: CustomColors.nightColor,
       appBarTheme: const AppBarTheme(
         color: CustomColors.nightColor,
       ),
       textTheme: _getTextTheme(),
+      cardTheme: CardTheme(
+        elevation: 0,
+        color: _colorAdjuster.makeDark(primaryColor!, 89),
+      ),
     );
-
-    return night;
   }
 }
