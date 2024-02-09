@@ -160,6 +160,9 @@ class EntryCard extends StatelessWidget {
                       child: SizedBox(
                         width: isLargeText ? 300 : 240,
                         child: Card(
+                          color: item.isSelected == true
+                              ? Theme.of(context).highlightColor
+                              : Theme.of(context).cardTheme.color,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -298,7 +301,9 @@ class EntryCard extends StatelessWidget {
           Column(
             children: [
               ConvertMeterUnit().getUnitWidget(
-                count: '+${ConvertCount.convertCount(usage)}',
+                count: usage.sign >= 0
+                    ? '+${ConvertCount.convertCount(usage)}'
+                    : ConvertCount.convertCount(usage),
                 unit: unit,
                 textStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: entryProvider.getColors(item.count, usage),

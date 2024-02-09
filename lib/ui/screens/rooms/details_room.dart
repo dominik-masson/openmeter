@@ -162,8 +162,8 @@ class _DetailsRoomState extends State<DetailsRoom> {
                             AddMeterToRoom(room: _currentRoom),
                       ))
                           .then((value) {
-                        if (value[0] == true) {
-                          _currentRoom.sumMeter = value[1];
+                        if (value != null) {
+                          _currentRoom.sumMeter = value;
 
                           setState(() {});
                         }

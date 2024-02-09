@@ -88,12 +88,6 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Zähler zuordnen'),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop([false, 0]);
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
       ),
       floatingActionButton: SizedBox(
         width: 100,
@@ -108,27 +102,20 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
                         db: db,
                         currentLength: room.sumMeter ?? 0,
                       )
-                      .then(
-                          (value) => Navigator.of(context).pop([true, value]));
+                      .then((value) => Navigator.of(context).pop(value));
                 }
-              : null,
+              : () => Navigator.of(context).pop(),
           child: const Text('Fertig'),
         ),
       ),
-      body: WillPopScope(
-        onWillPop: () async {
-          Navigator.of(context).pop([false, 0]);
-          return true;
-        },
-        child: Column(
-          children: [
-            _searchWidget(),
-            const SizedBox(
-              height: 10,
-            ),
-            _searchText.isNotEmpty ? _searchList(db) : _meterList(db),
-          ],
-        ),
+      body: Column(
+        children: [
+          _searchWidget(),
+          const SizedBox(
+            height: 10,
+          ),
+          _searchText.isNotEmpty ? _searchList(db) : _meterList(db),
+        ],
       ),
     );
   }
@@ -247,7 +234,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
               _meterCardCompact(db, _meters.elementAt(index)),
               if (index == _meters.length - 1)
                 const SizedBox(
-                  height: 50,
+                  height: 80,
                 ),
             ],
           );
@@ -269,7 +256,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
               _meterCardCompact(db, _searchMeters.elementAt(index)),
               if (index == _searchMeters.length - 1)
                 const SizedBox(
-                  height: 50,
+                  height: 80,
                 ),
             ],
           );
@@ -279,7 +266,7 @@ class _AddMeterToRoomState extends State<AddMeterToRoom> {
   }
 
   Widget _searchWidget() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.only(left: 8, right: 8),
       child: SearchBar(
         controller: _searchController,
