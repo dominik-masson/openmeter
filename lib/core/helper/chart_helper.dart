@@ -54,6 +54,10 @@ class ChartHelper {
   }
 
   List<EntryMonthlySums> getLastMonths(List<EntryDto> entries) {
+    if (entries.isEmpty) {
+      return [];
+    }
+
     List<EntryMonthlySums> sumOfMonths = getSumInMonths(entries);
 
     DateTime lastDate = entries.last.date;

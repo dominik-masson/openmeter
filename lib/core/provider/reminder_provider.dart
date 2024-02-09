@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../enums/notifications_repeat_values.dart';
@@ -69,7 +68,7 @@ class ReminderProvider extends ChangeNotifier {
     _hour = _prefs.getInt(keyHour) ?? 0;
     _minute = _prefs.getInt(keyMinute) ?? 0;
 
-    _monthDay = _prefs.getInt(keyMonthDay) ?? 0;
+    _monthDay = _prefs.getInt(keyMonthDay) ?? 1;
 
     notifyListeners();
   }

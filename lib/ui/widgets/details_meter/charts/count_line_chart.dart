@@ -292,7 +292,12 @@ class _CountLineChartState extends State<CountLineChart> {
                 const SizedBox(
                   height: 37,
                 ),
-                if (isEmpty)
+                if (isEmpty && hasActiveFilters)
+                  const NoEntry(
+                      text:
+                          'Es sind keine oder zu wenige Einträge mit den Filtern vorhanden',
+                      showHintText: false),
+                if (isEmpty && !hasActiveFilters)
                   const NoEntry(
                       text: 'Es sind keine oder zu wenige Einträge vorhanden'),
                 if (!isEmpty)

@@ -15,7 +15,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
   bool _active = false;
   final DateTime _selectedTime = DateTime.now();
 
-  _loadFromPrefs(BuildContext context, ReminderProvider reminderProvider) {
+  _loadFromPrefs(ReminderProvider reminderProvider) {
     _active = reminderProvider.isActive;
   }
 
@@ -34,7 +34,7 @@ class _ReminderScreenState extends State<ReminderScreen> {
   Widget build(BuildContext context) {
     final reminderProvider = Provider.of<ReminderProvider>(context);
 
-    _loadFromPrefs(context, reminderProvider);
+    _loadFromPrefs(reminderProvider);
 
     return Scaffold(
       appBar: AppBar(

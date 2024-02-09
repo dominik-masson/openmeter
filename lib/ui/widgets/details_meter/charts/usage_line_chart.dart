@@ -323,7 +323,12 @@ class _UsageLineChartState extends State<UsageLineChart> {
                     ),
                   ),
                 if (!isEmpty) _lastMonths(finalEntries),
-                if (isEmpty)
+                if (isEmpty && hasActiveFilters)
+                  const NoEntry(
+                      text:
+                          'Es sind keine oder zu wenige Einträge mit den Filtern vorhanden',
+                      showHintText: false),
+                if (isEmpty && !hasActiveFilters)
                   const NoEntry(
                       text: 'Es sind keine oder zu wenige Einträge vorhanden'),
                 const Spacer(),

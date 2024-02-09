@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class NoEntry extends StatelessWidget {
   final String text;
-  const NoEntry({super.key, required this.text});
+  final bool showHintText;
+  const NoEntry({super.key, required this.text, this.showHintText = true});
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +28,14 @@ class NoEntry extends StatelessWidget {
         const SizedBox(
           height: 10,
         ),
-        const Text(
-          'Drücke jetzt auf das Plus um neue Einträge zu erstellen!',
-          style: TextStyle(
-            color: Colors.grey,
+        if (showHintText)
+          const Text(
+            'Drücke jetzt auf das Plus um neue Einträge zu erstellen!',
+            style: TextStyle(
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
       ],
     );
   }

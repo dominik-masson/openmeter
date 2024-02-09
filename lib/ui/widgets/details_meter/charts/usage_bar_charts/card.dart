@@ -99,7 +99,12 @@ class _UsageBarCardState extends State<UsageBarCard> {
                   YearBarChart(
                       data: _helper.getSumInMonths(entries),
                       meter: widget.meter),
-                if (isEmpty)
+                if (isEmpty && hasActiveFilters)
+                  const NoEntry(
+                      text:
+                          'Es sind keine oder zu wenige Einträge mit den Filtern vorhanden',
+                      showHintText: false),
+                if (isEmpty && !hasActiveFilters)
                   const NoEntry(
                       text: 'Es sind keine oder zu wenige Einträge vorhanden'),
                 const Spacer(),
