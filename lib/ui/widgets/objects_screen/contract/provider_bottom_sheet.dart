@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/database/local_database.dart';
+import '../../../../core/helper/provider_helper.dart';
 import '../../../../core/model/contract_dto.dart';
 import '../../../../core/model/provider_dto.dart';
 import '../../../../core/provider/contract_provider.dart';
 import '../../../../core/provider/database_settings_provider.dart';
 import '../../../../core/provider/details_contract_provider.dart';
-import '../../../../core/helper/provider_helper.dart';
 import 'add_provider.dart';
 
 class ProviderBottomSheet extends StatefulWidget {
@@ -35,7 +35,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Expanded(
-            child: ElevatedButton(
+            child: FilledButton.tonal(
               onPressed: () async {
                 if (_currentProvider != null) {
                   provider.setRemoveCanceledDateState(true, true);
@@ -67,7 +67,7 @@ class _ProviderBottomSheetState extends State<ProviderBottomSheet> {
             width: 10,
           ),
           Expanded(
-            child: ElevatedButton(
+            child: FilledButton.tonal(
               onPressed: () async {
                 provider.setDeleteProviderState(true, true);
 

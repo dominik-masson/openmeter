@@ -52,17 +52,20 @@ class _SelectContractCardState extends State<SelectContractCard> {
                 ],
               ),
               const SizedBox(
-                height: 10,
+                height: 15,
               ),
-              OutlinedButton(
-                onPressed: () async {
-                  int? selectedContractId = await _showSelectionDialog();
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width * 0.8,
+                child: FilledButton.tonal(
+                  onPressed: () async {
+                    int? selectedContractId = await _showSelectionDialog();
 
-                  if (selectedContractId != null) {
-                    costProvider.saveSelectedContract(selectedContractId);
-                  }
-                },
-                child: const Text('Vertrag wählen'),
+                    if (selectedContractId != null) {
+                      costProvider.saveSelectedContract(selectedContractId);
+                    }
+                  },
+                  child: const Text('Vertrag wählen'),
+                ),
               ),
             ],
           ),
